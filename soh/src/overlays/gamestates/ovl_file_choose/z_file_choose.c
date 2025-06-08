@@ -1381,7 +1381,8 @@ void FileChoose_UpdateQuestMenu(GameState* thisx) {
                 } else {
                     defaultName = &emptyNameNES;
                 }
-            } else { // GAME_REGION_NTSC
+                this->charPage = FS_CHAR_PAGE_HIRA; // Default to Hiragana Keyboard
+            } else {                                // GAME_REGION_NTSC
                 defaultName = CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) ? &linkNameNES : &emptyNameNES;
             }
             memcpy(Save_GetSaveMetaInfo(this->buttonIndex)->playerName, defaultName, 8);
@@ -1582,7 +1583,8 @@ void FileChoose_UpdateRandomizerMenu(GameState* thisx) {
                     } else {
                         defaultName = &emptyNameNES;
                     }
-                } else { // GAME_REGION_NTSC
+                    this->charPage = FS_CHAR_PAGE_HIRA; // Default to Hiragana Keyboard
+                } else {                                // GAME_REGION_NTSC
                     defaultName = CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) ? &linkNameNES : &emptyNameNES;
                 }
                 memcpy(Save_GetSaveMetaInfo(this->buttonIndex)->playerName, defaultName, 8);
