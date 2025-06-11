@@ -703,7 +703,7 @@ static void DrawMoreInfo(FileChooseContext* this, s16 fileIndex, u8 alpha) {
 }
 
 #define MIN_QUEST (ResourceMgr_GameHasOriginal() ? QUEST_NORMAL : QUEST_MASTER)
-#define MAX_QUEST QUEST_BOSSRUSH
+#define MAX_QUEST QUEST_ARCHIPELAGO
 
 void Sram_InitDebugSave(void);
 void Sram_InitBossRushSave();
@@ -1074,7 +1074,11 @@ void FileChoose_UpdateRandomizer() {
             remove(fileLoc);
         }
     }
+}
 
+u8 connecting;
+
+void FileChoose_UpdateArchipelago() {
     if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("Connected"), 0) && !fileSelectArchipelagoLoaded) {
         ParseArchipelago();
         fileSelectArchipelagoLoaded = true;
@@ -1355,6 +1359,11 @@ void FileChoose_UpdateQuestMenu(GameState* thisx) {
                                    &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
             this->prevConfigMode = this->configMode;
             this->configMode = CM_ROTATE_TO_RANDOMIZER_SETTINGS_MENU;
+        } else if (this->questType[this->buttonIndex] == QUEST_ARCHIPELAGO) {
+            Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
+                &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+            this->prevConfigMode = this->configMode;
+            this->configMode = CM_ROTATE_TO_ARCHIPELAGO_MENU;
         } else {
             Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
                                    &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
@@ -1633,7 +1642,8 @@ void FileChoose_RotateToNameEntry(GameState* thisx) {
 
     this->windowRot += VREG(16);
 
-    if (this->prevConfigMode == CM_RANDOMIZER_SETTINGS_MENU) {
+    if (this->prevConfigMode == CM_RANDOMIZER_SETTINGS_MENU ||
+        this->prevConfigMode == CM_ARCHIPELAGO_SETTINGS_MENU) {
         if (this->windowRot >= 942.0f) {
             this->windowRot = 628.0f;
             this->configMode = CM_START_NAME_ENTRY;
@@ -1690,7 +1700,8 @@ void FileChoose_RotateToQuest(GameState* thisx) {
     FileChooseContext* this = (FileChooseContext*)thisx;
 
     if (this->configMode == CM_NAME_ENTRY_TO_QUEST_MENU || this->configMode == CM_BOSS_RUSH_TO_QUEST ||
-        this->configMode == CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST) {
+        this->configMode == CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST ||
+        this->configMode == CM_ARCHIPELAGO_SETTINGS_TO_QUEST) {
         this->windowRot -= VREG(16);
 
         if (this->windowRot <= 314.0f) {
@@ -1738,6 +1749,92 @@ void FileChoose_RotateToRandomizer(GameState* thisx) {
     }
 }
 
+void FileChoose_RotateToArchipelago(GameState* thisx) {
+    FileChooseContext* this = (FileChooseContext*)thisx;
+
+    if (this->configMode == CM_NAME_ENTRY_TO_ARCHIPELAGO_SETTINGS_MENU ) {
+        this->windowRot -= VREG(16);
+
+        if (this->windowRot <= 314.0f) {
+            this->windowRot = 628.0f;
+            this->configMode = CM_START_ARCHIPELAGO_SETTINGS_MENU;
+        }
+    } else {
+        this->windowRot += VREG(16);
+
+        if (this->windowRot >= 628.0f) {
+            this->windowRot = 628.0f;
+            this->configMode = CM_START_ARCHIPELAGO_SETTINGS_MENU;
+        }
+    }
+}
+
+void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
+    FileChooseContext* this = (FileChooseContext*)thisx;
+    Input* input = &this->state.input[0];
+    bool dpad = CVarGetInteger(CVAR_SETTING("DpadInText"), 0);
+
+    FileChoose_UpdateArchipelago();
+
+    if(connecting) {
+        return;
+    }
+
+    // Fade in elements after opening Archipelago Options menu
+    this->archipelagoUIAlpha += 25;
+    if (this->archipelagoUIAlpha > 255) {
+        this->archipelagoUIAlpha = 255;
+    }
+
+    // Move menu selection up or down
+    if(ABS(this->stickRelY) > 30 || (dpad && CHECK_BTN_ANY(input->press.button, BTN_DDOWN | BTN_DUP))) {
+        // move down
+        if(this->stickRelY < -30 || (dpad && CHECK_BTN_ANY(input->press.button, BTN_DDOWN))) {
+            if((this->archipelagoIndex + 1) > ASM_CONNECT) {
+                this->archipelagoIndex = ASM_CHANGE_SETTINGS;
+            } else {
+                this->archipelagoIndex++;
+            }
+        } else {
+            if(((int8_t)this->archipelagoIndex - 1) < ASM_CHANGE_SETTINGS) {
+                this->archipelagoIndex = ASM_CONNECT;
+            } else {
+                this->archipelagoIndex--;
+            }
+        }
+        Audio_PlaySoundGeneral(NA_SE_SY_FSEL_CURSOR, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
+            &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+    }
+
+    if (CHECK_BTN_ALL(input->press.button, BTN_B)) {
+        this->configMode = CM_ARCHIPELAGO_SETTINGS_TO_QUEST;
+        return;
+    }
+
+    if (CHECK_BTN_ALL(input->press.button, BTN_A)) {
+        if (this->archipelagoIndex == ASM_CONNECT) {
+            Archipelago_Connect();
+        } else if (this->archipelagoIndex == ASM_CHANGE_SETTINGS) {
+            Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
+                &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+            Archipelago_ShowArchipelagoMenu();
+        }
+    }
+}
+
+void FileChoose_StartArchipelagoMenu(GameState* thisx) {
+    FileChooseContext* this = (FileChooseContext*)thisx;
+
+    this->logoAlpha -= 25;
+    this->archipelagoUIAlpha = 0;
+    this->archipelagoArrowOffset = 0;
+
+    if (this->logoAlpha <= 0) {
+        this->logoAlpha = 0;
+        this->configMode = CM_ARCHIPELAGO_SETTINGS_MENU;
+    }
+}
+
 static void (*gConfigModeUpdateFuncs[])(GameState*) = {
     FileChoose_StartFadeIn,         FileChoose_FinishFadeIn,
     FileChoose_UpdateMainMenu,      FileChoose_SetupCopySource,
@@ -1766,7 +1863,9 @@ static void (*gConfigModeUpdateFuncs[])(GameState*) = {
     FileChoose_StartBossRushMenu,   FileChoose_RotateToQuest,
     FileChoose_RotateToRandomizer,  FileChoose_UpdateRandomizerMenu,
     FileChoose_StartRandomizerMenu, FileChoose_RotateToQuest,
-    FileChoose_RotateToRandomizer,
+    FileChoose_RotateToRandomizer,  FileChoose_RotateToArchipelago,
+    FileChoose_UpdateArchipelagoMenu, FileChoose_StartArchipelagoMenu,
+    FileChoose_RotateToQuest,       FileChoose_RotateToArchipelago
 };
 
 static void (*gConfigModeUpdateFuncsNES[])(GameState*) = {
@@ -1797,7 +1896,9 @@ static void (*gConfigModeUpdateFuncsNES[])(GameState*) = {
     FileChoose_StartBossRushMenu,   FileChoose_RotateToQuest,
     FileChoose_RotateToRandomizer,  FileChoose_UpdateRandomizerMenu,
     FileChoose_StartRandomizerMenu, FileChoose_RotateToQuest,
-    FileChoose_RotateToRandomizer,
+    FileChoose_RotateToRandomizer,  FileChoose_RotateToArchipelago,
+    FileChoose_UpdateArchipelagoMenu, FileChoose_StartArchipelagoMenu,
+    FileChoose_RotateToQuest,       FileChoose_RotateToArchipelago
 };
 
 /**
@@ -2460,6 +2561,7 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
         case CM_NAME_ENTRY_TO_QUEST_MENU:
         case CM_ROTATE_TO_BOSS_RUSH_MENU:
         case CM_ROTATE_TO_RANDOMIZER_SETTINGS_MENU:
+        case CM_ROTATE_TO_ARCHIPELAGO_MENU:
             tex = FileChoose_GetQuestChooseTitleTexName(gSaveContext.language);
             break;
         case CM_BOSS_RUSH_MENU:
@@ -2469,6 +2571,10 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
         case CM_START_RANDOMIZER_SETTINGS_MENU:
         case CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST:
         case CM_NAME_ENTRY_TO_RANDOMIZER_SETTINGS_MENU:
+        case CM_START_ARCHIPELAGO_SETTINGS_MENU:
+        case CM_ARCHIPELAGO_SETTINGS_MENU:
+        case CM_ARCHIPELAGO_SETTINGS_TO_QUEST:
+        case CM_NAME_ENTRY_TO_ARCHIPELAGO_SETTINGS_MENU:
             tex = FileChoose_GetSohOptionsTitleTexName(gSaveContext.language);
             break;
         default:
@@ -2585,6 +2691,17 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                     ResourceMgr_GameHasOriginal() ? gTitleZeldaShieldLogoTex : gTitleZeldaShieldLogoMQTex, 160, 160);
                 FileChoose_DrawImageRGBA32(this->state.gfxCtx, 182, 180, gTitleBossRushSubtitleTex, 128, 32);
                 break;
+            case QUEST_ARCHIPELAGO:
+                gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, this->logoAlpha);
+                FileChoose_DrawTextureI8(this->state.gfxCtx, gTitleTheLegendOfTextTex, 72, 8, 156, 108, 72, 8, 1024,
+                                         1024);
+                FileChoose_DrawTextureI8(this->state.gfxCtx, gTitleOcarinaOfTimeTMTextTex, 96, 8, 154, 163, 96, 8, 1024,
+                                         1024);
+                FileChoose_DrawImageRGBA32(
+                    this->state.gfxCtx, 160, 135,
+                    ResourceMgr_GameHasOriginal() ? gTitleZeldaShieldLogoTex : gTitleZeldaShieldLogoMQTex, 160, 160);
+                FileChoose_DrawImageRGBA32(this->state.gfxCtx, 182, 180, gTitleArchipelagoSubtitleTex, 128, 32);
+                break;
         }
     } else if (this->configMode == CM_BOSS_RUSH_MENU) {
         uint8_t language = (gSaveContext.language == LANGUAGE_JPN) ? LANGUAGE_ENG : gSaveContext.language;
@@ -2665,13 +2782,13 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                 textColorR = textColorG = textColorB = 100;
             }
 
-            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetSettingText(index, language), 70,
+            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetRandomizerSettingText(index, language), 70,
                                    (80 + (index * 16)), textColorR, textColorG, textColorB, textAlpha, 0.8f, true);
         }
 
         // Show text to indicate randomizer is being generated.
         if (generating) {
-            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetSettingText(RSM_GENERATING, language), 70,
+            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetRandomizerSettingText(RSM_GENERATING, language), 70,
                                    (80 + 64), 255, 255, 255, textAlpha, 0.8f, true);
         }
 
@@ -2680,11 +2797,62 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
         if (!Randomizer_IsSeedGenerated() && !Randomizer_IsSpoilerLoaded() &&
             this->randomizerIndex == RSM_START_RANDOMIZER) {
             Interface_DrawTextLine(this->state.gfxCtx,
-                                   SohFileSelect_GetSettingText(RSM_NO_RANDOMIZER_GENERATED, language), 70, (80 + 64),
+                                   SohFileSelect_GetRandomizerSettingText(RSM_NO_RANDOMIZER_GENERATED, language), 70, (80 + 64),
                                    240, 80, 80, textAlpha, 0.8f, true);
         }
 
         uint16_t textOffset = 16 * this->randomizerIndex;
+        Gfx_SetupDL_39Opa(this->state.gfxCtx);
+        gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
+        gDPLoadTextureBlock(POLY_OPA_DISP++, gArrowCursorTex, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 24, 0,
+                            G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, 4, G_TX_NOMASK, G_TX_NOLOD,
+                            G_TX_NOLOD);
+        FileChoose_DrawTextRec(this->state.gfxCtx, this->stickRightPrompt.arrowColorR,
+                               this->stickRightPrompt.arrowColorG, this->stickRightPrompt.arrowColorB, textAlpha, 62,
+                               (85 + textOffset), 0.42f, 0, 0, 1.0f, 1.0f);
+
+    } else if (this->configMode == CM_ARCHIPELAGO_SETTINGS_MENU) { 
+        uint8_t language = (gSaveContext.language == LANGUAGE_JPN) ? LANGUAGE_ENG : gSaveContext.language;
+        uint8_t textAlpha = this->archipelagoUIAlpha;        
+
+        uint8_t textIndex = 0;
+        Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_SERVER_ADDRESS, language), 70,
+                                   (80 + (textIndex * 16)), 255, 255, 255, textAlpha, 0.8f, true);
+        textIndex++;
+        Interface_DrawTextLine(this->state.gfxCtx, CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "No Data"), 70,
+                                   (75 + (textIndex * 16)), 185, 185, 185, textAlpha, 0.8f, true);
+        
+        textIndex++;
+        Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_SLOT_NAME, language), 70,
+                                   (80 + (textIndex * 16)), 255, 255, 255, textAlpha, 0.8f, true);
+        textIndex++;
+        Interface_DrawTextLine(this->state.gfxCtx, CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), "No Data"), 70,
+                                   (75 + (textIndex * 16)), 185, 185, 185, textAlpha, 0.8f, true);
+                                   
+
+        for (uint8_t index = 0; index <= ASM_CONNECT; index++) {
+            uint8_t textColorR = 255;
+            uint8_t textColorG = 255;
+            uint8_t textColorB = 255;
+
+            // If current index is the selected one, make the text yellow.
+            if (this->archipelagoIndex == index) {
+                textColorB = 80;
+            }
+
+            // todo, gray out text when connecting
+
+            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(index, language), 70,
+                                   (80 + ((5 + index) * 16)), textColorR, textColorG, textColorB, textAlpha, 0.8f, true);
+        }
+        
+        // Show text to indicate the client is connecting to the server.
+        if (connecting) {
+            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTING, language), 70,
+            (80 + 64), 255, 255, 255, textAlpha, 0.8f, true);
+        }
+
+        uint16_t textOffset = 16 * (5 + this->archipelagoIndex);
         Gfx_SetupDL_39Opa(this->state.gfxCtx);
         gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
         gDPLoadTextureBlock(POLY_OPA_DISP++, gArrowCursorTex, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 24, 0,
@@ -2699,7 +2867,11 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                this->configMode != CM_START_RANDOMIZER_SETTINGS_MENU &&
                this->configMode != CM_ROTATE_TO_RANDOMIZER_SETTINGS_MENU &&
                this->configMode != CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST &&
-               this->configMode != CM_NAME_ENTRY_TO_RANDOMIZER_SETTINGS_MENU) {
+               this->configMode != CM_NAME_ENTRY_TO_RANDOMIZER_SETTINGS_MENU &&
+               this->configMode != CM_START_ARCHIPELAGO_SETTINGS_MENU &&
+               this->configMode != CM_ROTATE_TO_ARCHIPELAGO_MENU &&
+               this->configMode != CM_ARCHIPELAGO_SETTINGS_TO_QUEST &&
+               this->configMode != CM_NAME_ENTRY_TO_ARCHIPELAGO_SETTINGS_MENU) {
         gDPPipeSync(POLY_OPA_DISP++);
         gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, this->titleAlpha[1]);
         gDPLoadTextureBlock(POLY_OPA_DISP++, sTitleLabels[gSaveContext.language][this->nextTitleLabel], G_IM_FMT_IA,
@@ -3060,6 +3232,7 @@ void FileChoose_ConfigModeDraw(GameState* thisx) {
         this->configMode == CM_ROTATE_TO_NAME_ENTRY || this->configMode == CM_QUEST_TO_MAIN ||
         this->configMode == CM_NAME_ENTRY_TO_QUEST_MENU || this->configMode == CM_ROTATE_TO_BOSS_RUSH_MENU ||
         this->configMode == CM_ROTATE_TO_RANDOMIZER_SETTINGS_MENU ||
+        this->configMode == CM_ROTATE_TO_ARCHIPELAGO_MENU ||
         this->configMode == CM_NAME_ENTRY_TO_RANDOMIZER_SETTINGS_MENU) {
         // window
         gDPPipeSync(POLY_OPA_DISP++);
@@ -3093,7 +3266,11 @@ void FileChoose_ConfigModeDraw(GameState* thisx) {
         this->configMode == CM_START_BOSS_RUSH_MENU || this->configMode == CM_BOSS_RUSH_TO_QUEST ||
         this->configMode == CM_RANDOMIZER_SETTINGS_MENU || this->configMode == CM_ROTATE_TO_RANDOMIZER_SETTINGS_MENU ||
         this->configMode == CM_START_RANDOMIZER_SETTINGS_MENU ||
-        this->configMode == CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST) {
+        this->configMode == CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST ||
+        this->configMode == CM_START_ARCHIPELAGO_SETTINGS_MENU ||
+        this->configMode == CM_ARCHIPELAGO_SETTINGS_MENU ||
+        this->configMode == CM_ROTATE_TO_ARCHIPELAGO_MENU ||
+        this->configMode == CM_ARCHIPELAGO_SETTINGS_TO_QUEST) {
         // window
         gDPPipeSync(POLY_OPA_DISP++);
         gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
@@ -3908,6 +4085,7 @@ void FileChoose_InitContext(GameState* thisx) {
     this->bossRushIndex = 0;
     this->bossRushOffset = 0;
     this->randomizerIndex = 0;
+    this->archipelagoIndex = 0;
 
     ShrinkWindow_SetVal(0);
 

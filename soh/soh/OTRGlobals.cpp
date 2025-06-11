@@ -2165,6 +2165,14 @@ extern "C" void Randomizer_ShowRandomizerMenu() {
     SohGui::ShowRandomizerSettingsMenu();
 }
 
+extern "C" void Archipelago_Connect() {
+    ArchipelagoClient::GetInstance().StartClient();
+}
+
+extern "C" void Archipelago_ShowArchipelagoMenu() {
+    SohGui::ShowArchipelagoSettingsMenu();
+}
+
 CustomMessage Randomizer_GetCustomGetItemMessage(Player* player) {
     s16 giid;
     if (player->getItemEntry.objectId != OBJECT_INVALID) {
