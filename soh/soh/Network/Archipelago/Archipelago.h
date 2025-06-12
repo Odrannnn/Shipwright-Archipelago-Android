@@ -15,6 +15,7 @@ namespace AP_Client_consts {
     static constexpr int MAX_PASSWORD_LENGTH = 32;
 
     static constexpr char const* AP_GAME_NAME = "Ship of Harkinian";
+    static constexpr int MAX_RETRIES = 6;
 }
 
 class ArchipelagoClient{
@@ -64,6 +65,7 @@ class ArchipelagoClient{
         std::unique_ptr<APClient> apClient;
         bool itemQueued;
         bool disconnecting;
+        int retries;
 
     protected:
         ArchipelagoClient();
