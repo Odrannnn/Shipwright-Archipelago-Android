@@ -521,8 +521,8 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SHUFFLE_TOKENS].Set(slotData["shuffle_tokens"]);
     mOptions[RSK_SHOPSANITY].Set(slotData["shuffle_shops"]);
     mOptions[RSK_SHOPSANITY_COUNT].Set(4);
-    mOptions[RSK_SHOPSANITY_PRICES].Set(0);
-    mOptions[RSK_SHOPSANITY_PRICES_FIXED_PRICE].Set(0);
+    mOptions[RSK_SHOPSANITY_PRICES].Set(RO_PRICE_FIXED);
+    mOptions[RSK_SHOPSANITY_PRICES_FIXED_PRICE].Set(1);
     mOptions[RSK_SHOPSANITY_PRICES_RANGE_1].Set(0);
     mOptions[RSK_SHOPSANITY_PRICES_RANGE_2].Set(0);
     mOptions[RSK_SHOPSANITY_PRICES_NO_WALLET_WEIGHT].Set(0);
@@ -536,8 +536,8 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     } else {
         mOptions[RSK_SHUFFLE_SCRUBS].Set(RO_SCRUBS_OFF);
     }
-    mOptions[RSK_SCRUBS_PRICES].Set(0);
-    mOptions[RSK_SCRUBS_PRICES_FIXED_PRICE].Set(0);
+    mOptions[RSK_SCRUBS_PRICES].Set(RO_PRICE_FIXED);
+    mOptions[RSK_SCRUBS_PRICES_FIXED_PRICE].Set(1);
     mOptions[RSK_SCRUBS_PRICES_RANGE_1].Set(0);
     mOptions[RSK_SCRUBS_PRICES_RANGE_2].Set(0);
     mOptions[RSK_SCRUBS_PRICES_NO_WALLET_WEIGHT].Set(0);
@@ -714,6 +714,8 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
     for(const ArchipelagoClient::ApItem& ap_item: scouted_items) {
         //const RandomizerCheck rc = StaticData::APcheckToSoh.find(ap_item.locationName)->second;
         const RandomizerCheck rc = StaticData::locationNameToEnum[ap_item.locationName];
+
+        itemLocationTable[rc].SetCustomPrice(10);
 
         if(SlotName == ap_item.playerName) {
             // our item
