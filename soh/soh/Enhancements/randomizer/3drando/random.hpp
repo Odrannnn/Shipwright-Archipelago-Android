@@ -8,7 +8,7 @@
 #include <set>
 
 void Random_Init(uint64_t seed);
-uint32_t Random(int min, int max);
+uint32_t Random(uint32_t min, uint32_t max);
 double RandomDouble();
 
 // Get a random element from a vector or array
