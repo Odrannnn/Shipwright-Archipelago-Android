@@ -2384,6 +2384,10 @@ void RandomizerOnCuccoOrChickenHatch() {
     }
 }
 
+uint32_t RandomizerReturnCurrentlyQueuedItem() {
+    return (uint32_t)randomizerQueuedCheck;
+}
+
 void RandomizerRegisterHooks() {
     static uint32_t onFlagSetHook = 0;
     static uint32_t onSceneFlagSetHook = 0;

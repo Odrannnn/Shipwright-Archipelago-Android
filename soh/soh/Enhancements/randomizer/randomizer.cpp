@@ -65,6 +65,7 @@ const std::string Randomizer::triforcePieceMessageTableID = "RandomizerTriforceP
 const std::string Randomizer::NaviRandoMessageTableID = "RandomizerNavi";
 const std::string Randomizer::IceTrapRandoMessageTableID = "RandomizerIceTrap";
 const std::string Randomizer::randoMiscHintsTableID = "RandomizerMiscHints";
+const std::string Randomizer::archipelagoItemsTableID = "ÁrchipelagoItems";
 
 static const char* englishRupeeNames[188] = {
     "[P]",
@@ -5346,10 +5347,40 @@ CustomMessage Randomizer::GetGoronMessage(u16 index) {
     return messageEntry;
 }
 
+void CreateArchipelagoItemMessage() {
+    CustomMessageManager* customMessageManager = CustomMessageManager::Instance;
+    customMessageManager->AddCustomMessageTable(Randomizer::archipelagoItemsTableID);
+        customMessageManager->CreateMessage(
+        Randomizer::archipelagoItemsTableID, 0,
+            CustomMessage("You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!", "You found \x05\x06[[apitem]]\x05\x00 for \x05\x05[[applayer]]\x05\x00!",
+                          "You found \x05\x06[[apitem]]\x05\x00 for \x05\x05[[applayer]]\x05\x00!"));
+}
+
+CustomMessage Randomizer::GetArchipelagoItemMessage(int16_t randomizerGet, uint32_t randomizerCheck) {
+    CustomMessage messageEntry =
+        CustomMessageManager::Instance->RetrieveMessage(Randomizer::archipelagoItemsTableID, 0);
+
+    std::string itemColor = "";
+    if (randomizerGet == RG_ARCHIPELAGO_ITEM_PROGRESSIVE) {
+        itemColor = "%p";
+    } else if (randomizerGet == RG_ARCHIPELAGO_ITEM_USEFUL) {
+        itemColor = "%b";
+    } else {
+        itemColor = "%c";
+    }
+
+    messageEntry.Replace("[[apcolor]]", itemColor);
+    messageEntry.Replace("[[apitem]]", std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].itemName));
+    messageEntry.Replace("[[applayer]]",
+                         std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].playerName));
+    messageEntry.AutoFormat();
+    return messageEntry;
+}
+
 void Randomizer::CreateCustomMessages() {
     // RANDTODO: Translate into french and german and replace GIMESSAGE_UNTRANSLATED
     // with GIMESSAGE(getItemID, itemID, english, german, french).
-    const std::array<GetItemMessage, 115> getItemMessages = { {
+    const std::array<GetItemMessage, 112> getItemMessages = { {
         GIMESSAGE(RG_GREG_RUPEE, ITEM_MASK_GORON, "You found %gGreg%w!", "%gGreg%w! Du hast ihn wirklich gefunden!",
                   "Félicitation! Vous avez trouvé %gGreg%w!"),
         GIMESSAGE(RG_MASTER_SWORD, ITEM_SWORD_MASTER, "You found the %gMaster Sword%w!",
@@ -5713,15 +5744,13 @@ void Randomizer::CreateCustomMessages() {
         GIMESSAGE(RG_DEKU_NUT_BAG, ITEM_NUT, "You found the %rDeku Nut Bag%w!&You can now hold Deku Nuts!",
                   "Du hast eine %rDeku-Nuß-Tasche%w&gefunden! Nun kannst Du &%yDeku-Nüsse%w verwenden!",
                   "Vous avez trouvé le %rSac de Noix& Mojo%w!&Vous pouvez maintenant porter des&Noix Mojo!"),
-        GIMESSAGE_UNTRANSLATED(RG_ARCHIPELAGO_ITEM_USEFUL, ITEM_NUT, "You found an useful %gAP Item%w!"),
-        GIMESSAGE_UNTRANSLATED(RG_ARCHIPELAGO_ITEM_JUNK, ITEM_NUT, "You found a junk %gAP Item%w!"),
-        GIMESSAGE_UNTRANSLATED(RG_ARCHIPELAGO_ITEM_PROGRESSIVE, ITEM_NUT, "You found a progressive %gAP Item%w!"),
     } };
     CreateGetItemMessages(getItemMessages);
     CreateRupeeMessages();
     CreateTriforcePieceMessages();
     CreateNaviRandoMessages();
     CreateFireTempleGoronMessages();
+    CreateArchipelagoItemMessage();
 }
 
 class ExtendedVanillaTableInvalidItemIdException : public std::exception {

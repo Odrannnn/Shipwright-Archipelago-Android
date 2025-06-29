@@ -45,6 +45,7 @@
 #include "Enhancements/custom-message/CustomMessageManager.h"
 #include "Enhancements/Presets/Presets.h"
 #include "util.h"
+#include "soh/Enhancements/randomizer/hook_handlers.h"
 
 #if not defined(__SWITCH__) && not defined(__WIIU__)
 #include "Extractor/Extract.h"
@@ -2262,6 +2263,11 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                 messageEntry = Randomizer::GetIceTrapMessage();
             } else if (player->getItemEntry.getItemId == RG_TRIFORCE_PIECE) {
                 messageEntry = Randomizer::GetTriforcePieceMessage();
+            } else if (player->getItemEntry.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
+                       player->getItemEntry.getItemId == RG_ARCHIPELAGO_ITEM_JUNK ||
+                       player->getItemEntry.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE) {
+                messageEntry = Randomizer::GetArchipelagoItemMessage(player->getItemEntry.getItemId,
+                                                                     RandomizerReturnCurrentlyQueuedItem());
             } else {
                 messageEntry = Randomizer_GetCustomGetItemMessage(player);
             }
