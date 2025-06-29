@@ -530,7 +530,7 @@ void RegisterArchipelago() {
     CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("Connected"), 0);
 
     COND_HOOK(GameInteractor::OnGameFrameUpdate, true, [](){ArchipelagoClient::GetInstance().Poll();});
-    COND_HOOK(GameInteractor::OnLoadGame, true, [](int32_t file_id){ArchipelagoClient::GetInstance().GameLoaded();});
+    COND_HOOK(GameInteractor::PostLoadGame, true, [](int32_t file_id){ArchipelagoClient::GetInstance().GameLoaded();});
     COND_HOOK(GameInteractor::OnRandomizerItemGivenHooks, IS_ARCHIPELAGO,
               [](uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped) { 
         if (rc == RC_ARCHIPELAGO_RECEIVED_ITEM) {

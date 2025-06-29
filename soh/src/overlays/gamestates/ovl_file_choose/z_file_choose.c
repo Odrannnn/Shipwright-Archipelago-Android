@@ -3429,6 +3429,7 @@ void FileChoose_LoadGame(GameState* thisx) {
     gSaveContext.naviTimer = 0;
 
     GameInteractor_ExecuteOnLoadGame(gSaveContext.fileNum);
+    GameInteractor_ExecutePostLoadGame(gSaveContext.fileNum);
 }
 
 static void (*gSelectModeUpdateFuncs[])(GameState*) = {
