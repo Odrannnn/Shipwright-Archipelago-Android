@@ -13,7 +13,6 @@
 #include "soh/SohGui/ImGuiUtils.h"
 #include "soh/Notification/Notification.h"
 #include "soh/SaveManager.h"
-#include "soh/Enhancements/randomizer/ShuffleFairies.h"
 #include "soh/Network/Archipelago/ArchipelagoConsoleWindow.h"
 
 extern "C" {

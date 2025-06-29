@@ -32,23 +32,6 @@ uint32_t next32() {
     return std::rotr(xorshifted, rot);
 }
 
-uint32_t next32() {
-    if (!init) {
-        // No seed given, get a random number from device to seed
-#if !defined(__SWITCH__) && !defined(__WIIU__)
-        uint64_t seed = static_cast<uint64_t>(std::random_device{}());
-#else
-        uint64_t seed = static_cast<uint64_t>(std::hash<std::string>{}(std::to_string(rand())));
-#endif
-        Random_Init(seed);
-    }
-
-    state = state * multiplier + increment;
-    uint32_t xorshifted = static_cast<uint32_t>(((state >> 18) ^ state) >> 27);
-    uint32_t rot = static_cast<int>(state >> 59);
-    return std::rotr(xorshifted, rot);
-}
-
 // Returns a random integer in range [min, max-1]
 uint32_t Random(uint32_t min, uint32_t max) {
     if (min == max) {

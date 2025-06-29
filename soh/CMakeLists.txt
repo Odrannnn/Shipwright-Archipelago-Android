@@ -282,6 +282,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	endif()
 	set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUNTIME_LIBRARY_STR})
 endif()
+
 ################################################################################
 # apclientpp + dependencies
 ################################################################################
@@ -293,7 +294,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/wswrap/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/valijson/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/apclientpp
-
+)
 
 # Find/download Dr Libs (For custom audio)
 ################################################################################
@@ -305,7 +306,6 @@ FetchContent_Declare(
         GIT_TAG da35f9d6c7374a95353fd1df1d394d44ab66cf01
 )
 FetchContent_MakeAvailable(dr_libs)
-
 
 ################################################################################
 # Compile definitions

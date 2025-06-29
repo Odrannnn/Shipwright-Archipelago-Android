@@ -598,7 +598,6 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_STARTING_NUTS].Set(RO_GENERIC_NO);
     mOptions[RSK_FULL_WALLETS].Set(RO_GENERIC_YES);
     mOptions[RSK_SHUFFLE_CHEST_MINIGAME].Set(RO_GENERIC_NO);
-    mOptions[RSK_CUCCO_COUNT].Set(1);
     mOptions[RSK_BIG_POE_COUNT].Set(1);
     mOptions[RSK_SKIP_EPONA_RACE].Set(RO_GENERIC_YES);
     mOptions[RSK_COMPLETE_MASK_QUEST].Set(RO_GENERIC_YES);
