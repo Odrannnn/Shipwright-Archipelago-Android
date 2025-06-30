@@ -355,7 +355,7 @@ void Context::AddReceivedArchipelagoItem(const RandomizerGet item) {
 
 GetItemEntry Context::GetArchipelagoGIEntry() {
     ArchipelagoConsole_SendMessage("[LOG] Trying to get Item Entry", true);
-    if(mAPreceiveQueue.empty()) {
+    if (mAPreceiveQueue.empty()) {
         // something must have gone wrong here, just give a rupee
         return ItemTableManager::Instance->RetrieveItemEntry(MOD_NONE, GI_HEART);
     }
@@ -368,7 +368,7 @@ GetItemEntry Context::GetArchipelagoGIEntry() {
     SPDLOG_TRACE("Found item! {}, {}", item.GetName().GetEnglish(), (int)item_id);
     GetItemEntry item_entry = item.GetGIEntry_Copy();
     mAPreceiveQueue.pop();
-    return item_entry;      // todo: add custom text maybe?
+    return item_entry; // todo: add custom text maybe?
 }
 
 GetItemEntry Context::GetFinalGIEntry(const RandomizerCheck rc, const bool checkObtainability,
@@ -705,19 +705,19 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
 
 void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient::ApItem>& scouted_items) {
     const std::string SlotName = ArchipelagoClient::GetInstance().GetSlotName();
-    
+
     // Zero out the location table first
-    for(int rc = 1; rc < RC_MAX; rc++) {
+    for (int rc = 1; rc < RC_MAX; rc++) {
         itemLocationTable[rc].SetPlacedItem(RG_NONE);
     }
 
-    for(const ArchipelagoClient::ApItem& ap_item: scouted_items) {
-        //const RandomizerCheck rc = StaticData::APcheckToSoh.find(ap_item.locationName)->second;
+    for (const ArchipelagoClient::ApItem& ap_item : scouted_items) {
+        // const RandomizerCheck rc = StaticData::APcheckToSoh.find(ap_item.locationName)->second;
         const RandomizerCheck rc = StaticData::locationNameToEnum[ap_item.locationName];
 
         itemLocationTable[rc].SetCustomPrice(10);
 
-        if(SlotName == ap_item.playerName) {
+        if (SlotName == ap_item.playerName) {
             // our item
             SPDLOG_TRACE("Populated item {} at location {}", ap_item.itemName, ap_item.locationName);
             const RandomizerGet item = StaticData::itemNameToEnum[ap_item.itemName];
@@ -727,10 +727,10 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
             // If progressive or trap bit flag is set, make item progressive.
             if (ap_item.flags & (1 << 0) || ap_item.flags & (1 << 2)) {
                 itemLocationTable[rc].SetPlacedItem(RG_ARCHIPELAGO_ITEM_PROGRESSIVE);
-            // If useful bit flag is on, make item useful.
+                // If useful bit flag is on, make item useful.
             } else if (ap_item.flags & (1 << 1)) {
                 itemLocationTable[rc].SetPlacedItem(RG_ARCHIPELAGO_ITEM_USEFUL);
-            // None of these flags being present means it's junk.
+                // None of these flags being present means it's junk.
             } else {
                 itemLocationTable[rc].SetPlacedItem(RG_ARCHIPELAGO_ITEM_JUNK);
             }

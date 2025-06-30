@@ -72,11 +72,11 @@ void ArchipelagoSettingsWindow::DrawElement() {
             ArchipelagoClient::GetInstance().OnItemReceived(apItem);
         }
         ImGui::SameLine();
-        if (UIWidgets::Button("Send Game Won",
-                              UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
+        if (UIWidgets::Button("Send Game Won", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
             ArchipelagoClient::GetInstance().SendGameWon();
         }
-        if (UIWidgets::Button("Get Mido br chest", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
+        if (UIWidgets::Button("Get Mido br chest",
+                              UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
             ArchipelagoClient::GetInstance().QueueExternalCheck(16711707);
         }
     }
@@ -96,7 +96,6 @@ void ArchipelagoSettingsWindow::DrawElement() {
 
 void ArchipelagoSettingsWindow::InitElement() {
     SaveManager::Instance->AddLoadFunction("archipelagoData", 1, LoadArchipelagoData);
-    SaveManager::Instance->AddSaveFunction("archipelagoData", 1, SaveArchipelagoData, true,
-                                           SECTION_PARENT_NONE);
+    SaveManager::Instance->AddSaveFunction("archipelagoData", 1, SaveArchipelagoData, true, SECTION_PARENT_NONE);
     SaveManager::Instance->AddInitFunction(InitArchipelagoData);
 }

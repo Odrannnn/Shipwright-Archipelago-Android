@@ -3482,7 +3482,7 @@ ShopItemIdentity Randomizer::IdentifyShopItem(s32 sceneNum, u8 slotIndex) {
 
     if (randoCheck != RC_UNKNOWN_CHECK) {
         RandomizerGet randoGet = Rando::Context::GetInstance()->GetItemLocation(randoCheck)->GetPlacedRandomizerGet();
-        
+
         if (randoGet != RG_NONE) {
             shopItemIdentity.randomizerInf = rcToRandomizerInf[randoCheck];
             shopItemIdentity.randomizerCheck = randoCheck;
@@ -5350,10 +5350,11 @@ CustomMessage Randomizer::GetGoronMessage(u16 index) {
 void CreateArchipelagoItemMessage() {
     CustomMessageManager* customMessageManager = CustomMessageManager::Instance;
     customMessageManager->AddCustomMessageTable(Randomizer::archipelagoItemsTableID);
-        customMessageManager->CreateMessage(
+    customMessageManager->CreateMessage(
         Randomizer::archipelagoItemsTableID, 0,
-            CustomMessage("You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!", "You found \x05\x06[[apitem]]\x05\x00 for \x05\x05[[applayer]]\x05\x00!",
-                          "You found \x05\x06[[apitem]]\x05\x00 for \x05\x05[[applayer]]\x05\x00!"));
+        CustomMessage("You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
+                      "You found \x05\x06[[apitem]]\x05\x00 for \x05\x05[[applayer]]\x05\x00!",
+                      "You found \x05\x06[[apitem]]\x05\x00 for \x05\x05[[applayer]]\x05\x00!"));
 }
 
 CustomMessage Randomizer::GetArchipelagoItemMessage(int16_t randomizerGet, uint32_t randomizerCheck) {
@@ -5370,7 +5371,8 @@ CustomMessage Randomizer::GetArchipelagoItemMessage(int16_t randomizerGet, uint3
     }
 
     messageEntry.Replace("[[apcolor]]", itemColor);
-    messageEntry.Replace("[[apitem]]", std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].itemName));
+    messageEntry.Replace("[[apitem]]",
+                         std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].itemName));
     messageEntry.Replace("[[applayer]]",
                          std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].playerName));
     messageEntry.AutoFormat();

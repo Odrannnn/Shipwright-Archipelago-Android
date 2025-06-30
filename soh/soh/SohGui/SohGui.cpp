@@ -201,7 +201,7 @@ void SetupGuiElements() {
                                                                              "Archipelago Settings", ImVec2(600, 450));
     gui->AddGuiWindow(mArchipelagoSettingsWindow);
     mArchipelagoConsoleWindow = std::make_shared<ArchipelagoConsoleWindow>(CVAR_WINDOW("ArchipelagoConsoleWindow"),
-                                                                             "Archipelago Console", ImVec2(600, 550));
+                                                                           "Archipelago Console", ImVec2(600, 550));
     gui->AddGuiWindow(mArchipelagoConsoleWindow);
     mModalWindow = std::make_shared<SohModalWindow>(CVAR_WINDOW("ModalWindow"), "Modal Window");
     gui->AddGuiWindow(mModalWindow);

@@ -290,15 +290,15 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
     SceneID scene = loc->GetScene();
 
     bool inSameArea = false;
-    if(gPlayState != nullptr) {
+    if (gPlayState != nullptr) {
         inSameArea = scene == gPlayState->sceneNum;
     }
 
     std::string logMessage = "";
 
-    switch(loc->GetCollectionCheck().type) {
+    switch (loc->GetCollectionCheck().type) {
         case SPOILER_CHK_CHEST:
-            if(inSameArea) {
+            if (inSameArea) {
                 Flags_SetTreasure(gPlayState, flagID);
             } else {
                 gSaveContext.sceneFlags[scene].chest |= 1 << flagID;
@@ -306,7 +306,7 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
             }
             break;
         case SPOILER_CHK_COLLECTABLE:
-            if(inSameArea) {
+            if (inSameArea) {
                 Flags_SetCollectible(gPlayState, flagID);
             } else {
                 gSaveContext.sceneFlags[scene].collect |= 1 << flagID;
@@ -325,11 +325,12 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
             Flags_SetInfTable(flagID);
             break;
         case SPOILER_CHK_GOLD_SKULLTULA:
-            logMessage = "[LOG] Externaly checked golden skultulla: " + std::to_string(loc->GetActorParams()) + ", " + std::to_string(flagID);
+            logMessage = "[LOG] Externaly checked golden skultulla: " + std::to_string(loc->GetActorParams()) + ", " +
+                         std::to_string(flagID);
             ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
             SET_GS_FLAGS((flagID & 0x1F00) >> 8, flagID & 0xFF);
             break;
-        case SPOILER_CHK_GRAVEDIGGER:   //This enum is used nowhere in code, so i'll leave it as nothing for now
+        case SPOILER_CHK_GRAVEDIGGER: // This enum is used nowhere in code, so i'll leave it as nothing for now
         case SPOILER_CHK_NONE:
             // do Nothing
             break;
@@ -393,7 +394,7 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
                   (getItemEntry.getItemCategory == ITEM_CATEGORY_JUNK ||
                    getItemEntry.getItemCategory == ITEM_CATEGORY_SKULLTULA_TOKEN ||
                    getItemEntry.getItemCategory == ITEM_CATEGORY_LESSER))))) {
-            
+
             Item_DropCollectible(gPlayState, &spawnPos, static_cast<int16_t>(ITEM00_SOH_GIVE_ITEM_ENTRY | 0x8000));
 
             isGiSkipped = 1;
@@ -1097,8 +1098,8 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                     });
                 } else if (item00->itemEntry.modIndex == MOD_RANDOMIZER) {
                     if (!(item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE ||
-                        item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
-                        item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
+                          item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
+                          item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
                         Notification::Emit({
                             .message = "You found ",
                             .suffix = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
@@ -2523,7 +2524,7 @@ void RandomizerRegisterHooks() {
             RandomizerOnKaleidoscopeUpdateHandler);
         onCuccoOrChickenHatchHook = GameInteractor::Instance->RegisterGameHook<GameInteractor::OnCuccoOrChickenHatch>(
             RandomizerOnCuccoOrChickenHatch);
-        
+
         COND_HOOK(GameInteractor::OnArchipelagoItemReceived, IS_ARCHIPELAGO, ArchipelagoOnReceiveItem);
         COND_HOOK(GameInteractor::OnRandomizerExternalCheck, IS_ARCHIPELAGO, RandomizerOnExternalCheckHandler)
 

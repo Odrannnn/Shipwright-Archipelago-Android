@@ -47,8 +47,8 @@ void ArchipelagoConsoleWindow::DrawElement() {
     if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, 400), ImGuiChildFlags_AlwaysUseWindowPadding,
                           ImGuiWindowFlags_HorizontalScrollbar)) {
 
-        for(const std::vector<ArchipelagoClient::ColoredTextNode>& line : Items) {
-            for(const ArchipelagoClient::ColoredTextNode& node : line) {
+        for (const std::vector<ArchipelagoClient::ColoredTextNode>& line : Items) {
+            for (const ArchipelagoClient::ColoredTextNode& node : line) {
                 ImGui::PushStyleColor(ImGuiCol_Text, getColorVal(node.color));
                 ImGui::TextUnformatted(node.text.c_str());
                 ImGui::SameLine();
@@ -69,56 +69,55 @@ void ArchipelagoConsoleWindow::DrawElement() {
     static char textEntryBuf[1024];
     static bool keepFocus = false;
 
-    if(keepFocus) {
+    if (keepFocus) {
         ImGui::SetKeyboardFocusHere();
         keepFocus = false;
     }
-    if(ImGui::InputText("##AP_MessageField", textEntryBuf, 1023, ImGuiInputTextFlags_EnterReturnsTrue)) {
+    if (ImGui::InputText("##AP_MessageField", textEntryBuf, 1023, ImGuiInputTextFlags_EnterReturnsTrue)) {
         ArchipelagoClient::GetInstance().SendMessageToConsole(std::string(textEntryBuf));
         textEntryBuf[0] = '\0';
         keepFocus = true;
     }
-    //keepFocus = ImGui::IsItemActive();
+    // keepFocus = ImGui::IsItemActive();
     ImGui::SameLine();
-    if(ImGui::Button("Send")) {
+    if (ImGui::Button("Send")) {
         ArchipelagoClient::GetInstance().SendMessageToConsole(std::string(textEntryBuf));
         textEntryBuf[0] = '\0';
         keepFocus = true;
     }
-    
-    
+
     ImGui::PopStyleColor();
     ImGui::PopStyleVar(4);
 };
 
-ImVec4 getColorVal(const std::string& color) {  // TODO change color strings to an enum
+ImVec4 getColorVal(const std::string& color) { // TODO change color strings to an enum
     if (color == "ERROR") {
         return ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
-    } else if(color =="LOG") {
+    } else if (color == "LOG") {
         return ImVec4(0.7f, 0.7f, 1.0f, 1.0f);
-    } else if(color == "black") {
+    } else if (color == "black") {
         return ImVec4(0.000f, 0.000f, 0.000f, 1.00f);
-    } else if(color == "red") {
+    } else if (color == "red") {
         return ImVec4(0.933f, 0.000f, 0.000f, 1.00f);
-    } else if(color == "green") {
+    } else if (color == "green") {
         return ImVec4(0.000f, 1.000f, 0.498f, 1.00f);
-    } else if(color == "yellow") {
+    } else if (color == "yellow") {
         return ImVec4(0.980f, 0.980f, 0.824f, 1.00f);
-    } else if(color == "blue") {
+    } else if (color == "blue") {
         return ImVec4(0.392f, 0.584f, 0.929f, 1.00f);
-    } else if(color == "cyan") {
+    } else if (color == "cyan") {
         return ImVec4(0.000f, 0.933f, 0.933f, 1.00f);
-    } else if(color == "magenta") {
+    } else if (color == "magenta") {
         return ImVec4(0.933f, 0.000f, 0.933f, 1.00f);
-    } else if(color == "slateblue") {
+    } else if (color == "slateblue") {
         return ImVec4(0.427f, 0.545f, 0.910f, 1.00f);
-    } else if(color == "plum") {
+    } else if (color == "plum") {
         return ImVec4(0.686f, 0.600f, 0.937f, 1.00f);
-    } else if(color == "salmon") {
+    } else if (color == "salmon") {
         return ImVec4(0.980f, 0.502f, 0.447f, 1.00f);
-    } else if(color == "white") {
+    } else if (color == "white") {
         return ImVec4(0.93f, 0.93f, 0.93f, 1.00f);
-    } else if(color == "orange") {
+    } else if (color == "orange") {
         return ImVec4(1.000, 0.467f, 0.000f, 1.000f);
     }
     return ImVec4(0.93f, 0.93f, 0.93f, 1.00f);
