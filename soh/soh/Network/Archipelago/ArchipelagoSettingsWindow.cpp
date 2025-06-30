@@ -32,6 +32,7 @@ void ArchipelagoSettingsWindow::DrawElement() {
     UIWidgets::CVarInputString("##ArchipelagoPassword", CVAR_REMOTE_ARCHIPELAGO("Password"),
                                UIWidgets::InputOptions()
                                    .Color(THEME_COLOR)
+                                   .IsSecret(true)
                                    .Size(ImVec2(ImGui::GetFontSize() * 15, 0))
                                    .LabelPosition(UIWidgets::LabelPositions::None));
     ImGui::PopStyleColor();

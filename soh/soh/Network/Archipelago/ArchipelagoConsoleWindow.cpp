@@ -10,7 +10,7 @@ bool autoScroll = true;
 using namespace UIWidgets;
 
 void ArchipelagoConsole_SendMessage(const char* fmt, bool debugMessage, ...) {
-    if (debugMessage && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DebugEnabled"), 0) == 0) {
+    if (debugMessage && !CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DebugEnabled"), 0)) {
         return;
     }
     char buf[1024];
@@ -73,14 +73,20 @@ void ArchipelagoConsoleWindow::DrawElement() {
         ImGui::SetKeyboardFocusHere();
         keepFocus = false;
     }
+
+    PushStyleInput(THEME_COLOR);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 8.0f));
     if (ImGui::InputText("##AP_MessageField", textEntryBuf, 1023, ImGuiInputTextFlags_EnterReturnsTrue)) {
         ArchipelagoClient::GetInstance().SendMessageToConsole(std::string(textEntryBuf));
         textEntryBuf[0] = '\0';
         keepFocus = true;
     }
-    // keepFocus = ImGui::IsItemActive();
+    ImGui::PopStyleVar();
+    PopStyleInput();
+    
     ImGui::SameLine();
-    if (ImGui::Button("Send")) {
+
+    if (UIWidgets::Button("Send", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
         ArchipelagoClient::GetInstance().SendMessageToConsole(std::string(textEntryBuf));
         textEntryBuf[0] = '\0';
         keepFocus = true;

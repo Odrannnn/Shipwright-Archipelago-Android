@@ -1053,6 +1053,7 @@ void FileChoose_UpdateRandomizer() {
     }
 
     if (!SpoilerFileExists(CVarGetString(CVAR_GENERAL("SpoilerLog"), "")) &&
+        !fileSelectArchipelagoLoaded &&
         !CVarGetInteger(CVAR_RANDOMIZER_SETTING("DontGenerateSpoiler"), 0)) {
         CVarSetString(CVAR_GENERAL("SpoilerLog"), "");
         Randomizer_SetSpoilerLoaded(false);

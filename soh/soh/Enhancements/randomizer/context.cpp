@@ -349,7 +349,7 @@ void Context::SetSpoilerLoaded(const bool spoilerLoaded) {
 
 void Context::AddReceivedArchipelagoItem(const RandomizerGet item) {
     mAPreceiveQueue.emplace(item);
-    std::string logMessage = "[LOG] Item Pushed: " + item;
+    std::string logMessage = "[LOG] Item Pushed: " + std::to_string(item);
     ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
 }
 
@@ -428,8 +428,10 @@ void Context::ParseArchipelago() {
     ArchipelagoClient& ap_client = ArchipelagoClient::GetInstance();
     ParseArchipelagoItemsLocations(ap_client.GetScoutedItems());
     ParseArchipelagoOptions(ap_client.GetSlotData());
+    mEntranceShuffler->UnshuffleAllEntrances();
+    mDungeons->ResetAllDungeons();
+    mTrials->RemoveAllTrials();
 
-    // lets see if counting AP_loaded as spoiler loaded does the trick
     mSpoilerLoaded = true;
     mSeedGenerated = false;
 }
