@@ -157,6 +157,7 @@ void Randomizer_SetSpoilerLoaded(bool spoilerLoaded);
 uint8_t Randomizer_GenerateRandomizer();
 void Randomizer_ShowRandomizerMenu();
 void Archipelago_Connect();
+void Archipelago_Disconnect();
 void Archipelago_ShowArchipelagoMenu();
 int CustomMessage_RetrieveIfExists(PlayState* play);
 void Overlay_DisplayText(float duration, const char* text);

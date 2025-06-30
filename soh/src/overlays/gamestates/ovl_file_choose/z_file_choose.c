@@ -1699,6 +1699,8 @@ void FileChoose_RotateToMain(GameState* thisx) {
 void FileChoose_RotateToQuest(GameState* thisx) {
     FileChooseContext* this = (FileChooseContext*)thisx;
 
+    Archipelago_Disconnect();
+
     if (this->configMode == CM_NAME_ENTRY_TO_QUEST_MENU || this->configMode == CM_BOSS_RUSH_TO_QUEST ||
         this->configMode == CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST ||
         this->configMode == CM_ARCHIPELAGO_SETTINGS_TO_QUEST) {
@@ -1859,6 +1861,8 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
 
 void FileChoose_StartArchipelagoMenu(GameState* thisx) {
     FileChooseContext* this = (FileChooseContext*)thisx;
+    Archipelago_Disconnect();
+    fileSelectArchipelagoLoaded = false;
 
     this->logoAlpha -= 25;
     this->archipelagoUIAlpha = 0;
@@ -3163,7 +3167,9 @@ void FileChoose_ConfigModeDraw(GameState* thisx) {
     if (this->configMode != CM_NAME_ENTRY && this->configMode != CM_START_NAME_ENTRY &&
         this->configMode != CM_QUEST_MENU && this->configMode != CM_NAME_ENTRY_TO_QUEST_MENU &&
         this->configMode != CM_RANDOMIZER_SETTINGS_MENU &&
-        this->configMode != CM_NAME_ENTRY_TO_RANDOMIZER_SETTINGS_MENU) {
+        this->configMode != CM_NAME_ENTRY_TO_RANDOMIZER_SETTINGS_MENU &&
+        this->configMode != CM_ARCHIPELAGO_SETTINGS_MENU &&
+        this->configMode != CM_NAME_ENTRY_TO_ARCHIPELAGO_SETTINGS_MENU) {
         gDPPipeSync(POLY_OPA_DISP++);
         gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
         gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, this->windowColor[0], this->windowColor[1], this->windowColor[2],
@@ -3273,7 +3279,9 @@ void FileChoose_ConfigModeDraw(GameState* thisx) {
         this->configMode == CM_NAME_ENTRY_TO_QUEST_MENU || this->configMode == CM_ROTATE_TO_BOSS_RUSH_MENU ||
         this->configMode == CM_ROTATE_TO_RANDOMIZER_SETTINGS_MENU ||
         this->configMode == CM_ROTATE_TO_ARCHIPELAGO_MENU ||
-        this->configMode == CM_NAME_ENTRY_TO_RANDOMIZER_SETTINGS_MENU) {
+        this->configMode == CM_NAME_ENTRY_TO_RANDOMIZER_SETTINGS_MENU ||
+        this->configMode == CM_ARCHIPELAGO_SETTINGS_MENU ||
+        this->configMode == CM_NAME_ENTRY_TO_ARCHIPELAGO_SETTINGS_MENU) {
         // window
         gDPPipeSync(POLY_OPA_DISP++);
         gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);

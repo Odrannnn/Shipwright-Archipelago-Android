@@ -206,6 +206,11 @@ bool ArchipelagoClient::StartClient() {
     return true;
 }
 
+bool ArchipelagoClient::StopClient() {
+    disconnecting = true;
+    return true;
+}
+
 void ArchipelagoClient::GameLoaded() {
     if(apClient == nullptr) {
         return;
@@ -387,6 +392,7 @@ void ArchipelagoClient::Poll() {
         apClient->reset();
         apClient = nullptr;
         disconnecting = false;
+        CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0); // disconnected
         return;
     }
 
