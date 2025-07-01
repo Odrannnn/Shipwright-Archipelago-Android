@@ -9,10 +9,7 @@ bool autoScroll = true;
 
 using namespace UIWidgets;
 
-void ArchipelagoConsole_SendMessage(const char* fmt, bool debugMessage, ...) {
-    if (debugMessage && !CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DebugEnabled"), 0)) {
-        return;
-    }
+void ArchipelagoConsole_SendMessage(const char* fmt, ...) {
     char buf[1024];
     va_list args;
     va_start(args, fmt);

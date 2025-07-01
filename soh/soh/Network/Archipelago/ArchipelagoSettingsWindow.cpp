@@ -40,47 +40,10 @@ void ArchipelagoSettingsWindow::DrawElement() {
 
     if (UIWidgets::Button("Connect", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
         bool success = AP_client.StartClient();
-        ArchipelagoConsole_SendMessage("[LOG] Trying to connect...", true);
     }
 
     ImGui::SameLine();
     ImGui::Text(ArchipelagoClient::GetInstance().GetConnectionStatus());
-
-    UIWidgets::CVarCheckbox(
-        "Debug Enabled", CVAR_REMOTE_ARCHIPELAGO("DebugEnabled"),
-        UIWidgets::CheckboxOptions().Color(THEME_COLOR).Tooltip("Enable Archipelago debug tools and extra logging."));
-
-    // Temporary developer helpers
-    UIWidgets::Separator();
-    if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DebugEnabled"), 0)) {
-        ImGui::SeparatorText("Developer Tools");
-        if (UIWidgets::Button("Scout", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
-            AP_client.StartLocationScouts();
-        }
-        ImGui::SameLine();
-        if (UIWidgets::Button("Link up", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
-            CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("Connected"), 1);
-        }
-        ImGui::SameLine();
-        if (UIWidgets::Button("Give Blue Rupee",
-                              UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
-            ArchipelagoClient::ApItem apItem;
-            apItem.itemName = "Blue Rupee";
-            apItem.locationName = "Nowhere";
-            apItem.playerName = "Nobody";
-            apItem.flags = 0b001;
-            apItem.index = 999999;
-            ArchipelagoClient::GetInstance().OnItemReceived(apItem);
-        }
-        ImGui::SameLine();
-        if (UIWidgets::Button("Send Game Won", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
-            ArchipelagoClient::GetInstance().SendGameWon();
-        }
-        if (UIWidgets::Button("Get Mido br chest",
-                              UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
-            ArchipelagoClient::GetInstance().QueueExternalCheck(16711707);
-        }
-    }
 
     static bool sArchipelagoTexturesLoaded = false;
     if (!sArchipelagoTexturesLoaded) {

@@ -220,8 +220,6 @@ static RandomizerCheck randomizerQueuedCheck = RC_UNKNOWN_CHECK;
 static GetItemEntry randomizerQueuedItemEntry = GET_ITEM_NONE;
 
 void ArchipelagoOnReceiveItem(const int32_t item) {
-    std::string logMessage = "[LOG] Receive item handler called: " + item;
-    ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
     randomizerQueuedChecks.push(RC_ARCHIPELAGO_RECEIVED_ITEM);
     Rando::Context::GetInstance()->AddReceivedArchipelagoItem(static_cast<RandomizerGet>(item));
 }
@@ -325,9 +323,6 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
             Flags_SetInfTable(flagID);
             break;
         case SPOILER_CHK_GOLD_SKULLTULA:
-            logMessage = "[LOG] Externaly checked golden skultulla: " + std::to_string(loc->GetActorParams()) + ", " +
-                         std::to_string(flagID);
-            ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
             SET_GS_FLAGS((flagID & 0x1F00) >> 8, flagID & 0xFF);
             break;
         case SPOILER_CHK_GRAVEDIGGER: // This enum is used nowhere in code, so i'll leave it as nothing for now

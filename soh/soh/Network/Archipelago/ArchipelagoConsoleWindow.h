@@ -18,7 +18,7 @@ class ArchipelagoConsoleWindow final : public Ship::GuiWindow {
     void UpdateElement() override{};
 };
 
-void ArchipelagoConsole_SendMessage(const char* fmt, bool debugMessage = false, ...);
+void ArchipelagoConsole_SendMessage(const char* fmt, ...);
 void ArchipelagoConsole_PrintJson(const std::vector<ArchipelagoClient::ColoredTextNode> nodes);
 ImVec4 getColorVal(const std::string& color);
 

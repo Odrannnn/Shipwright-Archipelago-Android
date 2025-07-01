@@ -48,13 +48,13 @@ bool ArchipelagoClient::StartClient() {
         new APClient(uuid, AP_Client_consts::AP_GAME_NAME,
                      CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281"), "cacert.pem"));
 
-    CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 1); // connecting
+    CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 1); // Connecting
 
     apClient->set_socket_error_handler([&](const std::string& msg) {
         retries++;
         if(retries > AP_Client_consts::MAX_RETRIES) {
             ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server");
-            CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // connection error
+            CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // Connection error
             disconnecting = true;
             return;
         }
@@ -122,16 +122,8 @@ bool ArchipelagoClient::StartClient() {
             apItem.flags = item.flags;
             apItem.index = item.index;
             scoutedItems.push_back(apItem);
-
-            const std::string itemName = apItem.itemName;
-            const std::string playerName = apItem.playerName;
-            const std::string locationName = apItem.locationName;
-            std::string logMessage =
-                "[LOG] Location scouted: " + itemName + " for " + playerName + " in location " + locationName;
-            ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
         }
 
-        ArchipelagoConsole_SendMessage("[LOG] Scouting finished.", true);
         CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 4); // locations scouted
     }); // todo maybe move these functions to a lambda, since they don't have to be static anymore
 
@@ -242,8 +234,6 @@ void ArchipelagoClient::GameLoaded() {
         return;
     }
 
-    ArchipelagoConsole_SendMessage("[LOG] Synching Items and Locations.", true);
-
     SynchItems();
     SynchSentLocations();
     SynchReceivedLocations();
@@ -264,7 +254,6 @@ void ArchipelagoClient::StartLocationScouts() {
 
 void ArchipelagoClient::SynchItems() {
     // Send a Synch request to get any items we may have missed
-    ArchipelagoConsole_SendMessage("[LOG] Sending synch request", true);
     apClient->Sync();
 }
 
@@ -278,9 +267,6 @@ void ArchipelagoClient::SynchSentLocations() {
             checkedLocations.emplace_back(apLocation);
         }
     }
-    std::string locationLog =
-        "[LOG] Synching " + std::to_string(checkedLocations.size()) + " checks already found in game";
-    ArchipelagoConsole_SendMessage(locationLog.c_str(), true);
 
     apClient->LocationChecks(checkedLocations);
 }
@@ -297,7 +283,7 @@ void ArchipelagoClient::QueueExternalCheck(const int64_t apLocation) {
     const uint32_t RC = static_cast<uint32_t>(Rando::StaticData::locationNameToEnum[checkName]);
 
     if (RC == RC_UNKNOWN_CHECK) {
-        ArchipelagoConsole_SendMessage("[ERROR] Attempting to queue RC_UNKOWN_CHECK, skipping", false);
+        ArchipelagoConsole_SendMessage("[ERROR] Attempting to queue an unknown location (RC_UNKOWN_CHECK), skipping.");
         return;
     }
 
@@ -305,9 +291,6 @@ void ArchipelagoClient::QueueExternalCheck(const int64_t apLocation) {
     if (Rando::Context::GetInstance()->GetItemLocation(RC)->HasObtained()) {
         return;
     }
-
-    std::string locationLog = "[LOG] Externaly checking: " + checkName;
-    ArchipelagoConsole_SendMessage(locationLog.c_str(), true);
 
     GameInteractor_ExecuteOnRandomizerExternalCheck(RC);
 }
@@ -322,7 +305,7 @@ bool ArchipelagoClient::IsConnected() {
 
 void ArchipelagoClient::CheckLocation(RandomizerCheck sohCheckId) {
     if (sohCheckId == RC_UNKNOWN_CHECK) {
-        ArchipelagoConsole_SendMessage("[ERROR] trying to send RC_UNKNOWN_CHECK, skipping", false);
+        ArchipelagoConsole_SendMessage("[ERROR] Trying to queue an unknown location (RC_UNKOWN_CHECK), skipping");
         return;
     }
 
@@ -336,36 +319,27 @@ void ArchipelagoClient::CheckLocation(RandomizerCheck sohCheckId) {
     }
 
     int64_t apItemId = apClient->get_location_id(std::string(apName));
-    std::string logMessage = "[LOG] Checked: " + apName + "(" + std::to_string(apItemId) + "), sending to AP server";
-    ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
-
     apClient->LocationChecks({ apItemId });
 }
 
 void ArchipelagoClient::OnItemReceived(const ApItem apItem) {
+
+    // Don't queue up any items when we aren't in game
+    // Any Items missed this way will get synched when we load the save
     if (!GameInteractor::IsSaveLoaded(true)) {
-        // Don't queue up any items when we aren't in game
-        // Any Items missed this way will get synched when we load the save
         return;
     }
 
-    std::string logMessage = "[LOG] Received " + apItem.itemName;
-    ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
-
+    // Skip queueing any items we already have
     if (apItem.index < gSaveContext.ship.quest.data.archipelago.lastReceivedItemIndex) {
-        // Skip queueing any items we already have
-        std::string logMessage = "[LOG] Skipping giving " + apItem.itemName + ". We received this previously.";
-        ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
         return;
     }
 
-    // add item to the queue
+    // Add item to the queue
     receiveQueue.push(apItem);
 }
 
 void ArchipelagoClient::QueueItem(const ApItem item) {
-    std::string logMessage = "[LOG] Giving " + item.itemName;
-    ArchipelagoConsole_SendMessage(logMessage.c_str(), true);
     const RandomizerGet RG = Rando::StaticData::itemNameToEnum[item.itemName];
     if (RG == RG_NONE) {
         return;
@@ -386,13 +360,12 @@ void ArchipelagoClient::SendMessageToConsole(const std::string message) {
     // local commands not implemented yet
     if (message.starts_with("/")) {
         ArchipelagoConsole_SendMessage(
-            "Ship of Harkinian does not have any local commands yet.\nUse \"!help\" to see server commands instead",
-            false);
+            "Ship of Harkinian does not have any local commands.\nUse \"!help\" to see server commands instead.");
         return;
     }
 
     if (apClient == nullptr) {
-        ArchipelagoConsole_SendMessage("[ERROR] Could not send message. Please Connect to your slot.", false);
+        ArchipelagoConsole_SendMessage("[ERROR] Could not send message. Please Connect to your slot.");
         return;
     }
 
