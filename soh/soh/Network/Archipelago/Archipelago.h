@@ -15,7 +15,7 @@ static constexpr int MAX_PLAYER_NAME_LENGHT = 17;
 static constexpr int MAX_PASSWORD_LENGTH = 32;
 
 static constexpr char const* AP_GAME_NAME = "Ship of Harkinian";
-static constexpr int MAX_RETRIES = 6;
+static constexpr int MAX_RETRIES = 3;
 } // namespace AP_Client_consts
 
 class ArchipelagoClient {
@@ -47,7 +47,7 @@ class ArchipelagoClient {
     // getters
     const std::string GetSlotName() const;
 
-    const char* GetConnectionStatus();
+    uint8_t GetConnectionStatus();
     const nlohmann::json GetSlotData();
     const std::vector<ApItem>& GetScoutedItems();
 

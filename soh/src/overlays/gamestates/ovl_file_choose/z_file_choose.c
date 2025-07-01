@@ -1806,7 +1806,6 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
 
     if (CHECK_BTN_ALL(input->press.button, BTN_A)) {
         if (this->archipelagoIndex == ASM_START_ARCHIPELAGO) {
-            uint16_t testnumber = CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0);
             // Only continue when connected to a slot and locations are scouted.
             if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4) {
                 Audio_PlaySoundGeneral(NA_SE_SY_FSEL_ERROR, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,

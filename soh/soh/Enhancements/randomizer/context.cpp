@@ -421,9 +421,9 @@ void Context::ParseArchipelago() {
     mSeedGenerated = false;
     mSpoilerLoaded = false;
 
-    ArchipelagoClient& ap_client = ArchipelagoClient::GetInstance();
-    ParseArchipelagoItemsLocations(ap_client.GetScoutedItems());
-    ParseArchipelagoOptions(ap_client.GetSlotData());
+    ArchipelagoClient& apClient = ArchipelagoClient::GetInstance();
+    ParseArchipelagoItemsLocations(apClient.GetScoutedItems());
+    ParseArchipelagoOptions(apClient.GetSlotData());
     mEntranceShuffler->UnshuffleAllEntrances();
     mDungeons->ResetAllDungeons();
     mTrials->RemoveAllTrials();

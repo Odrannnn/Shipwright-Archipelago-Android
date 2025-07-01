@@ -2233,14 +2233,6 @@ extern "C" void Randomizer_ShowRandomizerMenu() {
     SohGui::ShowRandomizerSettingsMenu();
 }
 
-extern "C" void Archipelago_Connect() {
-    ArchipelagoClient::GetInstance().StartClient();
-}
-
-extern "C" void Archipelago_Disconnect() {
-    ArchipelagoClient::GetInstance().StopClient();
-}
-
 extern "C" void Archipelago_ShowArchipelagoMenu() {
     SohGui::ShowArchipelagoSettingsMenu();
 }

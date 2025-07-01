@@ -52,8 +52,8 @@ bool ArchipelagoClient::StartClient() {
 
     apClient->set_socket_error_handler([&](const std::string& msg) {
         retries++;
-        if(retries > AP_Client_consts::MAX_RETRIES) {
-            ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server");
+        if(retries >= AP_Client_consts::MAX_RETRIES) {
+            ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server after several tries.\nAre the entered server address and slot name correct?");
             CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // Connection error
             disconnecting = true;
             return;
@@ -418,31 +418,11 @@ const std::vector<ArchipelagoClient::ApItem>& ArchipelagoClient::GetScoutedItems
     return scoutedItems;
 }
 
-const char* ArchipelagoClient::GetConnectionStatus() {
+uint8_t ArchipelagoClient::GetConnectionStatus() {
     if (!apClient) {
-        return "Disconnected!";
-    }
-
-    APClient::State clientStatus = apClient->get_state();
-
-    switch (clientStatus) {
-        case APClient::State::DISCONNECTED: {
-            return "Disconnected!";
-        }
-        case APClient::State::SOCKET_CONNECTING: {
-            return "Socket Connecting!";
-        }
-        case APClient::State::SOCKET_CONNECTED: {
-            return "Socket Connected!";
-        }
-        case APClient::State::ROOM_INFO: {
-            return "Room info Received!";
-        }
-        case APClient::State::SLOT_CONNECTED: {
-            return "Slot Connected!";
-        }
-        default:
-            return "";
+        return (uint8_t)APClient::State::DISCONNECTED;
+    } else {
+        return (uint8_t)apClient->get_state();
     }
 }
 

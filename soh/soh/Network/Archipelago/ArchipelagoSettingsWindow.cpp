@@ -7,7 +7,7 @@
 #include "soh/SaveManager.h"
 
 void ArchipelagoSettingsWindow::DrawElement() {
-    ArchipelagoClient& AP_client = ArchipelagoClient::GetInstance();
+    ArchipelagoClient& apClient = ArchipelagoClient::GetInstance();
 
     ImGui::SeparatorText("Connection info");
 
@@ -38,12 +38,36 @@ void ArchipelagoSettingsWindow::DrawElement() {
     ImGui::PopStyleColor();
     UIWidgets::PopStyleCombobox();
 
-    if (UIWidgets::Button("Connect", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
-        bool success = AP_client.StartClient();
+    if (!apClient.IsConnected()) {
+        if (UIWidgets::Button("Connect", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
+            bool success = apClient.StartClient();
+        }
+    } else {
+        if (UIWidgets::Button("Disconnect", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {
+            bool success = apClient.StopClient();
+        }
     }
 
     ImGui::SameLine();
-    ImGui::Text(ArchipelagoClient::GetInstance().GetConnectionStatus());
+
+    uint8_t clientStatus = apClient.GetConnectionStatus();
+    switch (clientStatus) {
+        case 1:
+        case 2:
+        case 3:
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
+            ImGui::Text("Connecting...");
+            break;
+        case 4:
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 1.0f, 0.5f, 1.0f));
+            ImGui::Text("Connected");
+            break;
+        default:
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.5f, 0.5f, 1.0f));
+            ImGui::Text("Not Connected");
+            break;
+    }
+    ImGui::PopStyleColor();
 
     static bool sArchipelagoTexturesLoaded = false;
     if (!sArchipelagoTexturesLoaded) {
