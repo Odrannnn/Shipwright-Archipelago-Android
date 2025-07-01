@@ -1031,7 +1031,6 @@ void DrawSeedHashSprites(FileChooseContext* this) {
 u8 generating;
 int retries = 0;
 bool fileSelectSpoilerFileLoaded = false;
-bool fileSelectArchipelagoLoaded = false;
 
 void FileChoose_UpdateRandomizer() {
     if (CVarGetInteger(CVAR_GENERAL("RandoGenerating"), 0) != 0 && generating == 0) {
@@ -1053,7 +1052,6 @@ void FileChoose_UpdateRandomizer() {
     }
 
     if (!SpoilerFileExists(CVarGetString(CVAR_GENERAL("SpoilerLog"), "")) &&
-        !fileSelectArchipelagoLoaded &&
         !CVarGetInteger(CVAR_RANDOMIZER_SETTING("DontGenerateSpoiler"), 0)) {
         CVarSetString(CVAR_GENERAL("SpoilerLog"), "");
         Randomizer_SetSpoilerLoaded(false);
@@ -1083,16 +1081,6 @@ void FileChoose_UpdateRandomizer() {
             remove(fileLoc);
         }
     }
-}
-
-bool FileChoose_UpdateArchipelago() {
-    if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) == 4 && !fileSelectArchipelagoLoaded) {
-        ParseArchipelago();
-        fileSelectArchipelagoLoaded = true;
-        Audio_PlayFanfare(NA_BGM_HORSE_GOAL);
-        return true;
-    }
-    return false;
 }
 
 static s16 sLastFileChooseButtonIndex;
@@ -1710,8 +1698,6 @@ void FileChoose_RotateToMain(GameState* thisx) {
 void FileChoose_RotateToQuest(GameState* thisx) {
     FileChooseContext* this = (FileChooseContext*)thisx;
 
-    Archipelago_Disconnect();
-
     if (this->configMode == CM_NAME_ENTRY_TO_QUEST_MENU || this->configMode == CM_BOSS_RUSH_TO_QUEST ||
         this->configMode == CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST ||
         this->configMode == CM_ARCHIPELAGO_SETTINGS_TO_QUEST) {
@@ -1786,48 +1772,7 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
     FileChooseContext* this = (FileChooseContext*)thisx;
     Input* input = &this->state.input[0];
     bool dpad = CVarGetInteger(CVAR_SETTING("DpadInText"), 0);
-
-    if(FileChoose_UpdateArchipelago()) {
-        Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
-            &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
-        static u8 emptyName[] = { 0x3E, 0x3E, 0x3E, 0x3E, 0x3E, 0x3E, 0x3E, 0x3E };
-        static u8 emptyNameNES[] = { 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF };
-        static u8 linkName[] = { 0x15, 0x2C, 0x31, 0x2E, 0x3E, 0x3E, 0x3E, 0x3E };
-        static u8 linkNameNES[] = { 0xB6, 0xB3, 0xB8, 0xB5, 0xDF, 0xDF, 0xDF, 0xDF };
-        static u8 linkNameJP[] = { 0x81, 0x87, 0x61, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF };
-        u8* defaultName;
-                
-        this->prevConfigMode = this->configMode;
-        this->configMode = CM_ROTATE_TO_NAME_ENTRY;
-        this->logoAlpha = 0;
-        CVarSetInteger(CVAR_GENERAL("OnFileSelectNameEntry"), 1);
-        this->kbdButton = FS_KBD_BTN_NONE;
-        this->charPage = FS_CHAR_PAGE_ENG;
-        this->kbdX = 0;
-        this->kbdY = 0;
-        this->charIndex = 0;
-        this->charBgAlpha = 0;
-        this->newFileNameCharCount = CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) ? 4 : 0;
-        this->nameEntryBoxPosX = 120;
-        this->nameEntryBoxAlpha = 0;
-        if (ResourceMgr_GetGameRegion(0) == GAME_REGION_PAL && gSaveContext.language != LANGUAGE_JPN) {
-            defaultName = CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) ? &linkName : &emptyName;
-        } else if (gSaveContext.language == LANGUAGE_JPN) { // Japanese
-        if (CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) != 0) {
-            // Set player name to "リンク" ("Link" in Katakana, 3 characters long) when playing in Japanese.
-            defaultName = &linkNameJP;
-            this->newFileNameCharCount = 3;
-        } else {
-            defaultName = &emptyNameNES;
-        }
-            this->charPage = FS_CHAR_PAGE_HIRA; // Default to Hiragana Keyboard
-        } else {                                // GAME_REGION_NTSC
-            defaultName = CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) ? &linkNameNES : &emptyNameNES;
-        }
-        memcpy(Save_GetSaveMetaInfo(this->buttonIndex)->playerName, defaultName, 8);
-    }
     
-
     // Fade in elements after opening Archipelago Options menu
     this->archipelagoUIAlpha += 25;
     if (this->archipelagoUIAlpha > 255) {
@@ -1838,14 +1783,14 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
     if(ABS(this->stickRelY) > 30 || (dpad && CHECK_BTN_ANY(input->press.button, BTN_DDOWN | BTN_DUP))) {
         // move down
         if(this->stickRelY < -30 || (dpad && CHECK_BTN_ANY(input->press.button, BTN_DDOWN))) {
-            if((this->archipelagoIndex + 1) > ASM_CONNECT) {
-                this->archipelagoIndex = ASM_CHANGE_SETTINGS;
+            if ((this->archipelagoIndex + 1) > ASM_CHANGE_CONNECTION_INFO) {
+                this->archipelagoIndex = ASM_START_ARCHIPELAGO;
             } else {
                 this->archipelagoIndex++;
             }
         } else {
-            if(((int8_t)this->archipelagoIndex - 1) < ASM_CHANGE_SETTINGS) {
-                this->archipelagoIndex = ASM_CONNECT;
+            if (((int8_t)this->archipelagoIndex - 1) < ASM_START_ARCHIPELAGO) {
+                this->archipelagoIndex = ASM_CHANGE_CONNECTION_INFO;
             } else {
                 this->archipelagoIndex--;
             }
@@ -1860,11 +1805,55 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
     }
 
     if (CHECK_BTN_ALL(input->press.button, BTN_A)) {
-        if (this->archipelagoIndex == ASM_CONNECT) {
-            Archipelago_Connect();
-        } else if (this->archipelagoIndex == ASM_CHANGE_SETTINGS) {
+        if (this->archipelagoIndex == ASM_START_ARCHIPELAGO) {
+            uint16_t testnumber = CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0);
+            // Only continue when connected to a slot and locations are scouted.
+            if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4) {
+                Audio_PlaySoundGeneral(NA_SE_SY_FSEL_ERROR, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
+                                       &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+                return;
+            }
             Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
-                &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+                                   &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+            ParseArchipelago();
+            static u8 emptyName[] = { 0x3E, 0x3E, 0x3E, 0x3E, 0x3E, 0x3E, 0x3E, 0x3E };
+            static u8 emptyNameNES[] = { 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF };
+            static u8 linkName[] = { 0x15, 0x2C, 0x31, 0x2E, 0x3E, 0x3E, 0x3E, 0x3E };
+            static u8 linkNameNES[] = { 0xB6, 0xB3, 0xB8, 0xB5, 0xDF, 0xDF, 0xDF, 0xDF };
+            static u8 linkNameJP[] = { 0x81, 0x87, 0x61, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF };
+            u8* defaultName;
+
+            this->prevConfigMode = this->configMode;
+            this->configMode = CM_ROTATE_TO_NAME_ENTRY;
+            this->logoAlpha = 0;
+            CVarSetInteger(CVAR_GENERAL("OnFileSelectNameEntry"), 1);
+            this->kbdButton = FS_KBD_BTN_NONE;
+            this->charPage = FS_CHAR_PAGE_ENG;
+            this->kbdX = 0;
+            this->kbdY = 0;
+            this->charIndex = 0;
+            this->charBgAlpha = 0;
+            this->newFileNameCharCount = CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) ? 4 : 0;
+            this->nameEntryBoxPosX = 120;
+            this->nameEntryBoxAlpha = 0;
+            if (ResourceMgr_GetGameRegion(0) == GAME_REGION_PAL && gSaveContext.language != LANGUAGE_JPN) {
+                defaultName = CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) ? &linkName : &emptyName;
+            } else if (gSaveContext.language == LANGUAGE_JPN) { // Japanese
+                if (CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) != 0) {
+                    // Set player name to "リンク" ("Link" in Katakana, 3 characters long) when playing in Japanese.
+                    defaultName = &linkNameJP;
+                    this->newFileNameCharCount = 3;
+                } else {
+                    defaultName = &emptyNameNES;
+                }
+                this->charPage = FS_CHAR_PAGE_HIRA; // Default to Hiragana Keyboard
+            } else {                                // GAME_REGION_NTSC
+                defaultName = CVarGetInteger(CVAR_ENHANCEMENT("LinkDefaultName"), 0) ? &linkNameNES : &emptyNameNES;
+            }
+            memcpy(Save_GetSaveMetaInfo(this->buttonIndex)->playerName, defaultName, 8);
+        } else if (this->archipelagoIndex == ASM_CHANGE_CONNECTION_INFO) {
+            Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
+                                   &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
             Archipelago_ShowArchipelagoMenu();
         }
     }
@@ -1872,8 +1861,6 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
 
 void FileChoose_StartArchipelagoMenu(GameState* thisx) {
     FileChooseContext* this = (FileChooseContext*)thisx;
-    Archipelago_Disconnect();
-    fileSelectArchipelagoLoaded = false;
 
     this->logoAlpha -= 25;
     this->archipelagoUIAlpha = 0;
@@ -2866,21 +2853,8 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
         uint8_t textAlpha = this->archipelagoUIAlpha;        
 
         uint8_t textIndex = 0;
-        Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_SERVER_ADDRESS, language), 70,
-                                   (80 + (textIndex * 16)), 255, 255, 255, textAlpha, 0.8f, true);
-        textIndex++;
-        Interface_DrawTextLine(this->state.gfxCtx, CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "No Data"), 70,
-                                   (75 + (textIndex * 16)), 185, 185, 185, textAlpha, 0.8f, true);
-        
-        textIndex++;
-        Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_SLOT_NAME, language), 70,
-                                   (80 + (textIndex * 16)), 255, 255, 255, textAlpha, 0.8f, true);
-        textIndex++;
-        Interface_DrawTextLine(this->state.gfxCtx, CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), "No Data"), 70,
-                                   (75 + (textIndex * 16)), 185, 185, 185, textAlpha, 0.8f, true);
-                                   
 
-        for (uint8_t index = 0; index <= ASM_CONNECT; index++) {
+        for (uint8_t index = 0; index <= ASM_CHANGE_CONNECTION_INFO; index++) {
             uint8_t textColorR = 255;
             uint8_t textColorG = 255;
             uint8_t textColorB = 255;
@@ -2889,25 +2863,57 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
             if (this->archipelagoIndex == index) {
                 textColorB = 80;
             }
-
-            // todo, gray out text when connecting
+            
+            // If not connected, make Start Archipelago text gray.
+            if (index == ASM_START_ARCHIPELAGO && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4) {
+                textColorR = textColorG = textColorB = 100;
+            }
 
             Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(index, language), 70,
-                                   (80 + ((5 + index) * 16)), textColorR, textColorG, textColorB, textAlpha, 0.8f, true);
+                                   (80 + index * 16), textColorR, textColorG, textColorB, textAlpha, 0.8f,
+                                   true);
         }
+
+        // Server address text
+        Interface_DrawTextLine(this->state.gfxCtx,
+                               SohFileSelect_GetArchipelagoSettingText(ASM_SERVER_ADDRESS, language), 70,
+                               120, 255, 255, 255, textAlpha, 0.8f, true);
+        textIndex++;
+        Interface_DrawTextLine(this->state.gfxCtx, CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "No Data"),
+                               70, 130, 185, 185, 185, textAlpha, 0.8f, true);
+
+        // Slot name text
+        textIndex++;
+        Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_SLOT_NAME, language), 70,
+                               145, 255, 255, 255, textAlpha, 0.8f, true);
+        textIndex++;
+        Interface_DrawTextLine(this->state.gfxCtx, CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), "No Data"), 70,
+                               155, 185, 185, 185, textAlpha, 0.8f, true);
+
+        // Connection status text
+        Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_STATUS, language),
+                               70, 175, 255, 255, 255, textAlpha, 0.8f, true);
 
         switch(CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0)) {
-            case 1:
-                Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTING, language), 70,
-                    (80 + 64), 185, 185, 185, textAlpha, 0.8f, true);
+            case 0: // Not Connected
+                Interface_DrawTextLine(this->state.gfxCtx,
+                                       SohFileSelect_GetArchipelagoSettingText(ASM_NOT_CONNECTED, language), 110, 175,
+                                       255, 120, 120, textAlpha, 0.8f, true);
                 break;
-            case 2:
-                    Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTION_ERROR, language), 70,
-                    (80 + 64), 255, 100, 100, textAlpha, 0.8f, true);  
+            case 1: // Connecting
+            case 2: // Connection error, retrying
+            case 3: // Connected
+                Interface_DrawTextLine(this->state.gfxCtx,
+                                       SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTING, language), 110, 175, 185,
+                                       185, 185, textAlpha, 0.8f, true);
+                break;
+            case 4: // Connected + Locations Scouted
+                Interface_DrawTextLine(this->state.gfxCtx,
+                                       SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTED, language), 110, 175, 120,
+                                       255, 120, textAlpha, 0.8f, true);
                 break;
         }
 
-        uint16_t textOffset = 16 * (5 + this->archipelagoIndex);
         Gfx_SetupDL_39Opa(this->state.gfxCtx);
         gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
         gDPLoadTextureBlock(POLY_OPA_DISP++, gArrowCursorTex, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 24, 0,
@@ -2915,7 +2921,7 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                             G_TX_NOLOD);
         FileChoose_DrawTextRec(this->state.gfxCtx, this->stickRightPrompt.arrowColorR,
                                this->stickRightPrompt.arrowColorG, this->stickRightPrompt.arrowColorB, textAlpha, 62,
-                               (85 + textOffset), 0.42f, 0, 0, 1.0f, 1.0f);
+                               (85 + (this->archipelagoIndex * 16)), 0.42f, 0, 0, 1.0f, 1.0f);
 
     } else if (this->configMode != CM_ROTATE_TO_NAME_ENTRY && this->configMode != CM_START_BOSS_RUSH_MENU &&
                this->configMode != CM_ROTATE_TO_BOSS_RUSH_MENU && this->configMode != CM_BOSS_RUSH_TO_QUEST &&
@@ -4191,7 +4197,6 @@ void FileChoose_Init(GameState* thisx) {
     this->questType[1] = MIN_QUEST;
     this->questType[2] = MIN_QUEST;
     fileSelectSpoilerFileLoaded = false;
-    fileSelectArchipelagoLoaded = false;
     CVarSetInteger(CVAR_GENERAL("OnFileSelectNameEntry"), 0);
 
     SREG(30) = 1;

@@ -22,12 +22,14 @@ typedef enum {
 } RandomizerSettingsMenuEnums;
 
 typedef enum {
-    ASM_CHANGE_SETTINGS,
-    ASM_CONNECT,
-    ASM_CONNECTING,
-    ASM_CONNECTION_ERROR,
+    ASM_START_ARCHIPELAGO,
+    ASM_CHANGE_CONNECTION_INFO,
     ASM_SERVER_ADDRESS,
     ASM_SLOT_NAME,
+    ASM_NOT_CONNECTED,
+    ASM_CONNECTING,
+    ASM_CONNECTED,
+    ASM_STATUS,
     ASM_MAX
 } ArchipelagoSettingsMenuEnums;
 
