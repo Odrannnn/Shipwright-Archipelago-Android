@@ -329,7 +329,7 @@ typedef enum {
     /* 01 */ QUEST_MASTER,
     /* 02 */ QUEST_RANDOMIZER,
     /* 03 */ QUEST_BOSSRUSH,
-    /* 03 */ QUEST_ARCHIPELAGO,
+    /* 04 */ QUEST_ARCHIPELAGO,
 } Quest;
 
 #define IS_VANILLA (gSaveContext.ship.quest.id == QUEST_NORMAL)

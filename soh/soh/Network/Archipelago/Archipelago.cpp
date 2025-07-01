@@ -43,9 +43,23 @@ bool ArchipelagoClient::StartClient() {
     }
 
     disconnecting = false;
+    retries = 0;
     apClient = std::unique_ptr<APClient>(
         new APClient(uuid, AP_Client_consts::AP_GAME_NAME,
                      CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281"), "cacert.pem"));
+
+    CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 1); // connecting
+
+    apClient->set_socket_error_handler([&](const std::string& msg) {
+        retries++;
+        if(retries > AP_Client_consts::MAX_RETRIES) {
+            ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server");
+            CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // connection error
+            disconnecting = true;
+            return;
+        }
+        ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server, retrying...");
+    });
 
     apClient->set_room_info_handler([&]() {
         std::list<std::string> tags;
@@ -55,6 +69,7 @@ bool ArchipelagoClient::StartClient() {
     });
 
     apClient->set_slot_connected_handler([&](const nlohmann::json data) {
+        CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 3); // slot connected
         ArchipelagoConsole_SendMessage("[LOG] Connected.", true);
         ArchipelagoClient::StartLocationScouts();
 
@@ -117,6 +132,7 @@ bool ArchipelagoClient::StartClient() {
         }
 
         ArchipelagoConsole_SendMessage("[LOG] Scouting finished.", true);
+        CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 4); // locations scouted
     }); // todo maybe move these functions to a lambda, since they don't have to be static anymore
 
     apClient->set_location_checked_handler([&](const std::list<int64_t> locations) {
@@ -200,6 +216,11 @@ bool ArchipelagoClient::StartClient() {
         ArchipelagoConsole_PrintJson(coloredNodes);
     });
 
+    return true;
+}
+
+bool ArchipelagoClient::StopClient() {
+    disconnecting = true;
     return true;
 }
 
@@ -386,6 +407,8 @@ void ArchipelagoClient::Poll() {
     if (disconnecting) {
         apClient->reset();
         apClient = nullptr;
+        disconnecting = false;
+        CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0); // disconnected
         return;
     }
 
@@ -542,7 +565,7 @@ void RegisterArchipelago() {
     // make sure the client is constructed
     ArchipelagoClient::GetInstance();
 
-    CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("Connected"), 0);
+    CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0);
 
     COND_HOOK(GameInteractor::OnGameFrameUpdate, true, []() { ArchipelagoClient::GetInstance().Poll(); });
     COND_HOOK(GameInteractor::PostLoadGame, true,

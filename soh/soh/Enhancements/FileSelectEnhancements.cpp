@@ -63,6 +63,61 @@ std::array<std::string, LANGUAGE_MAX> RandomizerSettingsMenuText[RSM_MAX] = {
     },
 };
 
-const char* SohFileSelect_GetSettingText(uint8_t optionIndex, uint8_t language) {
+std::array<std::string, LANGUAGE_MAX> ArchipelagoSettingsMenuText[ASM_MAX] {
+    // ASM_START_ARCHIPELAGO
+    {
+        "Start Archipelago",
+        "Todo",
+        "Todo",
+    },
+    // ASM_CHANGE_CONNECTION_INFO
+    {
+        "Change Connection Info",
+        "Todo",
+        "Todo",
+    },
+    // ASM_SERVER_ADDRESS
+    {
+        "Server Address: ",
+        "Todo",
+        "Todo",
+    },
+    // ASM_SLOT_NAME
+    {
+        "Slot Name: ",
+        "Todo",
+        "Todo",
+    },
+    // ASM_NOT_CONNECTED
+    {
+        "Not Connected",
+        "Todo",
+        "Todo",
+    },
+    // ASM_CONNECTING
+    {
+        "Connecting...",
+        "Todo",
+        "Todo",
+    },
+    // ASM_CONNECTED
+    {
+        "Connected",
+        "Todo",
+        "Todo",
+    },
+    // ASM_STATUS
+    {
+        "Status:",
+        "Todo",
+        "Todo",
+    },
+};
+
+const char* SohFileSelect_GetRandomizerSettingText(uint8_t optionIndex, uint8_t language) {
     return RandomizerSettingsMenuText[optionIndex][language].c_str();
+}
+
+const char* SohFileSelect_GetArchipelagoSettingText(uint8_t optionIndex, uint8_t language) {
+    return ArchipelagoSettingsMenuText[optionIndex][language].c_str();
 }
