@@ -146,6 +146,7 @@ SaveManager::SaveManager() {
         }
 
         info.randoSave = 0;
+        info.archiSave = 0;
         info.requiresMasterQuest = 0;
         info.requiresOriginal = 0;
 
@@ -486,7 +487,8 @@ void SaveManager::InitMeta(int fileNum) {
         fileMetaInfo[fileNum].seedHash[i] = randoContext->hashIconIndexes[i];
     }
 
-    fileMetaInfo[fileNum].randoSave = IS_RANDO;
+    fileMetaInfo[fileNum].randoSave = IS_RANDO && !IS_ARCHIPELAGO;
+    fileMetaInfo[fileNum].archiSave = IS_ARCHIPELAGO;
     // If the file is marked as a Master Quest file or if we're randomized and have at least one master quest dungeon,
     // we need the mq otr.
     fileMetaInfo[fileNum].requiresMasterQuest =
@@ -2345,6 +2347,7 @@ void SaveManager::CopyZeldaFile(int from, int to) {
     fileMetaInfo[to].defense = fileMetaInfo[from].defense;
     fileMetaInfo[to].health = fileMetaInfo[from].health;
     fileMetaInfo[to].randoSave = fileMetaInfo[from].randoSave;
+    fileMetaInfo[to].archiSave = fileMetaInfo[from].archiSave;
     fileMetaInfo[to].requiresMasterQuest = fileMetaInfo[from].requiresMasterQuest;
     fileMetaInfo[to].requiresOriginal = fileMetaInfo[from].requiresOriginal;
     fileMetaInfo[to].buildVersionMajor = fileMetaInfo[from].buildVersionMajor;
@@ -2361,6 +2364,7 @@ void SaveManager::DeleteZeldaFile(int fileNum) {
     }
     fileMetaInfo[fileNum].valid = false;
     fileMetaInfo[fileNum].randoSave = false;
+    fileMetaInfo[fileNum].archiSave = false;
     fileMetaInfo[fileNum].requiresMasterQuest = false;
     fileMetaInfo[fileNum].requiresOriginal = false;
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnDeleteFile>(fileNum);

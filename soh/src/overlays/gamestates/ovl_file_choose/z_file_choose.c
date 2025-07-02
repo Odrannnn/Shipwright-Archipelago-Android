@@ -452,7 +452,7 @@ u8 ShouldRenderItem(s16 fileIndex, u8 item) {
 
     // greg
     if (item == ITEM_RUPEE_GREEN) {
-        return Save_GetSaveMetaInfo(fileIndex)->randoSave;
+        return Save_GetSaveMetaInfo(fileIndex)->randoSave || Save_GetSaveMetaInfo(fileIndex)->archiSave;
     }
 
     return 1;
@@ -3018,7 +3018,7 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                 gSP1Quadrangle(POLY_OPA_DISP++, 8, 10, 11, 9, 0);
             }
 
-            // draw rando label
+            // Draw rando label
             if (Save_GetSaveMetaInfo(i)->randoSave) {
                 if (!FileChoose_IsSaveCompatible(Save_GetSaveMetaInfo(i))) {
                     gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, sWindowContentColors[1][0], sWindowContentColors[1][1],
@@ -3049,6 +3049,21 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                                     G_TX_NOLOD, G_TX_NOLOD);
                 gSP1Quadrangle(POLY_OPA_DISP++, 8, 10, 11, 9, 0);
             }
+            // Draw archipelago label
+            if (Save_GetSaveMetaInfo(i)->archiSave) {
+                if (!FileChoose_IsSaveCompatible(Save_GetSaveMetaInfo(i))) {
+                    gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, sWindowContentColors[1][0], sWindowContentColors[1][1],
+                                    sWindowContentColors[1][2], this->nameBoxAlpha[i]);
+                } else {
+                    gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, sWindowContentColors[isActive][0],
+                                    sWindowContentColors[isActive][1], sWindowContentColors[isActive][2],
+                                    this->nameAlpha[i]);
+                }
+                gDPLoadTextureBlock(POLY_OPA_DISP++, gFileSelArchiButtonTex, G_IM_FMT_IA, G_IM_SIZ_16b, 44, 16, 0,
+                                    G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK,
+                                    G_TX_NOLOD, G_TX_NOLOD);
+                gSP1Quadrangle(POLY_OPA_DISP++, 8, 10, 11, 9, 0);
+            }
 
             // draw connectors
             if (!FileChoose_IsSaveCompatible(Save_GetSaveMetaInfo(i)) && Save_GetSaveMetaInfo(i)->valid) {
@@ -3064,7 +3079,7 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                                 G_TX_NOLOD, G_TX_NOLOD);
             gSP1Quadrangle(POLY_OPA_DISP++, 12, 14, 15, 13, 0);
 
-            if (this->n64ddFlags[i] || Save_GetSaveMetaInfo(i)->randoSave ||
+            if (this->n64ddFlags[i] || Save_GetSaveMetaInfo(i)->randoSave || Save_GetSaveMetaInfo(i)->archiSave ||
                 Save_GetSaveMetaInfo(i)->requiresMasterQuest) {
                 gSP1Quadrangle(POLY_OPA_DISP++, 16, 18, 19, 17, 0);
             }
