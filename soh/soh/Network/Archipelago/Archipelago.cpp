@@ -70,7 +70,7 @@ bool ArchipelagoClient::StartClient() {
 
     apClient->set_slot_connected_handler([&](const nlohmann::json data) {
         CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 3); // slot connected
-        ArchipelagoConsole_SendMessage("[LOG] Connected.", true);
+        ArchipelagoConsole_SendMessage("[LOG] Connected.");
         ArchipelagoClient::StartLocationScouts();
 
         slotData = data;
