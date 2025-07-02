@@ -518,8 +518,6 @@ void RegisterArchipelago() {
     // make sure the client is constructed
     ArchipelagoClient::GetInstance();
 
-    CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0);
-
     COND_HOOK(GameInteractor::OnGameFrameUpdate, true, []() { ArchipelagoClient::GetInstance().Poll(); });
     COND_HOOK(GameInteractor::PostLoadGame, true,
               [](int32_t file_id) { ArchipelagoClient::GetInstance().GameLoaded(); });

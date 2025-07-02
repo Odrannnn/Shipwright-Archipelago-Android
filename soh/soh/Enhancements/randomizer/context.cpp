@@ -427,9 +427,6 @@ void Context::ParseArchipelago() {
     mEntranceShuffler->UnshuffleAllEntrances();
     mDungeons->ResetAllDungeons();
     mTrials->RemoveAllTrials();
-
-    mSpoilerLoaded = true;
-    mSeedGenerated = false;
 }
 
 void Context::ParseHashIconIndexesJson(nlohmann::json spoilerFileJson) {
