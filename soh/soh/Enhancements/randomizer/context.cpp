@@ -588,7 +588,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
         mOptions[RSK_GANONS_BOSS_KEY].Set(RO_GANON_BOSS_KEY_LACS_REWARDS);
     }
     mOptions[RSK_SKIP_CHILD_STEALTH].Set(RO_GENERIC_YES);
-    mOptions[RSK_SKIP_CHILD_ZELDA].Set(RO_GENERIC_NO);
+    mOptions[RSK_SKIP_CHILD_ZELDA].Set(RO_GENERIC_YES);
     mOptions[RSK_STARTING_STICKS].Set(RO_GENERIC_NO);
     mOptions[RSK_STARTING_NUTS].Set(RO_GENERIC_NO);
     mOptions[RSK_FULL_WALLETS].Set(RO_GENERIC_YES);
