@@ -48,6 +48,9 @@ class ArchipelagoClient {
     const std::string GetSlotName() const;
 
     uint8_t GetConnectionStatus();
+    void OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped);
+    void SendDeathLink();
+    void SetDeathLinkTag();
     const nlohmann::json GetSlotData();
     const std::vector<ApItem>& GetScoutedItems();
 
@@ -65,6 +68,7 @@ class ArchipelagoClient {
     std::unique_ptr<APClient> apClient;
     bool itemQueued;
     bool disconnecting;
+    bool isDeathLinkedDeath;
     int retries;
 
   protected:

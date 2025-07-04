@@ -30,6 +30,7 @@ ArchipelagoClient::ArchipelagoClient() {
     gameWon = false;
     itemQueued = false;
     disconnecting = false;
+    isDeathLinkedDeath = false;
 }
 
 ArchipelagoClient& ArchipelagoClient::GetInstance() {
@@ -63,7 +64,9 @@ bool ArchipelagoClient::StartClient() {
 
     apClient->set_room_info_handler([&]() {
         std::list<std::string> tags;
-        // tags.push_back("DeathLink");     // todo, implement deathlink
+        if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0)) {
+            tags.push_back("DeathLink");
+        }
         apClient->ConnectSlot(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""),
                               CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), ""), 0b001, tags);
     });
@@ -206,6 +209,25 @@ bool ArchipelagoClient::StartClient() {
         }
 
         ArchipelagoConsole_PrintJson(coloredNodes);
+    });
+
+    apClient->set_bounced_handler([&](const nlohmann::json data) {
+        std::list<std::string> tags = data["tags"];
+        bool deathLink = (std::find(tags.begin(), tags.end(), "DeathLink") != tags.end());
+
+        if (deathLink && data["data"]["source"] != apClient->get_slot()) {
+            if (GameInteractor::IsSaveLoaded()) {
+                gSaveContext.health = 0;
+                Notification::Emit({ .prefix = data["data"]["source"],
+                                        .message = "died. Cause:",
+                                        .suffix = data["data"]["cause"] });
+                std::string deathLinkMessage =
+                    "[LOG] Received death link from " + std::string(data["data"]["source"]) + ". Cause: " + std::string(data["data"]["cause"]);
+                ArchipelagoConsole_SendMessage(deathLinkMessage.c_str());
+
+                isDeathLinkedDeath = true;
+            }
+        }
     });
 
     return true;
@@ -426,11 +448,67 @@ uint8_t ArchipelagoClient::GetConnectionStatus() {
     }
 }
 
+void ArchipelagoClient::OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped) {
+    if (rc == RC_ARCHIPELAGO_RECEIVED_ITEM) {
+        gSaveContext.ship.quest.data.archipelago.lastReceivedItemIndex++;
+        ArchipelagoClient::GetInstance().itemQueued = false;
+    } else {
+        ArchipelagoClient::GetInstance().CheckLocation((RandomizerCheck)rc);
+
+        if (isGiSkipped && gi.modIndex == MOD_RANDOMIZER &&
+            (gi.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || gi.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
+             gi.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
+
+            const char* itemIcon = "";
+            switch (gi.getItemId) {
+                case RG_ARCHIPELAGO_ITEM_PROGRESSIVE:
+                    itemIcon = "Archipelago Progressive Icon";
+                    break;
+                case RG_ARCHIPELAGO_ITEM_USEFUL:
+                    itemIcon = "Archipelago Useful Icon";
+                    break;
+                case RG_ARCHIPELAGO_ITEM_JUNK:
+                    itemIcon = "Archipelago Junk Icon";
+                    break;
+            }
+
+            Notification::Emit(
+                { .itemIcon = itemIcon,
+                  .prefix = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].itemName),
+                  .message = " for ",
+                  .suffix = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].playerName) });
+        }
+    }
+}
+
+void ArchipelagoClient::SendDeathLink() {
+    if (apClient && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0) && !isDeathLinkedDeath) {
+        nlohmann::json data{
+            { "time", apClient->get_server_time() },
+            { "cause", "Shipwrecked by King Harkinian." },
+            { "source", apClient->get_slot() }
+        };
+        apClient->Bounce(data, {}, {}, { "DeathLink" });
+
+        Notification::Emit({ .message = "Sending Death Link" });
+        ArchipelagoConsole_SendMessage("[LOG] Died, sending death link.");
+    }
+
+    isDeathLinkedDeath = false;
+}
+
+void ArchipelagoClient::SetDeathLinkTag() {
+    std::list<std::string> tags;
+    if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0)) {
+        tags.push_back("DeathLink");
+    }
+    apClient->ConnectUpdate(false, 1, true, tags);
+}
+
 extern "C" void Archipelago_InitSaveFile() {
     gSaveContext.ship.quest.data.archipelago.isArchipelago = 1;
 
     nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
-    gSaveContext.ship.quest.data.archipelago.deathLink = slotData["death_link"];
 
     std::vector<ArchipelagoClient::ApItem> scoutedItems = ArchipelagoClient::GetInstance().GetScoutedItems();
 
@@ -456,7 +534,6 @@ void LoadArchipelagoData() {
     SaveManager::Instance->LoadData("isArchipelago", gSaveContext.ship.quest.data.archipelago.isArchipelago);
     SaveManager::Instance->LoadData("lastReceivedItemIndex",
                                     gSaveContext.ship.quest.data.archipelago.lastReceivedItemIndex);
-    SaveManager::Instance->LoadData("deathLink", gSaveContext.ship.quest.data.archipelago.deathLink);
 
     SaveManager::Instance->LoadCharArray("roomHash", gSaveContext.ship.quest.data.archipelago.roomHash,
                                          ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomHash));
@@ -480,7 +557,6 @@ void SaveArchipelagoData(SaveContext* saveContext, int sectionID, bool fullSave)
     SaveManager::Instance->SaveData("isArchipelago", saveContext->ship.quest.data.archipelago.isArchipelago);
     SaveManager::Instance->SaveData("lastReceivedItemIndex",
                                     saveContext->ship.quest.data.archipelago.lastReceivedItemIndex);
-    SaveManager::Instance->SaveData("deathLink", saveContext->ship.quest.data.archipelago.deathLink);
 
     SaveManager::Instance->SaveData("roomHash", saveContext->ship.quest.data.archipelago.roomHash);
     SaveManager::Instance->SaveData("slotName", saveContext->ship.quest.data.archipelago.slotName);
@@ -499,7 +575,6 @@ void SaveArchipelagoData(SaveContext* saveContext, int sectionID, bool fullSave)
 void InitArchipelagoData(bool isDebug) {
     gSaveContext.ship.quest.data.archipelago.isArchipelago = 0;
     gSaveContext.ship.quest.data.archipelago.lastReceivedItemIndex = 0;
-    gSaveContext.ship.quest.data.archipelago.deathLink = 0;
 
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomHash, "",
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomHash));
@@ -519,42 +594,18 @@ void RegisterArchipelago() {
     ArchipelagoClient::GetInstance();
 
     COND_HOOK(GameInteractor::OnGameFrameUpdate, true, []() { ArchipelagoClient::GetInstance().Poll(); });
+
     COND_HOOK(GameInteractor::PostLoadGame, true,
               [](int32_t file_id) { ArchipelagoClient::GetInstance().GameLoaded(); });
+
     COND_HOOK(
         GameInteractor::OnRandomizerItemGivenHooks, IS_ARCHIPELAGO,
         [](uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped) {
-            if (rc == RC_ARCHIPELAGO_RECEIVED_ITEM) {
-                gSaveContext.ship.quest.data.archipelago.lastReceivedItemIndex++;
-                ArchipelagoClient::GetInstance().itemQueued = false;
-            } else {
-                ArchipelagoClient::GetInstance().CheckLocation((RandomizerCheck)rc);
-
-                if (isGiSkipped && gi.modIndex == MOD_RANDOMIZER &&
-                    (gi.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || gi.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
-                     gi.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
-
-                    const char* itemIcon = "";
-                    switch (gi.getItemId) {
-                        case RG_ARCHIPELAGO_ITEM_PROGRESSIVE:
-                            itemIcon = "Archipelago Progressive Icon";
-                            break;
-                        case RG_ARCHIPELAGO_ITEM_USEFUL:
-                            itemIcon = "Archipelago Useful Icon";
-                            break;
-                        case RG_ARCHIPELAGO_ITEM_JUNK:
-                            itemIcon = "Archipelago Junk Icon";
-                            break;
-                    }
-
-                    Notification::Emit(
-                        { .itemIcon = itemIcon,
-                          .prefix = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].itemName),
-                          .message = " for ",
-                          .suffix = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].playerName) });
-                }
-            }
+            ArchipelagoClient::GetInstance().OnItemGiven(rc, gi, isGiSkipped);
         });
+
+    COND_HOOK(GameInteractor::OnPlayerDeath, IS_ARCHIPELAGO,
+              []() { ArchipelagoClient::GetInstance().SendDeathLink(); });
 }
 
 static RegisterShipInitFunc initFunc(RegisterArchipelago, { "IS_ARCHIPELAGO" });

@@ -176,7 +176,6 @@ typedef struct ArchipelagoLocationData {
 typedef struct ShipArchipelagoSaveContextData {
     u8 isArchipelago;
     u32 lastReceivedItemIndex;
-    u8 deathLink;
     char roomHash[100];
     char slotName[17];
     ArchipelagoLocationData locations[RC_MAX];

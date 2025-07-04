@@ -69,6 +69,13 @@ void ArchipelagoSettingsWindow::DrawElement() {
     }
     ImGui::PopStyleColor();
 
+    ImGui::SeparatorText("Additional Options");
+    if (UIWidgets::CVarCheckbox("Death Link", CVAR_REMOTE_ARCHIPELAGO("DeathLink"),
+        UIWidgets::CheckboxOptions()
+        .Color(THEME_COLOR).Tooltip("You die, others die. Others die, you die!"))) {
+        apClient.SetDeathLinkTag();
+    }
+
     static bool sArchipelagoTexturesLoaded = false;
     if (!sArchipelagoTexturesLoaded) {
         Ship::Context::GetInstance()->GetWindow()->GetGui()->LoadTextureFromRawImage(
