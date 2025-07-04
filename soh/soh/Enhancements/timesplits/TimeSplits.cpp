@@ -1,12 +1,11 @@
+#include <vector>
+#include <fstream>
+#include <filesystem>
+
 #include "TimeSplits.h"
 #include "soh/Enhancements/gameplaystats.h"
 #include "soh/SaveManager.h"
 #include "soh/util.h"
-#include <vector>
-#include "include/z64item.h"
-
-#include <fstream>
-#include <filesystem>
 
 #include "soh/OTRGlobals.h"
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
@@ -18,6 +17,7 @@
 #include "soh/Network/Archipelago/Archipelago.h"
 
 extern "C" {
+#include "z64item.h"
 extern SaveContext gSaveContext;
 extern PlayState* gPlayState;
 }
