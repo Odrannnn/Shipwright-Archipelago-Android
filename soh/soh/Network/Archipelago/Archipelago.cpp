@@ -219,7 +219,7 @@ bool ArchipelagoClient::StartClient() {
         if (deathLink && data["data"]["source"] != apClient->get_slot()) {
             if (GameInteractor::IsSaveLoaded()) {
                 gSaveContext.health = 0;
-                std::string prefixText = std::string(data["data"]["source"]) + "died.";
+                std::string prefixText = std::string(data["data"]["source"]) + " died.";
                 Notification::Emit({ .prefix = prefixText, .message = "Cause:", .suffix = data["data"]["cause"] });
                 std::string deathLinkMessage = "[LOG] Received death link from " + std::string(data["data"]["source"]) +
                                                ". Cause: " + std::string(data["data"]["cause"]);
