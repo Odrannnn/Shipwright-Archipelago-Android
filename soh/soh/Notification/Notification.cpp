@@ -93,10 +93,10 @@ void Window::Draw() {
         }
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0, 0, 0, 0.5));
-        
+
         if (ImGui::BeginChild(("Notification#" + std::to_string(notification.id)).c_str(), ImVec2(0, 0),
-            ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiChildFlags_AlwaysAutoResize |
-            ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
+                              ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiChildFlags_AlwaysAutoResize |
+                                  ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
 
             if (notification.itemIcon != nullptr) {
                 ImGui::Image(
@@ -115,7 +115,7 @@ void Window::Draw() {
             }
             ImGui::EndChild();
         }
-        
+
         ImGui::PopStyleColor();
 
         ImGui::End();

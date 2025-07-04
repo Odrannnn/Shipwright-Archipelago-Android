@@ -1358,7 +1358,7 @@ void FileChoose_UpdateQuestMenu(GameState* thisx) {
             this->configMode = CM_ROTATE_TO_RANDOMIZER_SETTINGS_MENU;
         } else if (this->questType[this->buttonIndex] == QUEST_ARCHIPELAGO) {
             Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
-                &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+                                   &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
             this->prevConfigMode = this->configMode;
             this->configMode = CM_ROTATE_TO_ARCHIPELAGO_MENU;
         } else {
@@ -1641,8 +1641,7 @@ void FileChoose_RotateToNameEntry(GameState* thisx) {
 
     this->windowRot += VREG(16);
 
-    if (this->prevConfigMode == CM_RANDOMIZER_SETTINGS_MENU ||
-        this->prevConfigMode == CM_ARCHIPELAGO_SETTINGS_MENU) {
+    if (this->prevConfigMode == CM_RANDOMIZER_SETTINGS_MENU || this->prevConfigMode == CM_ARCHIPELAGO_SETTINGS_MENU) {
         if (this->windowRot >= 942.0f) {
             this->windowRot = 628.0f;
             this->configMode = CM_START_NAME_ENTRY;
@@ -1751,7 +1750,7 @@ void FileChoose_RotateToRandomizer(GameState* thisx) {
 void FileChoose_RotateToArchipelago(GameState* thisx) {
     FileChooseContext* this = (FileChooseContext*)thisx;
 
-    if (this->configMode == CM_NAME_ENTRY_TO_ARCHIPELAGO_SETTINGS_MENU ) {
+    if (this->configMode == CM_NAME_ENTRY_TO_ARCHIPELAGO_SETTINGS_MENU) {
         this->windowRot -= VREG(16);
 
         if (this->windowRot <= 314.0f) {
@@ -1772,7 +1771,7 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
     FileChooseContext* this = (FileChooseContext*)thisx;
     Input* input = &this->state.input[0];
     bool dpad = CVarGetInteger(CVAR_SETTING("DpadInText"), 0);
-    
+
     // Fade in elements after opening Archipelago Options menu
     this->archipelagoUIAlpha += 25;
     if (this->archipelagoUIAlpha > 255) {
@@ -1780,9 +1779,9 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
     }
 
     // Move menu selection up or down
-    if(ABS(this->stickRelY) > 30 || (dpad && CHECK_BTN_ANY(input->press.button, BTN_DDOWN | BTN_DUP))) {
+    if (ABS(this->stickRelY) > 30 || (dpad && CHECK_BTN_ANY(input->press.button, BTN_DDOWN | BTN_DUP))) {
         // move down
-        if(this->stickRelY < -30 || (dpad && CHECK_BTN_ANY(input->press.button, BTN_DDOWN))) {
+        if (this->stickRelY < -30 || (dpad && CHECK_BTN_ANY(input->press.button, BTN_DDOWN))) {
             if ((this->archipelagoIndex + 1) > ASM_CHANGE_CONNECTION_INFO) {
                 this->archipelagoIndex = ASM_START_ARCHIPELAGO;
             } else {
@@ -1796,7 +1795,7 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
             }
         }
         Audio_PlaySoundGeneral(NA_SE_SY_FSEL_CURSOR, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
-            &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+                               &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
     }
 
     if (CHECK_BTN_ALL(input->press.button, BTN_B)) {
@@ -1871,71 +1870,127 @@ void FileChoose_StartArchipelagoMenu(GameState* thisx) {
     }
 }
 
-static void (*gConfigModeUpdateFuncs[])(GameState*) = {
-    FileChoose_StartFadeIn,         FileChoose_FinishFadeIn,
-    FileChoose_UpdateMainMenu,      FileChoose_SetupCopySource,
-    FileChoose_SelectCopySource,    FileChoose_SetupCopyDest1,
-    FileChoose_SetupCopyDest2,      FileChoose_SelectCopyDest,
-    FileChoose_ExitToCopySource1,   FileChoose_ExitToCopySource2,
-    FileChoose_SetupCopyConfirm1,   FileChoose_SetupCopyConfirm2,
-    FileChoose_CopyConfirm,         FileChoose_ReturnToCopyDest,
-    FileChoose_CopyAnim1,           FileChoose_CopyAnim2,
-    FileChoose_CopyAnim3,           FileChoose_CopyAnim4,
-    FileChoose_CopyAnim5,           FileChoose_ExitCopyToMain,
-    FileChoose_SetupEraseSelect,    FileChoose_EraseSelect,
-    FileChoose_SetupEraseConfirm1,  FileChoose_SetupEraseConfirm2,
-    FileChoose_EraseConfirm,        FileChoose_ExitToEraseSelect1,
-    FileChoose_ExitToEraseSelect2,  FileChoose_EraseAnim1,
-    FileChoose_EraseAnim2,          FileChoose_EraseAnim3,
-    FileChoose_ExitEraseToMain,     FileChoose_UnusedCM31,
-    FileChoose_RotateToNameEntry,   FileChoose_UpdateKeyboardCursor,
-    FileChoose_StartNameEntry,      FileChoose_RotateToMain,
-    FileChoose_RotateToOptions,     FileChoose_UpdateOptionsMenu,
-    FileChoose_StartOptions,        FileChoose_RotateToMain,
-    FileChoose_UnusedCMDelay,       FileChoose_RotateToQuest,
-    FileChoose_UpdateQuestMenu,     FileChoose_StartQuestMenu,
-    FileChoose_RotateToMain,        FileChoose_RotateToQuest,
-    FileChoose_RotateToBossRush,    FileChoose_UpdateBossRushMenu,
-    FileChoose_StartBossRushMenu,   FileChoose_RotateToQuest,
-    FileChoose_RotateToRandomizer,  FileChoose_UpdateRandomizerMenu,
-    FileChoose_StartRandomizerMenu, FileChoose_RotateToQuest,
-    FileChoose_RotateToRandomizer,  FileChoose_RotateToArchipelago,
-    FileChoose_UpdateArchipelagoMenu, FileChoose_StartArchipelagoMenu,
-    FileChoose_RotateToQuest,       FileChoose_RotateToArchipelago
-};
+static void (*gConfigModeUpdateFuncs[])(GameState*) = { FileChoose_StartFadeIn,
+                                                        FileChoose_FinishFadeIn,
+                                                        FileChoose_UpdateMainMenu,
+                                                        FileChoose_SetupCopySource,
+                                                        FileChoose_SelectCopySource,
+                                                        FileChoose_SetupCopyDest1,
+                                                        FileChoose_SetupCopyDest2,
+                                                        FileChoose_SelectCopyDest,
+                                                        FileChoose_ExitToCopySource1,
+                                                        FileChoose_ExitToCopySource2,
+                                                        FileChoose_SetupCopyConfirm1,
+                                                        FileChoose_SetupCopyConfirm2,
+                                                        FileChoose_CopyConfirm,
+                                                        FileChoose_ReturnToCopyDest,
+                                                        FileChoose_CopyAnim1,
+                                                        FileChoose_CopyAnim2,
+                                                        FileChoose_CopyAnim3,
+                                                        FileChoose_CopyAnim4,
+                                                        FileChoose_CopyAnim5,
+                                                        FileChoose_ExitCopyToMain,
+                                                        FileChoose_SetupEraseSelect,
+                                                        FileChoose_EraseSelect,
+                                                        FileChoose_SetupEraseConfirm1,
+                                                        FileChoose_SetupEraseConfirm2,
+                                                        FileChoose_EraseConfirm,
+                                                        FileChoose_ExitToEraseSelect1,
+                                                        FileChoose_ExitToEraseSelect2,
+                                                        FileChoose_EraseAnim1,
+                                                        FileChoose_EraseAnim2,
+                                                        FileChoose_EraseAnim3,
+                                                        FileChoose_ExitEraseToMain,
+                                                        FileChoose_UnusedCM31,
+                                                        FileChoose_RotateToNameEntry,
+                                                        FileChoose_UpdateKeyboardCursor,
+                                                        FileChoose_StartNameEntry,
+                                                        FileChoose_RotateToMain,
+                                                        FileChoose_RotateToOptions,
+                                                        FileChoose_UpdateOptionsMenu,
+                                                        FileChoose_StartOptions,
+                                                        FileChoose_RotateToMain,
+                                                        FileChoose_UnusedCMDelay,
+                                                        FileChoose_RotateToQuest,
+                                                        FileChoose_UpdateQuestMenu,
+                                                        FileChoose_StartQuestMenu,
+                                                        FileChoose_RotateToMain,
+                                                        FileChoose_RotateToQuest,
+                                                        FileChoose_RotateToBossRush,
+                                                        FileChoose_UpdateBossRushMenu,
+                                                        FileChoose_StartBossRushMenu,
+                                                        FileChoose_RotateToQuest,
+                                                        FileChoose_RotateToRandomizer,
+                                                        FileChoose_UpdateRandomizerMenu,
+                                                        FileChoose_StartRandomizerMenu,
+                                                        FileChoose_RotateToQuest,
+                                                        FileChoose_RotateToRandomizer,
+                                                        FileChoose_RotateToArchipelago,
+                                                        FileChoose_UpdateArchipelagoMenu,
+                                                        FileChoose_StartArchipelagoMenu,
+                                                        FileChoose_RotateToQuest,
+                                                        FileChoose_RotateToArchipelago };
 
-static void (*gConfigModeUpdateFuncsNES[])(GameState*) = {
-    FileChoose_StartFadeIn,         FileChoose_FinishFadeIn,
-    FileChoose_UpdateMainMenu,      FileChoose_SetupCopySource,
-    FileChoose_SelectCopySource,    FileChoose_SetupCopyDest1,
-    FileChoose_SetupCopyDest2,      FileChoose_SelectCopyDest,
-    FileChoose_ExitToCopySource1,   FileChoose_ExitToCopySource2,
-    FileChoose_SetupCopyConfirm1,   FileChoose_SetupCopyConfirm2,
-    FileChoose_CopyConfirm,         FileChoose_ReturnToCopyDest,
-    FileChoose_CopyAnim1,           FileChoose_CopyAnim2,
-    FileChoose_CopyAnim3,           FileChoose_CopyAnim4,
-    FileChoose_CopyAnim5,           FileChoose_ExitCopyToMain,
-    FileChoose_SetupEraseSelect,    FileChoose_EraseSelect,
-    FileChoose_SetupEraseConfirm1,  FileChoose_SetupEraseConfirm2,
-    FileChoose_EraseConfirm,        FileChoose_ExitToEraseSelect1,
-    FileChoose_ExitToEraseSelect2,  FileChoose_EraseAnim1,
-    FileChoose_EraseAnim2,          FileChoose_EraseAnim3,
-    FileChoose_ExitEraseToMain,     FileChoose_UnusedCM31,
-    FileChoose_RotateToNameEntry,   FileChoose_UpdateKeyboardCursorNES,
-    FileChoose_StartNameEntryNES,   FileChoose_RotateToMain,
-    FileChoose_RotateToOptions,     FileChoose_UpdateOptionsMenuNES,
-    FileChoose_StartOptionsNES,     FileChoose_RotateToMain,
-    FileChoose_UnusedCMDelay,       FileChoose_RotateToQuest,
-    FileChoose_UpdateQuestMenu,     FileChoose_StartQuestMenu,
-    FileChoose_RotateToMain,        FileChoose_RotateToQuest,
-    FileChoose_RotateToBossRush,    FileChoose_UpdateBossRushMenu,
-    FileChoose_StartBossRushMenu,   FileChoose_RotateToQuest,
-    FileChoose_RotateToRandomizer,  FileChoose_UpdateRandomizerMenu,
-    FileChoose_StartRandomizerMenu, FileChoose_RotateToQuest,
-    FileChoose_RotateToRandomizer,  FileChoose_RotateToArchipelago,
-    FileChoose_UpdateArchipelagoMenu, FileChoose_StartArchipelagoMenu,
-    FileChoose_RotateToQuest,       FileChoose_RotateToArchipelago
-};
+static void (*gConfigModeUpdateFuncsNES[])(GameState*) = { FileChoose_StartFadeIn,
+                                                           FileChoose_FinishFadeIn,
+                                                           FileChoose_UpdateMainMenu,
+                                                           FileChoose_SetupCopySource,
+                                                           FileChoose_SelectCopySource,
+                                                           FileChoose_SetupCopyDest1,
+                                                           FileChoose_SetupCopyDest2,
+                                                           FileChoose_SelectCopyDest,
+                                                           FileChoose_ExitToCopySource1,
+                                                           FileChoose_ExitToCopySource2,
+                                                           FileChoose_SetupCopyConfirm1,
+                                                           FileChoose_SetupCopyConfirm2,
+                                                           FileChoose_CopyConfirm,
+                                                           FileChoose_ReturnToCopyDest,
+                                                           FileChoose_CopyAnim1,
+                                                           FileChoose_CopyAnim2,
+                                                           FileChoose_CopyAnim3,
+                                                           FileChoose_CopyAnim4,
+                                                           FileChoose_CopyAnim5,
+                                                           FileChoose_ExitCopyToMain,
+                                                           FileChoose_SetupEraseSelect,
+                                                           FileChoose_EraseSelect,
+                                                           FileChoose_SetupEraseConfirm1,
+                                                           FileChoose_SetupEraseConfirm2,
+                                                           FileChoose_EraseConfirm,
+                                                           FileChoose_ExitToEraseSelect1,
+                                                           FileChoose_ExitToEraseSelect2,
+                                                           FileChoose_EraseAnim1,
+                                                           FileChoose_EraseAnim2,
+                                                           FileChoose_EraseAnim3,
+                                                           FileChoose_ExitEraseToMain,
+                                                           FileChoose_UnusedCM31,
+                                                           FileChoose_RotateToNameEntry,
+                                                           FileChoose_UpdateKeyboardCursorNES,
+                                                           FileChoose_StartNameEntryNES,
+                                                           FileChoose_RotateToMain,
+                                                           FileChoose_RotateToOptions,
+                                                           FileChoose_UpdateOptionsMenuNES,
+                                                           FileChoose_StartOptionsNES,
+                                                           FileChoose_RotateToMain,
+                                                           FileChoose_UnusedCMDelay,
+                                                           FileChoose_RotateToQuest,
+                                                           FileChoose_UpdateQuestMenu,
+                                                           FileChoose_StartQuestMenu,
+                                                           FileChoose_RotateToMain,
+                                                           FileChoose_RotateToQuest,
+                                                           FileChoose_RotateToBossRush,
+                                                           FileChoose_UpdateBossRushMenu,
+                                                           FileChoose_StartBossRushMenu,
+                                                           FileChoose_RotateToQuest,
+                                                           FileChoose_RotateToRandomizer,
+                                                           FileChoose_UpdateRandomizerMenu,
+                                                           FileChoose_StartRandomizerMenu,
+                                                           FileChoose_RotateToQuest,
+                                                           FileChoose_RotateToRandomizer,
+                                                           FileChoose_RotateToArchipelago,
+                                                           FileChoose_UpdateArchipelagoMenu,
+                                                           FileChoose_StartArchipelagoMenu,
+                                                           FileChoose_RotateToQuest,
+                                                           FileChoose_RotateToArchipelago };
 
 /**
  * Updates the alpha of the cursor to make it pulsate.
@@ -2824,8 +2879,8 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
 
         // Show text to indicate randomizer is being generated.
         if (generating) {
-            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetRandomizerSettingText(RSM_GENERATING, language), 70,
-                                   (80 + 64), 255, 255, 255, textAlpha, 0.8f, true);
+            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetRandomizerSettingText(RSM_GENERATING, language),
+                                   70, (80 + 64), 255, 255, 255, textAlpha, 0.8f, true);
         }
 
         // If no randomizer is generated and "start randomizer" is selected, show text to explain why user can't start
@@ -2833,8 +2888,8 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
         if (!Randomizer_IsSeedGenerated() && !Randomizer_IsSpoilerLoaded() &&
             this->randomizerIndex == RSM_START_RANDOMIZER) {
             Interface_DrawTextLine(this->state.gfxCtx,
-                                   SohFileSelect_GetRandomizerSettingText(RSM_NO_RANDOMIZER_GENERATED, language), 70, (80 + 64),
-                                   240, 80, 80, textAlpha, 0.8f, true);
+                                   SohFileSelect_GetRandomizerSettingText(RSM_NO_RANDOMIZER_GENERATED, language), 70,
+                                   (80 + 64), 240, 80, 80, textAlpha, 0.8f, true);
         }
 
         uint16_t textOffset = 16 * this->randomizerIndex;
@@ -2847,9 +2902,9 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                                this->stickRightPrompt.arrowColorG, this->stickRightPrompt.arrowColorB, textAlpha, 62,
                                (85 + textOffset), 0.42f, 0, 0, 1.0f, 1.0f);
 
-    } else if (this->configMode == CM_ARCHIPELAGO_SETTINGS_MENU) { 
+    } else if (this->configMode == CM_ARCHIPELAGO_SETTINGS_MENU) {
         uint8_t language = (gSaveContext.language == LANGUAGE_JPN) ? LANGUAGE_ENG : gSaveContext.language;
-        uint8_t textAlpha = this->archipelagoUIAlpha;        
+        uint8_t textAlpha = this->archipelagoUIAlpha;
 
         uint8_t textIndex = 0;
 
@@ -2862,21 +2917,20 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
             if (this->archipelagoIndex == index) {
                 textColorB = 80;
             }
-            
+
             // If not connected, make Start Archipelago text gray.
             if (index == ASM_START_ARCHIPELAGO && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4) {
                 textColorR = textColorG = textColorB = 100;
             }
 
             Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(index, language), 70,
-                                   (80 + index * 16), textColorR, textColorG, textColorB, textAlpha, 0.8f,
-                                   true);
+                                   (80 + index * 16), textColorR, textColorG, textColorB, textAlpha, 0.8f, true);
         }
 
         // Server address text
         Interface_DrawTextLine(this->state.gfxCtx,
-                               SohFileSelect_GetArchipelagoSettingText(ASM_SERVER_ADDRESS, language), 70,
-                               120, 255, 255, 255, textAlpha, 0.8f, true);
+                               SohFileSelect_GetArchipelagoSettingText(ASM_SERVER_ADDRESS, language), 70, 120, 255, 255,
+                               255, textAlpha, 0.8f, true);
         textIndex++;
         Interface_DrawTextLine(this->state.gfxCtx, CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "No Data"),
                                70, 130, 185, 185, 185, textAlpha, 0.8f, true);
@@ -2890,10 +2944,10 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                                155, 185, 185, 185, textAlpha, 0.8f, true);
 
         // Connection status text
-        Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_STATUS, language),
-                               70, 175, 255, 255, 255, textAlpha, 0.8f, true);
+        Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_STATUS, language), 70,
+                               175, 255, 255, 255, textAlpha, 0.8f, true);
 
-        switch(CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0)) {
+        switch (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0)) {
             case 0: // Not Connected
                 Interface_DrawTextLine(this->state.gfxCtx,
                                        SohFileSelect_GetArchipelagoSettingText(ASM_NOT_CONNECTED, language), 110, 175,
@@ -3346,10 +3400,8 @@ void FileChoose_ConfigModeDraw(GameState* thisx) {
         this->configMode == CM_RANDOMIZER_SETTINGS_MENU || this->configMode == CM_ROTATE_TO_RANDOMIZER_SETTINGS_MENU ||
         this->configMode == CM_START_RANDOMIZER_SETTINGS_MENU ||
         this->configMode == CM_RANDOMIZER_SETTINGS_MENU_TO_QUEST ||
-        this->configMode == CM_START_ARCHIPELAGO_SETTINGS_MENU ||
-        this->configMode == CM_ARCHIPELAGO_SETTINGS_MENU ||
-        this->configMode == CM_ROTATE_TO_ARCHIPELAGO_MENU ||
-        this->configMode == CM_ARCHIPELAGO_SETTINGS_TO_QUEST) {
+        this->configMode == CM_START_ARCHIPELAGO_SETTINGS_MENU || this->configMode == CM_ARCHIPELAGO_SETTINGS_MENU ||
+        this->configMode == CM_ROTATE_TO_ARCHIPELAGO_MENU || this->configMode == CM_ARCHIPELAGO_SETTINGS_TO_QUEST) {
         // window
         gDPPipeSync(POLY_OPA_DISP++);
         gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);

@@ -80,7 +80,7 @@ void ArchipelagoConsoleWindow::DrawElement() {
     }
     ImGui::PopStyleVar();
     PopStyleInput();
-    
+
     ImGui::SameLine();
 
     if (UIWidgets::Button("Send", UIWidgets::ButtonOptions().Color(THEME_COLOR).Size(ImVec2(0.0, 0.0)))) {

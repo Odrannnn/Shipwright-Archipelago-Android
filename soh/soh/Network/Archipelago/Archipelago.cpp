@@ -53,8 +53,9 @@ bool ArchipelagoClient::StartClient() {
 
     apClient->set_socket_error_handler([&](const std::string& msg) {
         retries++;
-        if(retries >= AP_Client_consts::MAX_RETRIES) {
-            ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server after several tries.\nAre the entered server address and slot name correct?");
+        if (retries >= AP_Client_consts::MAX_RETRIES) {
+            ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server after several tries.\nAre the entered "
+                                           "server address and slot name correct?");
             CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // Connection error
             disconnecting = true;
             return;
@@ -218,12 +219,10 @@ bool ArchipelagoClient::StartClient() {
         if (deathLink && data["data"]["source"] != apClient->get_slot()) {
             if (GameInteractor::IsSaveLoaded()) {
                 gSaveContext.health = 0;
-                Notification::Emit(
-                    { .prefix = data["data"]["source"] + "died.",
-                                        .message = "Cause:",
-                                        .suffix = data["data"]["cause"] });
-                std::string deathLinkMessage =
-                    "[LOG] Received death link from " + std::string(data["data"]["source"]) + ". Cause: " + std::string(data["data"]["cause"]);
+                std::string prefixText = data["data"]["source"] + "died.";
+                Notification::Emit({ .prefix = prefixText, .message = "Cause:", .suffix = data["data"]["cause"] });
+                std::string deathLinkMessage = "[LOG] Received death link from " + std::string(data["data"]["source"]) +
+                                               ". Cause: " + std::string(data["data"]["cause"]);
                 ArchipelagoConsole_SendMessage(deathLinkMessage.c_str());
 
                 isDeathLinkedDeath = true;
@@ -484,11 +483,9 @@ void ArchipelagoClient::OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSk
 
 void ArchipelagoClient::SendDeathLink() {
     if (apClient && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0) && !isDeathLinkedDeath) {
-        nlohmann::json data{
-            { "time", apClient->get_server_time() },
-            { "cause", "Shipwrecked by King Harkinian." },
-            { "source", apClient->get_slot() }
-        };
+        nlohmann::json data{ { "time", apClient->get_server_time() },
+                             { "cause", "Shipwrecked by King Harkinian." },
+                             { "source", apClient->get_slot() } };
         apClient->Bounce(data, {}, {}, { "DeathLink" });
 
         Notification::Emit({ .message = "Sending Death Link" });
@@ -599,11 +596,10 @@ void RegisterArchipelago() {
     COND_HOOK(GameInteractor::PostLoadGame, true,
               [](int32_t file_id) { ArchipelagoClient::GetInstance().GameLoaded(); });
 
-    COND_HOOK(
-        GameInteractor::OnRandomizerItemGivenHooks, IS_ARCHIPELAGO,
-        [](uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped) {
-            ArchipelagoClient::GetInstance().OnItemGiven(rc, gi, isGiSkipped);
-        });
+    COND_HOOK(GameInteractor::OnRandomizerItemGivenHooks, IS_ARCHIPELAGO,
+              [](uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped) {
+                  ArchipelagoClient::GetInstance().OnItemGiven(rc, gi, isGiSkipped);
+              });
 
     COND_HOOK(GameInteractor::OnPlayerDeath, IS_ARCHIPELAGO,
               []() { ArchipelagoClient::GetInstance().SendDeathLink(); });

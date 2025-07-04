@@ -62,7 +62,7 @@ std::array<std::string, LANGUAGE_MAX> RandomizerSettingsMenuText[RSM_MAX] = {
     },
 };
 
-std::array<std::string, LANGUAGE_MAX> ArchipelagoSettingsMenuText[ASM_MAX] {
+std::array<std::string, LANGUAGE_MAX> ArchipelagoSettingsMenuText[ASM_MAX]{
     // ASM_START_ARCHIPELAGO
     {
         "Start Archipelago",
