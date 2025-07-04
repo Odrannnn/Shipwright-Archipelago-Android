@@ -313,6 +313,7 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
             break;
         case SPOILER_CHK_RANDOMIZER_INF:
             Flags_SetRandomizerInf(static_cast<RandomizerInf>(flagID));
+            break;
         case SPOILER_CHK_EVENT_CHK_INF:
             Flags_SetEventChkInf(flagID);
             break;
@@ -323,11 +324,13 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
             Flags_SetInfTable(flagID);
             break;
         case SPOILER_CHK_GOLD_SKULLTULA:
-            SET_GS_FLAGS((flagID & 0x1F00) >> 8, flagID & 0xFF);
+            randomizerQueuedChecks.push(rc);
+            // Below doesn't work, temporarily disabled until a solution is found
+            // SET_GS_FLAGS((flagID & 0x1F00) >> 8, flagID & 0xFF);
             break;
         case SPOILER_CHK_GRAVEDIGGER: // This enum is used nowhere in code, so i'll leave it as nothing for now
         case SPOILER_CHK_NONE:
-            // do Nothing
+            // Do nothing
             break;
     }
 }
