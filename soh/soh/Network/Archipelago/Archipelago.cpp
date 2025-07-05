@@ -496,6 +496,9 @@ void ArchipelagoClient::SendDeathLink() {
 }
 
 void ArchipelagoClient::SetDeathLinkTag() {
+    if (!apClient) {
+        return;
+    }
     std::list<std::string> tags;
     if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0)) {
         tags.push_back("DeathLink");
