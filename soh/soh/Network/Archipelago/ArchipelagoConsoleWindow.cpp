@@ -27,10 +27,16 @@ void ArchipelagoConsole_SendMessage(const char* fmt, ...) {
     std::vector<ArchipelagoClient::ColoredTextNode> line;
     line.push_back(node);
     Items.push_back(line);
+    if (Items.size() > 50) {
+        Items.erase(Items.begin());
+    }
 }
 
 void ArchipelagoConsole_PrintJson(const std::vector<ArchipelagoClient::ColoredTextNode> nodes) {
     Items.push_back(nodes);
+    if (Items.size() > 50) {
+        Items.erase(Items.begin());
+    }
 }
 
 void ArchipelagoConsoleWindow::DrawElement() {

@@ -467,6 +467,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     // load those in instead.
 
     nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
+    mOptions[RSK_LOGIC_RULES].Set(RO_LOGIC_NO_LOGIC);
     mOptions[RSK_FOREST].Set(RO_CLOSED_FOREST_OFF);
     mOptions[RSK_KAK_GATE].Set(RO_KAK_GATE_OPEN);
     mOptions[RSK_DOOR_OF_TIME].Set(RO_DOOROFTIME_OPEN);
