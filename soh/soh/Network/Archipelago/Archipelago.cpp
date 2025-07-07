@@ -146,64 +146,64 @@ bool ArchipelagoClient::StartClient() {
             return;
         }
 
-        std::vector<ColoredTextNode> coloredNodes;
+        std::vector<AP_Text::ColoredTextNode> coloredNodes;
 
         for (const APClient::TextNode& node : arg.data) {
             APClient* client = apClient.get();
-            std::string color;
+            AP_Text::TextColor color = AP_Text::TextColor::COLOR_DEFAULT;
             std::string text;
 
             if (node.type == "player_id") {
                 int id = std::stoi(node.text);
-                if (color.empty() && id == client->get_player_number())
-                    color = "magenta";
-                else if (color.empty())
-                    color = "yellow";
+                if (color == AP_Text::TextColor::COLOR_DEFAULT && id == client->get_player_number())
+                    color = AP_Text::TextColor::COLOR_MAGENTA;
+                else if (color == AP_Text::TextColor::COLOR_DEFAULT)
+                    color = AP_Text::TextColor::COLOR_YELLOW;
                 text = client->get_player_alias(id);
             } else if (node.type == "item_id") {
                 int64_t id = std::stoll(node.text);
-                if (color.empty()) {
+                if (color == AP_Text::TextColor::COLOR_DEFAULT) {
                     if (node.flags & APClient::ItemFlags::FLAG_ADVANCEMENT)
-                        color = "plum";
+                        color = AP_Text::TextColor::COLOR_PLUM;
                     else if (node.flags & APClient::ItemFlags::FLAG_NEVER_EXCLUDE)
-                        color = "slateblue";
+                        color = AP_Text::TextColor::COLOR_SLATEBLUE;
                     else if (node.flags & APClient::ItemFlags::FLAG_TRAP)
-                        color = "salmon";
+                        color = AP_Text::TextColor::COLOR_SALMON;
                     else
-                        color = "cyan";
+                        color = AP_Text::TextColor::COLOR_CYAN;
                 }
                 text = client->get_item_name(id, client->get_player_game(node.player));
             } else if (node.type == "location_id") {
                 int64_t id = std::stoll(node.text);
-                if (color.empty())
-                    color = "blue";
+                if (color == AP_Text::TextColor::COLOR_DEFAULT)
+                    color = AP_Text::TextColor::COLOR_BLUE;
                 text = client->get_location_name(id, client->get_player_game(node.player));
             } else if (node.type == "hint_status") {
                 text = node.text;
                 if (node.hintStatus == APClient::HINT_FOUND)
-                    color = "green";
+                    color = AP_Text::TextColor::COLOR_GREEN;
                 else if (node.hintStatus == APClient::HINT_UNSPECIFIED)
-                    color = "grey";
+                    color = AP_Text::TextColor::COLOR_GRAY;
                 else if (node.hintStatus == APClient::HINT_NO_PRIORITY)
-                    color = "slateblue";
+                    color = AP_Text::TextColor::COLOR_SLATEBLUE;
                 else if (node.hintStatus == APClient::HINT_AVOID)
-                    color = "salmon";
+                    color = AP_Text::TextColor::COLOR_SALMON;
                 else if (node.hintStatus == APClient::HINT_PRIORITY)
-                    color = "plum";
+                    color = AP_Text::TextColor::COLOR_PLUM;
                 else
-                    color = "red"; // unknown status -> red
+                    color = AP_Text::TextColor::COLOR_RED; // unknown status -> red
             } else if (node.type == "ERROR") {
-                color = "ERROR";
+                color = AP_Text::TextColor::COLOR_ERROR;
                 text = node.text;
             } else if (node.type == "LOG") {
-                color = "LOG";
+                color = AP_Text::TextColor::COLOR_LOG;
                 text = node.text;
             } else {
-                color = "white";
+                color = AP_Text::TextColor::COLOR_WHITE;
                 text = node.text;
             }
 
-            ColoredTextNode Colornode;
+            AP_Text::ColoredTextNode Colornode;
             Colornode.color = color;
             Colornode.text = text;
             coloredNodes.push_back(Colornode);
