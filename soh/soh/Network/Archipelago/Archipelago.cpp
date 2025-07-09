@@ -39,7 +39,7 @@ ArchipelagoClient& ArchipelagoClient::GetInstance() {
 }
 
 bool ArchipelagoClient::StartClient() {
-    if (apClient != NULL) {
+    if (apClient != nullptr) {
         apClient.reset();
     }
 
@@ -372,6 +372,10 @@ void ArchipelagoClient::QueueItem(const ApItem item) {
 }
 
 void ArchipelagoClient::SendGameWon() {
+    if(apClient == nullptr) {
+        return;
+    }
+
     if (!gameWon) {
         apClient->StatusUpdate(APClient::ClientStatus::GOAL);
         gameWon = true;
@@ -425,7 +429,7 @@ bool ArchipelagoClient::isRightSaveLoaded() const {
 }
 
 const std::string ArchipelagoClient::GetSlotName() const {
-    if (apClient == NULL) {
+    if (apClient == nullptr) {
         return "";
     }
 
@@ -482,7 +486,7 @@ void ArchipelagoClient::OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSk
 }
 
 void ArchipelagoClient::SendDeathLink() {
-    if (apClient && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0) && !isDeathLinkedDeath) {
+    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0) && !isDeathLinkedDeath) {
         nlohmann::json data{ { "time", apClient->get_server_time() },
                              { "cause", "Shipwrecked by King Harkinian." },
                              { "source", apClient->get_slot() } };
