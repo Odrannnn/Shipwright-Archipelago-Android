@@ -213,19 +213,21 @@ bool ArchipelagoClient::StartClient() {
     });
 
     apClient->set_bounced_handler([&](const nlohmann::json data) {
-        std::list<std::string> tags = data["tags"];
-        bool deathLink = (std::find(tags.begin(), tags.end(), "DeathLink") != tags.end());
-
-        if (deathLink && data["data"]["source"] != apClient->get_slot()) {
-            if (GameInteractor::IsSaveLoaded()) {
-                gSaveContext.health = 0;
-                std::string prefixText = std::string(data["data"]["source"]) + " died.";
-                Notification::Emit({ .prefix = prefixText, .message = "Cause:", .suffix = data["data"]["cause"] });
-                std::string deathLinkMessage = "[LOG] Received death link from " + std::string(data["data"]["source"]) +
-                                               ". Cause: " + std::string(data["data"]["cause"]);
-                ArchipelagoConsole_SendMessage(deathLinkMessage.c_str());
-
-                isDeathLinkedDeath = true;
+        if(data.contains("tags")) {
+            std::list<std::string> tags = data["tags"];
+            bool deathLink = (std::find(tags.begin(), tags.end(), "DeathLink") != tags.end());
+            
+            if (deathLink && data["data"]["source"] != apClient->get_slot()) {
+                if (GameInteractor::IsSaveLoaded()) {
+                    gSaveContext.health = 0;
+                    std::string prefixText = std::string(data["data"]["source"]) + " died.";
+                    Notification::Emit({ .prefix = prefixText, .message = "Cause:", .suffix = data["data"]["cause"] });
+                    std::string deathLinkMessage = "[LOG] Received death link from " + std::string(data["data"]["source"]) +
+                                                   ". Cause: " + std::string(data["data"]["cause"]);
+                    ArchipelagoConsole_SendMessage(deathLinkMessage.c_str());
+                
+                    isDeathLinkedDeath = true;
+                }
             }
         }
     });
