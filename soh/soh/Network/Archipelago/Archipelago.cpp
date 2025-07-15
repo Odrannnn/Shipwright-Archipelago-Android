@@ -45,9 +45,10 @@ bool ArchipelagoClient::StartClient() {
 
     disconnecting = false;
     retries = 0;
+    uri = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281");
     apClient = std::unique_ptr<APClient>(
         new APClient(uuid, AP_Client_consts::AP_GAME_NAME,
-                     CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281"), "cacert.pem"));
+            uri, "cacert.pem"));
 
     CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 1); // Connecting
 
@@ -424,6 +425,23 @@ void ArchipelagoClient::Poll() {
     apClient->poll();
 }
 
+bool ArchipelagoClient::slotMatch(const std::string& slotName, const std::string& roomHash) {
+    if (apClient == nullptr) {
+        return false;
+    }
+
+    if(disconnecting) {
+        return false;
+    }
+
+    const std::string seed = apClient->get_seed();
+    const std::string slot = GetSlotName();
+
+    const bool seedMatch = apClient->get_seed().compare(roomHash) == 0;
+    const bool slotMatch = GetSlotName().compare(slotName) == 0;
+    return seedMatch && slotMatch;
+}
+
 bool ArchipelagoClient::isRightSaveLoaded() const {
     const bool seedMatch = apClient->get_seed().compare(gSaveContext.ship.quest.data.archipelago.roomHash) == 0;
     const bool slotMatch = GetSlotName().compare(gSaveContext.ship.quest.data.archipelago.slotName) == 0;
@@ -524,6 +542,8 @@ extern "C" void Archipelago_InitSaveFile() {
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomHash));
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.slotName, client.apClient->get_slot(),
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, client.uri,
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));                                
 
     for (uint32_t i = 0; i < scoutedItems.size(); i++) {
         RandomizerCheck rc = Rando::StaticData::locationNameToEnum[scoutedItems[i].locationName];
@@ -546,6 +566,8 @@ void LoadArchipelagoData() {
                                          ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomHash));
     SaveManager::Instance->LoadCharArray("slotName", gSaveContext.ship.quest.data.archipelago.slotName,
                                          ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
+    SaveManager::Instance->LoadCharArray("archiUri", gSaveContext.ship.quest.data.archipelago.archiUri,
+                                         ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
 
     SaveManager::Instance->LoadArray(
         "locations", ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations), [](size_t i) {
@@ -567,6 +589,7 @@ void SaveArchipelagoData(SaveContext* saveContext, int sectionID, bool fullSave)
 
     SaveManager::Instance->SaveData("roomHash", saveContext->ship.quest.data.archipelago.roomHash);
     SaveManager::Instance->SaveData("slotName", saveContext->ship.quest.data.archipelago.slotName);
+    SaveManager::Instance->SaveData("archiUri", saveContext->ship.quest.data.archipelago.archiUri);
 
     SaveManager::Instance->SaveArray(
         "locations", ARRAY_COUNT(saveContext->ship.quest.data.archipelago.locations), [&](size_t i) {
@@ -587,6 +610,8 @@ void InitArchipelagoData(bool isDebug) {
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomHash));
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.slotName, "",
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, "",
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
 
     for (uint32_t i = 0; i < ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations); i++) {
         SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.locations[i].itemName, "",

@@ -178,6 +178,7 @@ typedef struct ShipArchipelagoSaveContextData {
     u32 lastReceivedItemIndex;
     char roomHash[100];
     char slotName[17];
+    char archiUri[50];
     ArchipelagoLocationData locations[RC_MAX];
 } ShipArchipelagoSaveContextData;
 

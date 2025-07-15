@@ -33,6 +33,10 @@ typedef struct {
     s32 filenameLanguage;
     s32 gregFound;
     s32 hasWallet;
+
+    char archiRoomSeed[100];
+    char slotName[17];
+    char archiUri[50];
 } SaveFileMetaInfo;
 
 typedef enum {

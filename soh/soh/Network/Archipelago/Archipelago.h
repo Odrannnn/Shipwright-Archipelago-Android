@@ -62,11 +62,14 @@ class ArchipelagoClient {
     void SendMessageToConsole(const std::string message);
     void Poll();
 
+    bool slotMatch(const std::string& slotName, const std::string& roomHash);
+
     std::unique_ptr<APClient> apClient;
     bool itemQueued;
     bool disconnecting;
     bool isDeathLinkedDeath;
     int retries;
+    std::string uri;
 
   protected:
     ArchipelagoClient();

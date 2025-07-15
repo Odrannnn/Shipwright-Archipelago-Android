@@ -2728,6 +2728,12 @@ extern "C" void ParseArchipelago() {
     OTRGlobals::Instance->gRandoContext->ParseArchipelago();
 }
 
+extern "C" bool checkArchipelagoSlotInfo(const char* slotName, const char* roomHash) {
+    const std::string slot = std::string(slotName);
+    const std::string room = std::string(roomHash);
+    return ArchipelagoClient::GetInstance().slotMatch(slot, room);
+}
+
 extern "C" void CheckTracker_RecalculateAvailableChecks() {
     CheckTracker::RecalculateAvailableChecks();
 }
