@@ -17,6 +17,7 @@
 #include "soh/Notification/Notification.h"
 #include "soh/ShipInit.hpp"
 #include "soh/SaveManager.h"
+#include "soh/util.h"
 
 extern "C" {
 #include "variables.h"
@@ -31,6 +32,8 @@ ArchipelagoClient::ArchipelagoClient() {
     itemQueued = false;
     disconnecting = false;
     isDeathLinkedDeath = false;
+    uri = "";
+    password = "";
 }
 
 ArchipelagoClient& ArchipelagoClient::GetInstance() {
@@ -46,6 +49,8 @@ bool ArchipelagoClient::StartClient() {
     disconnecting = false;
     retries = 0;
     uri = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281");
+    password = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), "");
+
     apClient = std::unique_ptr<APClient>(
         new APClient(uuid, AP_Client_consts::AP_GAME_NAME,
             uri, "cacert.pem"));
@@ -70,7 +75,7 @@ bool ArchipelagoClient::StartClient() {
             tags.push_back("DeathLink");
         }
         apClient->ConnectSlot(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""),
-                              CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), ""), 0b001, tags);
+                              password, 0b001, tags);
     });
 
     apClient->set_slot_connected_handler([&](const nlohmann::json data) {
@@ -88,6 +93,14 @@ bool ArchipelagoClient::StartClient() {
                 ArchipelagoConsole_SendMessage("[ERROR] Connected to incorrect slot, disconnecting...");
                 return;
             }
+
+            // save the connection details in case they changed
+            SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, uri,
+                                            ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
+            SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.slotName, GetSlotName(),
+                                            ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
+            SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomPass, password,
+                                            ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
             SynchSentLocations();
             SynchReceivedLocations();
@@ -243,6 +256,12 @@ bool ArchipelagoClient::StopClient() {
 
 void ArchipelagoClient::GameLoaded() {
     if (apClient == nullptr) {
+        if(IS_ARCHIPELAGO) {
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), gSaveContext.ship.quest.data.archipelago.archiUri);
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), gSaveContext.ship.quest.data.archipelago.slotName);
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("Password"), gSaveContext.ship.quest.data.archipelago.roomPass);
+            StartClient();
+        }
         return;
     }
 
@@ -254,8 +273,12 @@ void ArchipelagoClient::GameLoaded() {
     }
 
     if (!isRightSaveLoaded()) {
-        ArchipelagoConsole_SendMessage("[ERROR] Loaded save is not associated with connected slot, disconnecting...");
-        disconnecting = true;
+        ArchipelagoConsole_SendMessage("Connec");
+        //disconnecting = true;
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), gSaveContext.ship.quest.data.archipelago.archiUri);
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), gSaveContext.ship.quest.data.archipelago.slotName);
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("Password"), gSaveContext.ship.quest.data.archipelago.roomPass);
+            StartClient();
         return;
     }
 
@@ -543,7 +566,9 @@ extern "C" void Archipelago_InitSaveFile() {
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.slotName, client.apClient->get_slot(),
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, client.uri,
-                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));                                
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomPass, client.password,
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
     for (uint32_t i = 0; i < scoutedItems.size(); i++) {
         RandomizerCheck rc = Rando::StaticData::locationNameToEnum[scoutedItems[i].locationName];
@@ -568,6 +593,8 @@ void LoadArchipelagoData() {
                                          ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
     SaveManager::Instance->LoadCharArray("archiUri", gSaveContext.ship.quest.data.archipelago.archiUri,
                                          ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
+    SaveManager::Instance->LoadCharArray("roomPass", gSaveContext.ship.quest.data.archipelago.roomPass, 
+                                         ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
     SaveManager::Instance->LoadArray(
         "locations", ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations), [](size_t i) {
@@ -590,6 +617,7 @@ void SaveArchipelagoData(SaveContext* saveContext, int sectionID, bool fullSave)
     SaveManager::Instance->SaveData("roomHash", saveContext->ship.quest.data.archipelago.roomHash);
     SaveManager::Instance->SaveData("slotName", saveContext->ship.quest.data.archipelago.slotName);
     SaveManager::Instance->SaveData("archiUri", saveContext->ship.quest.data.archipelago.archiUri);
+    SaveManager::Instance->SaveData("roomPass", gSaveContext.ship.quest.data.archipelago.roomPass);
 
     SaveManager::Instance->SaveArray(
         "locations", ARRAY_COUNT(saveContext->ship.quest.data.archipelago.locations), [&](size_t i) {
@@ -612,6 +640,8 @@ void InitArchipelagoData(bool isDebug) {
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, "",
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomHash, "",
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
     for (uint32_t i = 0; i < ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations); i++) {
         SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.locations[i].itemName, "",

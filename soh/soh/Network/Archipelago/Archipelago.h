@@ -70,6 +70,7 @@ class ArchipelagoClient {
     bool isDeathLinkedDeath;
     int retries;
     std::string uri;
+    std::string password;
 
   protected:
     ArchipelagoClient();
