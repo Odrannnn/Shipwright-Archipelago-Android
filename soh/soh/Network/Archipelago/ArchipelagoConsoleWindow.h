@@ -5,6 +5,7 @@
 #include <libultraship/libultraship.h>
 #include <vector>
 #include <list>
+#include "window/gui/GuiWindow.h"
 #include "ArchipelagoTypes.h"
 
 class ArchipelagoConsoleWindow final : public Ship::GuiWindow {
