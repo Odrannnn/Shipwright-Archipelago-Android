@@ -5,7 +5,6 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 #include <queue>
-#include "ArchipelagoConsoleWindow.h"
 #include "ArchipelagoTypes.h"
 
 // Forward declaration

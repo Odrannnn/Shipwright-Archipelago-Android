@@ -3,6 +3,7 @@
 #define ARCHIPELAGO_SETTINGS_WINDOW_H
 
 #include <libultraship/libultraship.h>
+#include "window/gui/GuiWindow.h"
 
 class ArchipelagoSettingsWindow final : public Ship::GuiWindow {
   public:
