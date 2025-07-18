@@ -18,6 +18,7 @@
 #include "soh/ShipInit.hpp"
 #include "soh/SaveManager.h"
 #include "soh/util.h"
+#include "soh/SohGui/SohGui.hpp"
 
 extern "C" {
 #include "variables.h"
@@ -64,6 +65,10 @@ bool ArchipelagoClient::StartClient() {
                                            "server address and slot name correct?");
             CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // Connection error
             disconnecting = true;
+
+            if(GameInteractor::IsSaveLoaded) {
+                SohGui::ShowArchipelagoSettingsMenu();
+            }
             return;
         }
         ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server, retrying...");
