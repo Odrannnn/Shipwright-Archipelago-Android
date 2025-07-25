@@ -2,6 +2,7 @@
 #include <fstream>
 #include <filesystem>
 
+#include "Context.h"
 #include "TimeSplits.h"
 #include "soh/Enhancements/gameplaystats.h"
 #include "soh/SaveManager.h"
@@ -365,7 +366,7 @@ void TimeSplitsSkipSplit(uint32_t index) {
 }
 
 void TimeSplitsFileManagement(uint32_t action, const char* listEntry, std::vector<SplitObject> listData) {
-    std::string filename = "timesplitdata.json";
+    std::string filename = Ship::Context::GetPathRelativeToAppDirectory("timesplitdata.json");
     json saveFile;
     json listArray = nlohmann::json::array();
 
@@ -950,9 +951,10 @@ void TimeSplitsDrawManageList() {
 }
 
 void InitializeSplitDataFile() {
-    if (!std::filesystem::exists("timesplitdata.json")) {
+    std::string filename = Ship::Context::GetPathRelativeToAppDirectory("timesplitdata.json");
+    if (!std::filesystem::exists(filename)) {
         json j;
-        std::ofstream file("timesplitdata.json");
+        std::ofstream file(filename);
         file << j.dump(4);
         file.close();
     }
