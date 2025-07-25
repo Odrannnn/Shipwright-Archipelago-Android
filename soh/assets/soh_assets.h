@@ -466,6 +466,10 @@ static const ALIGN_ASSET(2) char gShipLogoDL[] = dgShipLogoDL;
 #define dnintendo_rogo_static_Tex_LUS_000000 "__OTR__textures/nintendo_rogo_static/nintendo_rogo_static_Tex_LUS_000000"
 static const ALIGN_ASSET(2) char nintendo_rogo_static_Tex_LUS_000000[] = dnintendo_rogo_static_Tex_LUS_000000;
 
+// Archipelago Item Icons
+#define dgArchipelagoItemTex "__OTR__textures/parameter_static/gArchipelagoOutline"
+static const ALIGN_ASSET(2) char gArchipelagoItemTex[] = dgArchipelagoItemTex;
+
 // Archipelago Item Models
 #define dgArchipelagoItemDL "__OTR__objects/object_archipelago_item/gArchipelagoItemDL"
 static const ALIGN_ASSET(2) char gArchipelagoItemDL[] = dgArchipelagoItemDL;

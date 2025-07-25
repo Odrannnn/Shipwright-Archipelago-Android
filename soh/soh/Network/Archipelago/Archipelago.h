@@ -5,6 +5,7 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 #include <queue>
+#include "ArchipelagoTypes.h"
 
 // Forward declaration
 class APClient;
@@ -26,11 +27,6 @@ class ArchipelagoClient {
         std::string playerName;
         unsigned int flags;
         uint64_t index;
-    };
-
-    struct ColoredTextNode {
-        std::string text;
-        std::string color;
     };
 
     static ArchipelagoClient& GetInstance();
@@ -65,11 +61,15 @@ class ArchipelagoClient {
     void SendMessageToConsole(const std::string message);
     void Poll();
 
+    bool slotMatch(const std::string& slotName, const std::string& roomHash);
+
     std::unique_ptr<APClient> apClient;
     bool itemQueued;
     bool disconnecting;
     bool isDeathLinkedDeath;
     int retries;
+    std::string uri;
+    std::string password;
 
   protected:
     ArchipelagoClient();

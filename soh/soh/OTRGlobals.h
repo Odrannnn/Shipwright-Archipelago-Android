@@ -173,6 +173,7 @@ void CheckTracker_RecalculateAvailableChecks();
 GetItemID RetrieveGetItemIDFromItemID(ItemID itemID);
 RandomizerGet RetrieveRandomizerGetFromItemID(ItemID itemID);
 void ParseArchipelago();
+bool checkArchipelagoSlotInfo(const char* slotName, const char* roomHash);
 void Messagebox_ShowErrorBox(char* title, char* body);
 #endif
 

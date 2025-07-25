@@ -17,6 +17,8 @@
 #include "soh/Notification/Notification.h"
 #include "soh/ShipInit.hpp"
 #include "soh/SaveManager.h"
+#include "soh/util.h"
+#include "soh/SohGui/SohGui.hpp"
 
 extern "C" {
 #include "variables.h"
@@ -31,6 +33,8 @@ ArchipelagoClient::ArchipelagoClient() {
     itemQueued = false;
     disconnecting = false;
     isDeathLinkedDeath = false;
+    uri = "";
+    password = "";
 }
 
 ArchipelagoClient& ArchipelagoClient::GetInstance() {
@@ -39,15 +43,18 @@ ArchipelagoClient& ArchipelagoClient::GetInstance() {
 }
 
 bool ArchipelagoClient::StartClient() {
-    if (apClient != NULL) {
+    if (apClient != nullptr) {
         apClient.reset();
     }
 
     disconnecting = false;
     retries = 0;
+    uri = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281");
+    password = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), "");
+
     apClient = std::unique_ptr<APClient>(
         new APClient(uuid, AP_Client_consts::AP_GAME_NAME,
-                     CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281"), "cacert.pem"));
+            uri, "cacert.pem"));
 
     CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 1); // Connecting
 
@@ -58,6 +65,10 @@ bool ArchipelagoClient::StartClient() {
                                            "server address and slot name correct?");
             CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // Connection error
             disconnecting = true;
+
+            if(GameInteractor::IsSaveLoaded) {
+                SohGui::ShowArchipelagoSettingsMenu();
+            }
             return;
         }
         ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server, retrying...");
@@ -69,7 +80,7 @@ bool ArchipelagoClient::StartClient() {
             tags.push_back("DeathLink");
         }
         apClient->ConnectSlot(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""),
-                              CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), ""), 0b001, tags);
+                              password, 0b001, tags);
     });
 
     apClient->set_slot_connected_handler([&](const nlohmann::json data) {
@@ -87,6 +98,14 @@ bool ArchipelagoClient::StartClient() {
                 ArchipelagoConsole_SendMessage("[ERROR] Connected to incorrect slot, disconnecting...");
                 return;
             }
+
+            // save the connection details in case they changed
+            SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, uri,
+                                            ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
+            SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.slotName, GetSlotName(),
+                                            ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
+            SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomPass, password,
+                                            ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
             SynchSentLocations();
             SynchReceivedLocations();
@@ -146,64 +165,64 @@ bool ArchipelagoClient::StartClient() {
             return;
         }
 
-        std::vector<ColoredTextNode> coloredNodes;
+        std::vector<AP_Text::ColoredTextNode> coloredNodes;
 
         for (const APClient::TextNode& node : arg.data) {
             APClient* client = apClient.get();
-            std::string color;
+            AP_Text::TextColor color = AP_Text::TextColor::COLOR_DEFAULT;
             std::string text;
 
             if (node.type == "player_id") {
                 int id = std::stoi(node.text);
-                if (color.empty() && id == client->get_player_number())
-                    color = "magenta";
-                else if (color.empty())
-                    color = "yellow";
+                if (color == AP_Text::TextColor::COLOR_DEFAULT && id == client->get_player_number())
+                    color = AP_Text::TextColor::COLOR_MAGENTA;
+                else if (color == AP_Text::TextColor::COLOR_DEFAULT)
+                    color = AP_Text::TextColor::COLOR_YELLOW;
                 text = client->get_player_alias(id);
             } else if (node.type == "item_id") {
                 int64_t id = std::stoll(node.text);
-                if (color.empty()) {
+                if (color == AP_Text::TextColor::COLOR_DEFAULT) {
                     if (node.flags & APClient::ItemFlags::FLAG_ADVANCEMENT)
-                        color = "plum";
+                        color = AP_Text::TextColor::COLOR_PLUM;
                     else if (node.flags & APClient::ItemFlags::FLAG_NEVER_EXCLUDE)
-                        color = "slateblue";
+                        color = AP_Text::TextColor::COLOR_SLATEBLUE;
                     else if (node.flags & APClient::ItemFlags::FLAG_TRAP)
-                        color = "salmon";
+                        color = AP_Text::TextColor::COLOR_SALMON;
                     else
-                        color = "cyan";
+                        color = AP_Text::TextColor::COLOR_CYAN;
                 }
                 text = client->get_item_name(id, client->get_player_game(node.player));
             } else if (node.type == "location_id") {
                 int64_t id = std::stoll(node.text);
-                if (color.empty())
-                    color = "blue";
+                if (color == AP_Text::TextColor::COLOR_DEFAULT)
+                    color = AP_Text::TextColor::COLOR_BLUE;
                 text = client->get_location_name(id, client->get_player_game(node.player));
             } else if (node.type == "hint_status") {
                 text = node.text;
                 if (node.hintStatus == APClient::HINT_FOUND)
-                    color = "green";
+                    color = AP_Text::TextColor::COLOR_GREEN;
                 else if (node.hintStatus == APClient::HINT_UNSPECIFIED)
-                    color = "grey";
+                    color = AP_Text::TextColor::COLOR_GRAY;
                 else if (node.hintStatus == APClient::HINT_NO_PRIORITY)
-                    color = "slateblue";
+                    color = AP_Text::TextColor::COLOR_SLATEBLUE;
                 else if (node.hintStatus == APClient::HINT_AVOID)
-                    color = "salmon";
+                    color = AP_Text::TextColor::COLOR_SALMON;
                 else if (node.hintStatus == APClient::HINT_PRIORITY)
-                    color = "plum";
+                    color = AP_Text::TextColor::COLOR_PLUM;
                 else
-                    color = "red"; // unknown status -> red
+                    color = AP_Text::TextColor::COLOR_RED; // unknown status -> red
             } else if (node.type == "ERROR") {
-                color = "ERROR";
+                color = AP_Text::TextColor::COLOR_ERROR;
                 text = node.text;
             } else if (node.type == "LOG") {
-                color = "LOG";
+                color = AP_Text::TextColor::COLOR_LOG;
                 text = node.text;
             } else {
-                color = "white";
+                color = AP_Text::TextColor::COLOR_WHITE;
                 text = node.text;
             }
 
-            ColoredTextNode Colornode;
+            AP_Text::ColoredTextNode Colornode;
             Colornode.color = color;
             Colornode.text = text;
             coloredNodes.push_back(Colornode);
@@ -213,19 +232,21 @@ bool ArchipelagoClient::StartClient() {
     });
 
     apClient->set_bounced_handler([&](const nlohmann::json data) {
-        std::list<std::string> tags = data["tags"];
-        bool deathLink = (std::find(tags.begin(), tags.end(), "DeathLink") != tags.end());
-
-        if (deathLink && data["data"]["source"] != apClient->get_slot()) {
-            if (GameInteractor::IsSaveLoaded()) {
-                gSaveContext.health = 0;
-                std::string prefixText = std::string(data["data"]["source"]) + " died.";
-                Notification::Emit({ .prefix = prefixText, .message = "Cause:", .suffix = data["data"]["cause"] });
-                std::string deathLinkMessage = "[LOG] Received death link from " + std::string(data["data"]["source"]) +
-                                               ". Cause: " + std::string(data["data"]["cause"]);
-                ArchipelagoConsole_SendMessage(deathLinkMessage.c_str());
-
-                isDeathLinkedDeath = true;
+        if(data.contains("tags")) {
+            std::list<std::string> tags = data["tags"];
+            bool deathLink = (std::find(tags.begin(), tags.end(), "DeathLink") != tags.end());
+            
+            if (deathLink && data["data"]["source"] != apClient->get_slot()) {
+                if (GameInteractor::IsSaveLoaded()) {
+                    gSaveContext.health = 0;
+                    std::string prefixText = std::string(data["data"]["source"]) + " died.";
+                    Notification::Emit({ .prefix = prefixText, .message = "Cause:", .suffix = data["data"]["cause"] });
+                    std::string deathLinkMessage = "[LOG] Received death link from " + std::string(data["data"]["source"]) +
+                                                   ". Cause: " + std::string(data["data"]["cause"]);
+                    ArchipelagoConsole_SendMessage(deathLinkMessage.c_str());
+                
+                    isDeathLinkedDeath = true;
+                }
             }
         }
     });
@@ -240,6 +261,12 @@ bool ArchipelagoClient::StopClient() {
 
 void ArchipelagoClient::GameLoaded() {
     if (apClient == nullptr) {
+        if(IS_ARCHIPELAGO) {
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), gSaveContext.ship.quest.data.archipelago.archiUri);
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), gSaveContext.ship.quest.data.archipelago.slotName);
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("Password"), gSaveContext.ship.quest.data.archipelago.roomPass);
+            StartClient();
+        }
         return;
     }
 
@@ -251,8 +278,12 @@ void ArchipelagoClient::GameLoaded() {
     }
 
     if (!isRightSaveLoaded()) {
-        ArchipelagoConsole_SendMessage("[ERROR] Loaded save is not associated with connected slot, disconnecting...");
-        disconnecting = true;
+        ArchipelagoConsole_SendMessage("Connec");
+        //disconnecting = true;
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), gSaveContext.ship.quest.data.archipelago.archiUri);
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), gSaveContext.ship.quest.data.archipelago.slotName);
+            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("Password"), gSaveContext.ship.quest.data.archipelago.roomPass);
+            StartClient();
         return;
     }
 
@@ -372,6 +403,10 @@ void ArchipelagoClient::QueueItem(const ApItem item) {
 }
 
 void ArchipelagoClient::SendGameWon() {
+    if(apClient == nullptr) {
+        return;
+    }
+
     if (!gameWon) {
         apClient->StatusUpdate(APClient::ClientStatus::GOAL);
         gameWon = true;
@@ -418,6 +453,23 @@ void ArchipelagoClient::Poll() {
     apClient->poll();
 }
 
+bool ArchipelagoClient::slotMatch(const std::string& slotName, const std::string& roomHash) {
+    if (apClient == nullptr) {
+        return false;
+    }
+
+    if(disconnecting) {
+        return false;
+    }
+
+    const std::string seed = apClient->get_seed();
+    const std::string slot = GetSlotName();
+
+    const bool seedMatch = apClient->get_seed().compare(roomHash) == 0;
+    const bool slotMatch = GetSlotName().compare(slotName) == 0;
+    return seedMatch && slotMatch;
+}
+
 bool ArchipelagoClient::isRightSaveLoaded() const {
     const bool seedMatch = apClient->get_seed().compare(gSaveContext.ship.quest.data.archipelago.roomHash) == 0;
     const bool slotMatch = GetSlotName().compare(gSaveContext.ship.quest.data.archipelago.slotName) == 0;
@@ -425,7 +477,7 @@ bool ArchipelagoClient::isRightSaveLoaded() const {
 }
 
 const std::string ArchipelagoClient::GetSlotName() const {
-    if (apClient == NULL) {
+    if (apClient == nullptr) {
         return "";
     }
 
@@ -482,7 +534,7 @@ void ArchipelagoClient::OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSk
 }
 
 void ArchipelagoClient::SendDeathLink() {
-    if (apClient && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0) && !isDeathLinkedDeath) {
+    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0) && !isDeathLinkedDeath) {
         nlohmann::json data{ { "time", apClient->get_server_time() },
                              { "cause", "Shipwrecked by King Harkinian." },
                              { "source", apClient->get_slot() } };
@@ -518,6 +570,10 @@ extern "C" void Archipelago_InitSaveFile() {
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomHash));
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.slotName, client.apClient->get_slot(),
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, client.uri,
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomPass, client.password,
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
     for (uint32_t i = 0; i < scoutedItems.size(); i++) {
         RandomizerCheck rc = Rando::StaticData::locationNameToEnum[scoutedItems[i].locationName];
@@ -540,6 +596,10 @@ void LoadArchipelagoData() {
                                          ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomHash));
     SaveManager::Instance->LoadCharArray("slotName", gSaveContext.ship.quest.data.archipelago.slotName,
                                          ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
+    SaveManager::Instance->LoadCharArray("archiUri", gSaveContext.ship.quest.data.archipelago.archiUri,
+                                         ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
+    SaveManager::Instance->LoadCharArray("roomPass", gSaveContext.ship.quest.data.archipelago.roomPass, 
+                                         ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
     SaveManager::Instance->LoadArray(
         "locations", ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations), [](size_t i) {
@@ -561,6 +621,8 @@ void SaveArchipelagoData(SaveContext* saveContext, int sectionID, bool fullSave)
 
     SaveManager::Instance->SaveData("roomHash", saveContext->ship.quest.data.archipelago.roomHash);
     SaveManager::Instance->SaveData("slotName", saveContext->ship.quest.data.archipelago.slotName);
+    SaveManager::Instance->SaveData("archiUri", saveContext->ship.quest.data.archipelago.archiUri);
+    SaveManager::Instance->SaveData("roomPass", gSaveContext.ship.quest.data.archipelago.roomPass);
 
     SaveManager::Instance->SaveArray(
         "locations", ARRAY_COUNT(saveContext->ship.quest.data.archipelago.locations), [&](size_t i) {
@@ -581,6 +643,10 @@ void InitArchipelagoData(bool isDebug) {
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomHash));
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.slotName, "",
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, "",
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomHash, "",
+                                    ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
     for (uint32_t i = 0; i < ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations); i++) {
         SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.locations[i].itemName, "",

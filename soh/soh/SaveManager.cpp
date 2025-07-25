@@ -154,6 +154,9 @@ SaveManager::SaveManager() {
         info.buildVersionMinor = 0;
         info.buildVersionPatch = 0;
         memset(&info.buildVersion, 0, sizeof(info.buildVersion));
+
+        memset(&info.archiUri, 0, sizeof(info.archiUri));
+        memset(&info.slotName, 0, sizeof(info.slotName));
     }
 }
 
@@ -509,6 +512,13 @@ void SaveManager::InitMeta(int fileNum) {
     fileMetaInfo[fileNum].buildVersionPatch = gSaveContext.ship.stats.buildVersionPatch;
     SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].buildVersion, gSaveContext.ship.stats.buildVersion,
                                     ARRAY_COUNT(fileMetaInfo[fileNum].buildVersion));
+
+    SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiUri, gSaveContext.ship.quest.data.archipelago.archiUri,
+                                    ARRAY_COUNT(fileMetaInfo[fileNum].archiUri));
+    SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].slotName, gSaveContext.ship.quest.data.archipelago.slotName,
+                                    ARRAY_COUNT(fileMetaInfo[fileNum].slotName));
+    SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiRoomSeed, gSaveContext.ship.quest.data.archipelago.roomHash,
+                                    ARRAY_COUNT(fileMetaInfo[fileNum].archiRoomSeed));
 }
 
 void SaveManager::InitFile(bool isDebug) {
