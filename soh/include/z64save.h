@@ -183,7 +183,7 @@ typedef struct ShipArchipelagoSaveContextData {
     ArchipelagoLocationData locations[RC_MAX];
 } ShipArchipelagoSaveContextData;
 
-typedef union ShipQuestSpecificSaveContextData {
+typedef struct ShipQuestSpecificSaveContextData {
     ShipRandomizerSaveContextData randomizer;
     ShipBossRushSaveContextData bossRush;
     ShipArchipelagoSaveContextData archipelago;

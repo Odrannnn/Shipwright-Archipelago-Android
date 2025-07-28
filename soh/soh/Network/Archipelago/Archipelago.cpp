@@ -645,7 +645,7 @@ void InitArchipelagoData(bool isDebug) {
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.slotName));
     SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.archiUri, "",
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.archiUri));
-    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomHash, "",
+    SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomPass, "",
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
     for (uint32_t i = 0; i < ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations); i++) {
