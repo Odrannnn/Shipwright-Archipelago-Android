@@ -516,7 +516,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
         mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_ANYWHERE);
     }
     mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE);
-    mOptions[RSK_SHUFFLE_TOKENS].Set(slotData["shuffle_tokens"]);
+    mOptions[RSK_SHUFFLE_TOKENS].Set(slotData["shuffle_skull_tokens"]);
     mOptions[RSK_SHOPSANITY].Set(slotData["shuffle_shops"]);
     mOptions[RSK_SHOPSANITY_COUNT].Set(4);
     mOptions[RSK_SHOPSANITY_PRICES].Set(RO_PRICE_FIXED);
