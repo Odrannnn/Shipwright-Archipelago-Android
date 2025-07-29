@@ -546,7 +546,13 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SCRUBS_PRICES_AFFORDABLE].Set(0);
     mOptions[RSK_SHUFFLE_BEEHIVES].Set(slotData["shuffle_beehives"]);
     mOptions[RSK_SHUFFLE_COWS].Set(slotData["shuffle_cows"]);
-    mOptions[RSK_SHUFFLE_WEIRD_EGG].Set(slotData["shuffle_weird_egg"]);
+    // Ship shows Malon Egg location if weird egg is shuffled even with "Skip Child Zelda" on
+    // So manually set this to off.
+    if (slotData["skip_child_zelda"] == 0) {
+        mOptions[RSK_SHUFFLE_WEIRD_EGG].Set(slotData["shuffle_weird_egg"]);
+    } else {
+        mOptions[RSK_SHUFFLE_WEIRD_EGG].Set(RO_GENERIC_NO);
+    }
     mOptions[RSK_SHUFFLE_GERUDO_MEMBERSHIP_CARD].Set(RO_GENERIC_YES);
     mOptions[RSK_SHUFFLE_POTS].Set(slotData["shuffle_pots"]);
     mOptions[RSK_SHUFFLE_CRATES].Set(slotData["shuffle_crates"]);
@@ -692,13 +698,13 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SHUFFLE_100_GS_REWARD].Set(RO_GENERIC_NO);
     mOptions[RSK_TRIFORCE_HUNT].Set(slotData["triforce_hunt"]);
     uint16_t triforcePiecesRequired = slotData["triforce_hunt_required_pieces"];
-    uint16_t triforcePiecesExtraPercentage = slotData["triforce_hunt_extra_pieces_percentage"];
-    uint16_t triforcePiecesTotal = floor(triforcePiecesRequired * (1 + (triforcePiecesExtraPercentage / 100)));
+    float triforcePiecesExtraMultiplier = 1 + (float(slotData["triforce_hunt_extra_pieces_percentage"]) / 100);
+    uint16_t triforcePiecesTotal = floor(triforcePiecesRequired * triforcePiecesExtraMultiplier);
     if (triforcePiecesTotal > 100) {
         triforcePiecesTotal = 100;
     }
-    mOptions[RSK_TRIFORCE_HUNT_PIECES_TOTAL].Set(triforcePiecesTotal);
-    mOptions[RSK_TRIFORCE_HUNT_PIECES_REQUIRED].Set(triforcePiecesRequired);
+    mOptions[RSK_TRIFORCE_HUNT_PIECES_TOTAL].Set((triforcePiecesTotal - 1));
+    mOptions[RSK_TRIFORCE_HUNT_PIECES_REQUIRED].Set((triforcePiecesRequired - 1));
     mOptions[RSK_SHUFFLE_BOSS_SOULS].Set(slotData["shuffle_boss_souls"]);
     if (slotData["shuffle_fish"] == 0) {
         mOptions[RSK_FISHSANITY].Set(RO_FISHSANITY_OFF);

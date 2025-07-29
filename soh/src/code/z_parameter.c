@@ -3461,7 +3461,7 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
     }
 
 
-    Interface_DrawTextLine_overlay(play->state.gfxCtx, statusText, posX, posY, 255, 255, 255, 255, 0.8f, true);
+    Interface_DrawTextLineOverlay(play->state.gfxCtx, statusText, posX, posY, 255, 255, 255, 255, 0.8f, true);
 }
 
 void Interface_DrawMagicBar(PlayState* play) {
@@ -7046,7 +7046,7 @@ uint16_t Interface_DrawTextLine(GraphicsContext* gfx, char text[], int16_t x, in
     return kerningOffset;
 }
 
-uint16_t Interface_DrawTextLine_overlay(GraphicsContext* gfx, char text[], int16_t x, int16_t y, uint16_t colorR,
+uint16_t Interface_DrawTextLineOverlay(GraphicsContext* gfx, char text[], int16_t x, int16_t y, uint16_t colorR,
     uint16_t colorG, uint16_t colorB, uint16_t colorA, float textScale,
     uint8_t textShadow) {
 

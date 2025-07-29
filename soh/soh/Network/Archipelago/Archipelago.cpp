@@ -17,8 +17,8 @@
 #include "soh/Notification/Notification.h"
 #include "soh/ShipInit.hpp"
 #include "soh/SaveManager.h"
-#include "soh/util.h"
 #include "soh/SohGui/SohGui.hpp"
+#include "soh/OTRGlobals.h"
 
 extern "C" {
 #include "variables.h"
@@ -393,9 +393,13 @@ void ArchipelagoClient::OnItemReceived(const ApItem apItem) {
 }
 
 void ArchipelagoClient::QueueItem(const ApItem item) {
-    const RandomizerGet RG = Rando::StaticData::itemNameToEnum[item.itemName];
+    RandomizerGet RG = Rando::StaticData::itemNameToEnum[item.itemName];
     if (RG == RG_NONE) {
         return;
+    }
+
+    if (OTRGlobals::Instance->gRandomizer->GetItemObtainabilityFromRandomizerGet(RG) != CAN_OBTAIN) {
+        RG = RG_BLUE_RUPEE;
     }
 
     itemQueued = true;
