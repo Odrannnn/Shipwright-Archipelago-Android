@@ -60,6 +60,7 @@ class ArchipelagoClient {
     void SendGameWon();
     void SendMessageToConsole(const std::string message);
     void Poll();
+    void ResetQueue();
 
     bool slotMatch(const std::string& slotName, const std::string& roomHash);
 
