@@ -75,18 +75,6 @@ void ArchipelagoSettingsWindow::DrawElement() {
             UIWidgets::CheckboxOptions().Color(THEME_COLOR).Tooltip("You die, others die. Others die, you die!"))) {
         apClient.SetDeathLinkTag();
     }
-
-    static bool sArchipelagoTexturesLoaded = false;
-    if (!sArchipelagoTexturesLoaded) {
-        Ship::Context::GetInstance()->GetWindow()->GetGui()->LoadTextureFromRawImage(
-            "Archipelago Progressive Icon", "textures/parameter_static/gArchipelagoProgressive.png");
-        Ship::Context::GetInstance()->GetWindow()->GetGui()->LoadTextureFromRawImage(
-            "Archipelago Useful Icon", "textures/parameter_static/gArchipelagoUseful.png");
-        Ship::Context::GetInstance()->GetWindow()->GetGui()->LoadTextureFromRawImage(
-            "Archipelago Junk Icon", "textures/parameter_static/gArchipelagoJunk.png");
-
-        sArchipelagoTexturesLoaded = true;
-    }
 };
 
 void ArchipelagoSettingsWindow::InitElement() {

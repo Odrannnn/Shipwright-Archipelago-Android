@@ -262,6 +262,20 @@ bool ArchipelagoClient::StopClient() {
 }
 
 void ArchipelagoClient::GameLoaded() {
+    
+    // Load textures for the archipelago items that're shown in the notifications
+    static bool sArchipelagoTexturesLoaded = false;
+    if (!sArchipelagoTexturesLoaded) {
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->LoadTextureFromRawImage(
+            "Archipelago Progressive Icon", "textures/parameter_static/gArchipelagoProgressive.png");
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->LoadTextureFromRawImage(
+            "Archipelago Useful Icon", "textures/parameter_static/gArchipelagoUseful.png");
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->LoadTextureFromRawImage(
+            "Archipelago Junk Icon", "textures/parameter_static/gArchipelagoJunk.png");
+
+        sArchipelagoTexturesLoaded = true;
+    }
+
     if (apClient == nullptr) {
         if(IS_ARCHIPELAGO) {
             CVarSetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), gSaveContext.ship.quest.data.archipelago.archiUri);
@@ -560,7 +574,7 @@ void ArchipelagoClient::SendDeathLink() {
 }
 
 void ArchipelagoClient::SetDeathLinkTag() {
-    if (!apClient) {
+    if (!ArchipelagoClient::IsConnected()) {
         return;
     }
     std::list<std::string> tags;

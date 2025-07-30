@@ -421,6 +421,7 @@ void Context::ParseArchipelago() {
     mSeedGenerated = false;
     mSpoilerLoaded = false;
 
+    Rando::Settings::GetInstance()->ResetExcludedLocations();
     ArchipelagoClient& apClient = ArchipelagoClient::GetInstance();
     ParseArchipelagoItemsLocations(apClient.GetScoutedItems());
     ParseArchipelagoOptions(apClient.GetSlotData());

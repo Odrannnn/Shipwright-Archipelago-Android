@@ -2929,6 +2929,13 @@ void Settings::ParseJson(nlohmann::json spoilerFileJson) {
     }
 }
 
+void Settings::ResetExcludedLocations() {
+    const auto ctx = Context::GetInstance();
+    for (int rc = 1; rc < RC_MAX; rc++) {
+        ctx->GetItemLocation(rc)->SetExcludedOption(RO_GENERIC_OFF);
+    }
+}
+
 void Settings::AssignContext(std::shared_ptr<Context> ctx) {
     mContext = ctx;
 }
