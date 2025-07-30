@@ -1,24 +1,6 @@
 ![Ship of Harkinian](docs/shiptitle.darkmode.png#gh-dark-mode-only)
 ![Ship of Harkinian](docs/shiptitle.lightmode.png#gh-light-mode-only)
 
-## Fork Overview
-
-This Repo serves as a proof of concept for SoH to connect to Archipellago, the current implementation tries to implement the existing OoT AP world.
-Mainly to check out the SoH Repo and to have something to develop against while the others on the discord are working on an AP world for SoH.
-
-I'm not entierly happy with this implementation, but I'd like to create a bespoke Client to connect to AP with instead of relying on the current 3rd party clien't I've just thrown in to try out.
-
-You can currently connect to the multiworld server, scout the items.
-If you have no randomizer genereted (the `Randomizer` folder is empty) `Connect` to the multiworld from the main screen, click the  `Scout` button to load all of the item locations and finally press the `Link up` button, you'll be able to start a randomizer save file.
-with the items populated with the location from the server.
-
-Sending and Receiving should be implemented, Saving the game doesn't save the current item index localy (the library is a bit anoying with that).
-
-Not all checks have been mapped, and some may be mapped incorrectly.
-The victory condition should be implemented but has largely gone untested.
-Results may varry
-
-
 ## Website
 
 Official Website: https://www.shipofharkinian.com/
