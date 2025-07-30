@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <utility>
 
 #include "soh/Network/Archipelago/ArchipelagoConsoleWindow.h"
 #include "soh/Enhancements/randomizer/randomizerTypes.h"
@@ -107,6 +108,7 @@ bool ArchipelagoClient::StartClient() {
             SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.roomPass, password,
                                             ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
+            ResetQueue();
             SynchSentLocations();
             SynchReceivedLocations();
         }
@@ -278,12 +280,11 @@ void ArchipelagoClient::GameLoaded() {
     }
 
     if (!isRightSaveLoaded()) {
-        ArchipelagoConsole_SendMessage("Connec");
-        //disconnecting = true;
-            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), gSaveContext.ship.quest.data.archipelago.archiUri);
-            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), gSaveContext.ship.quest.data.archipelago.slotName);
-            CVarSetString(CVAR_REMOTE_ARCHIPELAGO("Password"), gSaveContext.ship.quest.data.archipelago.roomPass);
-            StartClient();
+        ArchipelagoConsole_SendMessage("Disconnecting from previous slot and connecting to this one...");
+        CVarSetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), gSaveContext.ship.quest.data.archipelago.archiUri);
+        CVarSetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), gSaveContext.ship.quest.data.archipelago.slotName);
+        CVarSetString(CVAR_REMOTE_ARCHIPELAGO("Password"), gSaveContext.ship.quest.data.archipelago.roomPass);
+        StartClient();
         return;
     }
 
@@ -307,6 +308,7 @@ void ArchipelagoClient::StartLocationScouts() {
 
 void ArchipelagoClient::SynchItems() {
     // Send a Synch request to get any items we may have missed
+    ResetQueue();
     apClient->Sync();
 }
 
@@ -441,6 +443,7 @@ void ArchipelagoClient::Poll() {
     if (disconnecting) {
         apClient->reset();
         apClient = nullptr;
+        ResetQueue();
         disconnecting = false;
         CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0); // disconnected
         return;
@@ -448,13 +451,18 @@ void ArchipelagoClient::Poll() {
 
     // queue another item to be received
     if (!itemQueued && receiveQueue.size() > 0) {
-
         const ApItem item = receiveQueue.front();
         receiveQueue.pop();
         QueueItem(item);
     }
 
     apClient->poll();
+}
+
+void ArchipelagoClient::ResetQueue(){
+    itemQueued = false;
+    std::queue<ApItem> empty;
+    std::swap( receiveQueue, empty );
 }
 
 bool ArchipelagoClient::slotMatch(const std::string& slotName, const std::string& roomHash) {
