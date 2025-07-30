@@ -3426,8 +3426,8 @@ void Interface_DrawLineupTick(PlayState* play) {
 }
 
 void Interface_DrawArchipelagoStatusString(PlayState* play) {
-    s16 posX = OTRGetRectDimensionFromLeftEdge(28);
-    s16 posY = SCREEN_HEIGHT - 15;
+    s16 posX = OTRGetRectDimensionFromLeftEdge(4);
+    s16 posY = SCREEN_HEIGHT - 12;
 
     int32_t scale = R_TEXT_CHAR_SCALE * 0.2f;
     int32_t sTexSize = (scale / 100.0f) * 64.0f;
