@@ -517,7 +517,8 @@ void SaveManager::InitMeta(int fileNum) {
                                     ARRAY_COUNT(fileMetaInfo[fileNum].archiUri));
     SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].slotName, gSaveContext.ship.quest.data.archipelago.slotName,
                                     ARRAY_COUNT(fileMetaInfo[fileNum].slotName));
-    SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiRoomSeed, gSaveContext.ship.quest.data.archipelago.roomHash,
+    SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiRoomSeed,
+                                    gSaveContext.ship.quest.data.archipelago.roomHash,
                                     ARRAY_COUNT(fileMetaInfo[fileNum].archiRoomSeed));
 }
 

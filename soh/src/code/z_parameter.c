@@ -3434,19 +3434,19 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
     int32_t sTexScale = 1024.0f / (scale / 100.0f);
 
     gDPLoadTextureBlock(play->state.gfxCtx->overlay.p++, gArchipelagoItemTex, G_IM_FMT_RGBA, G_IM_SIZ_32b, 64, 64, 0,
-        G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, 0, 0, G_TX_NOLOD, G_TX_NOLOD);
+                        G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, 0, 0, G_TX_NOLOD, G_TX_NOLOD);
 
     gSPWideTextureRectangle(play->state.gfxCtx->overlay.p++, posX << 2, posY << 2, (posX + sTexSize) << 2,
-        (posY + sTexSize) << 2, G_TX_RENDERTILE, 0, 0, sTexScale, sTexScale);
+                            (posY + sTexSize) << 2, G_TX_RENDERTILE, 0, 0, sTexScale, sTexScale);
 
-    //SPWideTextureRectangle(OVERLAY_DISP++, ((rMagicBarX + gSaveContext.magicCapacity) + 8) << 2, magicBarY << 2,
-    //    ((rMagicBarX + gSaveContext.magicCapacity) + 16) << 2, (magicBarY + 16) << 2,
-    //    G_TX_RENDERTILE, 256, 0, 1 << 10, 1 << 10);
+    // SPWideTextureRectangle(OVERLAY_DISP++, ((rMagicBarX + gSaveContext.magicCapacity) + 8) << 2, magicBarY << 2,
+    //     ((rMagicBarX + gSaveContext.magicCapacity) + 16) << 2, (magicBarY + 16) << 2,
+    //     G_TX_RENDERTILE, 256, 0, 1 << 10, 1 << 10);
     posX += 13;
 
     uint8_t language = (gSaveContext.language == LANGUAGE_JPN) ? LANGUAGE_ENG : gSaveContext.language;
     char* statusText = SohFileSelect_GetArchipelagoSettingText(ASM_NOT_CONNECTED, language);
-    switch(CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0)) {
+    switch (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0)) {
         case 0: // Not Connected
             statusText = SohFileSelect_GetArchipelagoSettingText(ASM_NOT_CONNECTED, language);
             break;
@@ -3459,7 +3459,6 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
             statusText = SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTED, language);
             break;
     }
-
 
     Interface_DrawTextLineOverlay(play->state.gfxCtx, statusText, posX, posY, 255, 255, 255, 255, 0.8f, true);
 }
@@ -5437,7 +5436,7 @@ void Interface_Draw(PlayState* play) {
             Interface_DrawLineupTick(play);
         }
 
-        if(IS_ARCHIPELAGO) {
+        if (IS_ARCHIPELAGO) {
             Interface_DrawArchipelagoStatusString(play);
         }
 
@@ -6981,8 +6980,8 @@ void Interface_DrawTextCharacter(GraphicsContext* gfx, int16_t x, int16_t y, voi
 }
 
 void Interface_DrawTextCharacter_overlay(GraphicsContext* gfx, int16_t x, int16_t y, void* texture, uint16_t colorR,
-    uint16_t colorG, uint16_t colorB, uint16_t colorA, float textScale,
-    uint8_t textShadow) {
+                                         uint16_t colorG, uint16_t colorB, uint16_t colorA, float textScale,
+                                         uint8_t textShadow) {
 
     int32_t scale = R_TEXT_CHAR_SCALE * textScale;
     int32_t sCharTexSize = (scale / 100.0f) * 16.0f;
@@ -6993,16 +6992,16 @@ void Interface_DrawTextCharacter_overlay(GraphicsContext* gfx, int16_t x, int16_
     gDPPipeSync(OVERLAY_DISP++);
 
     gDPLoadTextureBlock_4b(OVERLAY_DISP++, texture, G_IM_FMT_I, FONT_CHAR_TEX_WIDTH, FONT_CHAR_TEX_HEIGHT, 0,
-    G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD,
-    G_TX_NOLOD);
+                           G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD,
+                           G_TX_NOLOD);
 
     if (textShadow) {
         // Draw drop shadow
         gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 0, 0, 0, colorA);
-        gSPWideTextureRectangle(OVERLAY_DISP++, (x + R_TEXT_DROP_SHADOW_OFFSET) << 2, (y + R_TEXT_DROP_SHADOW_OFFSET) << 2,
-                            (x + R_TEXT_DROP_SHADOW_OFFSET + sCharTexSize) << 2,
-                            (y + R_TEXT_DROP_SHADOW_OFFSET + sCharTexSize) << 2, G_TX_RENDERTILE, 0, 0, sCharTexScale,
-                            sCharTexScale);
+        gSPWideTextureRectangle(
+            OVERLAY_DISP++, (x + R_TEXT_DROP_SHADOW_OFFSET) << 2, (y + R_TEXT_DROP_SHADOW_OFFSET) << 2,
+            (x + R_TEXT_DROP_SHADOW_OFFSET + sCharTexSize) << 2, (y + R_TEXT_DROP_SHADOW_OFFSET + sCharTexSize) << 2,
+            G_TX_RENDERTILE, 0, 0, sCharTexScale, sCharTexScale);
     }
 
     gDPPipeSync(OVERLAY_DISP++);
@@ -7010,7 +7009,7 @@ void Interface_DrawTextCharacter_overlay(GraphicsContext* gfx, int16_t x, int16_
     // Draw normal text
     gDPSetPrimColor(OVERLAY_DISP++, 0, 0, colorR, colorG, colorB, colorA);
     gSPWideTextureRectangle(OVERLAY_DISP++, x << 2, y << 2, (x + sCharTexSize) << 2, (y + sCharTexSize) << 2,
-                    G_TX_RENDERTILE, 0, 0, sCharTexScale, sCharTexScale);
+                            G_TX_RENDERTILE, 0, 0, sCharTexScale, sCharTexScale);
 
     CLOSE_DISPS(gfx);
 }
@@ -7047,8 +7046,8 @@ uint16_t Interface_DrawTextLine(GraphicsContext* gfx, char text[], int16_t x, in
 }
 
 uint16_t Interface_DrawTextLineOverlay(GraphicsContext* gfx, char text[], int16_t x, int16_t y, uint16_t colorR,
-    uint16_t colorG, uint16_t colorB, uint16_t colorA, float textScale,
-    uint8_t textShadow) {
+                                       uint16_t colorG, uint16_t colorB, uint16_t colorA, float textScale,
+                                       uint8_t textShadow) {
 
     uint16_t textureIndex;
     uint16_t kerningOffset = 0;
@@ -7061,16 +7060,16 @@ uint16_t Interface_DrawTextLineOverlay(GraphicsContext* gfx, char text[], int16_
         if (processedText[i] == '\n') {
             lineOffset += 15 * textScale;
             kerningOffset = 0;
-            } else {
-                textureIndex = processedText[i] - 32;
-            
-                if (textureIndex != 0) {
-                    texture = Ship_GetCharFontTexture(processedText[i]);
-                    Interface_DrawTextCharacter_overlay(gfx, (int16_t)(x + kerningOffset), (int16_t)(y + lineOffset), texture, colorR, colorG, colorB,
-                                colorA, textScale, textShadow);
-                }
-                kerningOffset +=
-                    (uint16_t)(Ship_GetCharFontWidth(processedText[i]) * (R_TEXT_CHAR_SCALE / 100.0f) * textScale);
+        } else {
+            textureIndex = processedText[i] - 32;
+
+            if (textureIndex != 0) {
+                texture = Ship_GetCharFontTexture(processedText[i]);
+                Interface_DrawTextCharacter_overlay(gfx, (int16_t)(x + kerningOffset), (int16_t)(y + lineOffset),
+                                                    texture, colorR, colorG, colorB, colorA, textScale, textShadow);
+            }
+            kerningOffset +=
+                (uint16_t)(Ship_GetCharFontWidth(processedText[i]) * (R_TEXT_CHAR_SCALE / 100.0f) * textScale);
         }
     }
 

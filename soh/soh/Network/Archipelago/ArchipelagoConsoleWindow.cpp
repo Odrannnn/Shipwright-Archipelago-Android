@@ -100,9 +100,9 @@ void ArchipelagoConsoleWindow::DrawElement() {
     ImGui::PopStyleVar(4);
 };
 
-ImVec4 ArchipelagoConsoleWindow::getColorVal(const AP_Text::TextColor color) { 
-    using apt = AP_Text::TextColor; 
-    switch(color) {
+ImVec4 ArchipelagoConsoleWindow::getColorVal(const AP_Text::TextColor color) {
+    using apt = AP_Text::TextColor;
+    switch (color) {
         case apt::COLOR_ERROR:
             return ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
         case apt::COLOR_LOG:
@@ -137,4 +137,3 @@ ImVec4 ArchipelagoConsoleWindow::getColorVal(const AP_Text::TextColor color) {
             return ImVec4(0.93f, 0.93f, 0.93f, 1.00f);
     };
 }
-    

@@ -2479,7 +2479,7 @@ void FileChoose_DrawFileInfo(GameState* thisx, s16 fileIndex, s16 isActive) {
 
         // draw death count
         if (CVarGetInteger(CVAR_ENHANCEMENT("FileSelectMoreInfo"), 0) == 0 || this->menuMode != FS_MENU_MODE_SELECT ||
-                Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave) {
+            Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave) {
             for (i = 0, vtxOffset = 0; i < 3; i++, vtxOffset += 4) {
                 FileChoose_DrawCharacter(this->state.gfxCtx, sp54->fontBuf + deathCountSplit[i] * FONT_CHAR_TEX_SIZE,
                                          vtxOffset);
@@ -2506,7 +2506,7 @@ void FileChoose_DrawFileInfo(GameState* thisx, s16 fileIndex, s16 isActive) {
         i = Save_GetSaveMetaInfo(fileIndex)->healthCapacity / 0x10;
 
         if (CVarGetInteger(CVAR_ENHANCEMENT("FileSelectMoreInfo"), 0) == 0 || this->menuMode != FS_MENU_MODE_SELECT ||
-                Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave) {
+            Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave) {
             // draw hearts
             for (vtxOffset = 0, j = 0; j < i; j++, vtxOffset += 4) {
                 gSPVertex(POLY_OPA_DISP++, &this->windowContentVtx[D_8081284C[fileIndex] + vtxOffset] + 0x30, 4, 0);
@@ -2523,8 +2523,8 @@ void FileChoose_DrawFileInfo(GameState* thisx, s16 fileIndex, s16 isActive) {
             textAlpha = 255;
         }
 
-        if (CVarGetInteger(CVAR_ENHANCEMENT("FileSelectMoreInfo"), 0) != 0 && this->menuMode == FS_MENU_MODE_SELECT && 
-                Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave == 0) {
+        if (CVarGetInteger(CVAR_ENHANCEMENT("FileSelectMoreInfo"), 0) != 0 && this->menuMode == FS_MENU_MODE_SELECT &&
+            Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave == 0) {
             DrawMoreInfo(this, fileIndex, textAlpha);
         } else {
             // draw quest items
@@ -2549,51 +2549,55 @@ void FileChoose_DrawFileInfo(GameState* thisx, s16 fileIndex, s16 isActive) {
             }
         }
 
-        if(Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave) {
+        if (Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave) {
             uint8_t language = (gSaveContext.language == LANGUAGE_JPN) ? LANGUAGE_ENG : gSaveContext.language;
-            
+
             // Connection status text
-            int statusPos = 61 + Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_STATUS, language), 
-                        58, 133, 200, 200, 200, textAlpha, 0.8f, true);
+            int statusPos = 61 + Interface_DrawTextLine(this->state.gfxCtx,
+                                                        SohFileSelect_GetArchipelagoSettingText(ASM_STATUS, language),
+                                                        58, 133, 200, 200, 200, textAlpha, 0.8f, true);
 
-            const bool connectedToThisSlot = checkArchipelagoSlotInfo(Save_GetSaveMetaInfo(this->selectedFileIndex)->slotName,
-                                                                        Save_GetSaveMetaInfo(this->selectedFileIndex)->archiRoomSeed);
+            const bool connectedToThisSlot =
+                checkArchipelagoSlotInfo(Save_GetSaveMetaInfo(this->selectedFileIndex)->slotName,
+                                         Save_GetSaveMetaInfo(this->selectedFileIndex)->archiRoomSeed);
 
-            switch(CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0)) {
+            switch (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0)) {
                 case 0: // Not Connected
                     Interface_DrawTextLine(this->state.gfxCtx,
-                                           SohFileSelect_GetArchipelagoSettingText(ASM_NOT_CONNECTED, language), 
+                                           SohFileSelect_GetArchipelagoSettingText(ASM_NOT_CONNECTED, language),
                                            statusPos, 133, 255, 120, 120, textAlpha, 0.8f, true);
                     break;
                 case 1: // Connecting
                 case 2: // Connection error, retrying
                 case 3: // Connected
                     Interface_DrawTextLine(this->state.gfxCtx,
-                                           SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTING, language), 
-                                           statusPos, 133, 185, 185, 185, textAlpha, 0.8f, true);
+                                           SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTING, language), statusPos,
+                                           133, 185, 185, 185, textAlpha, 0.8f, true);
                     break;
                 case 4: // Connected + Locations Scouted
-                    if(connectedToThisSlot) {
+                    if (connectedToThisSlot) {
                         Interface_DrawTextLine(this->state.gfxCtx,
-                            SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTED, language), 
-                            statusPos, 133, 120, 255, 120, textAlpha, 0.8f, true);
+                                               SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTED, language),
+                                               statusPos, 133, 120, 255, 120, textAlpha, 0.8f, true);
                     } else {
-                        Interface_DrawTextLine(this->state.gfxCtx,
-                            SohFileSelect_GetArchipelagoSettingText(ASM_CHAR_SELECT_CONNECTED_TO_OTHER_SLOT, language), 
+                        Interface_DrawTextLine(
+                            this->state.gfxCtx,
+                            SohFileSelect_GetArchipelagoSettingText(ASM_CHAR_SELECT_CONNECTED_TO_OTHER_SLOT, language),
                             statusPos, 133, 255, 255, 120, textAlpha, 0.8f, true);
                     }
-                    
+
                     break;
             }
 
-            if(!connectedToThisSlot) {
-                Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_CHAR_START_TO_CONNECT, language), 
-                        58, 144, 200, 200, 200, textAlpha, 0.8f, true);
+            if (!connectedToThisSlot) {
+                Interface_DrawTextLine(this->state.gfxCtx,
+                                       SohFileSelect_GetArchipelagoSettingText(ASM_CHAR_START_TO_CONNECT, language), 58,
+                                       144, 200, 200, 200, textAlpha, 0.8f, true);
             }
 
-            //Interface_DrawTextLine(this->state.gfxCtx,
-            //    SohFileSelect_GetArchipelagoSettingText(ASM_CHAR_SELECT_CHANGE_CONNECTION_INFO, language), 95, 220,
-            //    100, 250, 255, textAlpha, 1.0f, true);
+            // Interface_DrawTextLine(this->state.gfxCtx,
+            //     SohFileSelect_GetArchipelagoSettingText(ASM_CHAR_SELECT_CHANGE_CONNECTION_INFO, language), 95, 220,
+            //     100, 250, 255, textAlpha, 1.0f, true);
         }
     }
 
@@ -2994,26 +2998,27 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                                155, 185, 185, 185, textAlpha, 0.8f, true);
 
         // Connection status text
-        int statusPos = 75 + Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(ASM_STATUS, language), 70,
-                               175, 255, 255, 255, textAlpha, 0.8f, true);
+        int statusPos = 75 + Interface_DrawTextLine(this->state.gfxCtx,
+                                                    SohFileSelect_GetArchipelagoSettingText(ASM_STATUS, language), 70,
+                                                    175, 255, 255, 255, textAlpha, 0.8f, true);
 
         switch (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0)) {
             case 0: // Not Connected
                 Interface_DrawTextLine(this->state.gfxCtx,
-                                       SohFileSelect_GetArchipelagoSettingText(ASM_NOT_CONNECTED, language), statusPos, 175,
-                                       255, 120, 120, textAlpha, 0.8f, true);
+                                       SohFileSelect_GetArchipelagoSettingText(ASM_NOT_CONNECTED, language), statusPos,
+                                       175, 255, 120, 120, textAlpha, 0.8f, true);
                 break;
             case 1: // Connecting
             case 2: // Connection error, retrying
             case 3: // Connected
                 Interface_DrawTextLine(this->state.gfxCtx,
-                                       SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTING, language), statusPos, 175, 185,
-                                       185, 185, textAlpha, 0.8f, true);
+                                       SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTING, language), statusPos,
+                                       175, 185, 185, 185, textAlpha, 0.8f, true);
                 break;
             case 4: // Connected + Locations Scouted
                 Interface_DrawTextLine(this->state.gfxCtx,
-                                       SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTED, language), statusPos, 175, 120,
-                                       255, 120, textAlpha, 0.8f, true);
+                                       SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTED, language), statusPos, 175,
+                                       120, 255, 120, textAlpha, 0.8f, true);
                 break;
         }
 
@@ -3055,7 +3060,8 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
 
             // Draw the small file name box instead when more meta info is enabled
             if (CVarGetInteger(CVAR_ENHANCEMENT("FileSelectMoreInfo"), 0) != 0 &&
-                this->menuMode == FS_MENU_MODE_SELECT && Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave == 0) {
+                this->menuMode == FS_MENU_MODE_SELECT &&
+                Save_GetSaveMetaInfo(this->selectedFileIndex)->archiSave == 0) {
                 // Location of file 1 small name box vertices
                 gSPVertex(POLY_OPA_DISP++, &this->windowContentVtx[68], 4, 0);
 

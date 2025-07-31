@@ -111,13 +111,13 @@ std::array<std::string, LANGUAGE_MAX> ArchipelagoSettingsMenuText[ASM_MAX]{
         "Todo",
         "Todo",
     },
-    //ASM_CHAR_START_TO_CONNECT
+    // ASM_CHAR_START_TO_CONNECT
     {
         "Start to automatically connect to this slot",
         "Todo",
         "Todo",
     },
-    //ASM_CHAR_SELECT_CONNECTED_TO_OTHER_SLOT
+    // ASM_CHAR_SELECT_CONNECTED_TO_OTHER_SLOT
     {
         "Connected to a different slot",
         "Todo",
