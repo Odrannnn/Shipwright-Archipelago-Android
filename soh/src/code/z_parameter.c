@@ -3444,8 +3444,8 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
     gDPLoadTextureBlock(OVERLAY_DISP++, gArchipelagoItemTex, G_IM_FMT_RGBA, G_IM_SIZ_32b, 64, 64, 0,
                         G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, 0, 0, G_TX_NOLOD, G_TX_NOLOD);
 
-    gSPWideTextureRectangle(OVERLAY_DISP++, posX << 2, posY << 2, (posX + sTexSize) << 2,
-                            (posY + sTexSize) << 2, G_TX_RENDERTILE, 0, 0, sTexScale, sTexScale);
+    gSPWideTextureRectangle(OVERLAY_DISP++, posX << 2, posY << 2, (posX + sTexSize) << 2, (posY + sTexSize) << 2,
+                            G_TX_RENDERTILE, 0, 0, sTexScale, sTexScale);
 
     posX += 13;
 
