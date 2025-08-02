@@ -3426,6 +3426,11 @@ void Interface_DrawLineupTick(PlayState* play) {
 }
 
 void Interface_DrawArchipelagoStatusString(PlayState* play) {
+    InterfaceContext* interfaceCtx = &play->interfaceCtx;
+    OPEN_DISPS(play->state.gfxCtx);
+
+    Gfx_SetupDL_39Overlay(play->state.gfxCtx);
+
     s16 posX = OTRGetRectDimensionFromLeftEdge(4);
     s16 posY = SCREEN_HEIGHT - 12;
 
@@ -3433,15 +3438,15 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
     int32_t sTexSize = (scale / 100.0f) * 64.0f;
     int32_t sTexScale = 1024.0f / (scale / 100.0f);
 
-    gDPLoadTextureBlock(play->state.gfxCtx->overlay.p++, gArchipelagoItemTex, G_IM_FMT_RGBA, G_IM_SIZ_32b, 64, 64, 0,
+    gDPSetEnvColor(OVERLAY_DISP++, 255, 255, 255, 255);
+    gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 255, 255, 255);
+
+    gDPLoadTextureBlock(OVERLAY_DISP++, gArchipelagoItemTex, G_IM_FMT_RGBA, G_IM_SIZ_32b, 64, 64, 0,
                         G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, 0, 0, G_TX_NOLOD, G_TX_NOLOD);
 
-    gSPWideTextureRectangle(play->state.gfxCtx->overlay.p++, posX << 2, posY << 2, (posX + sTexSize) << 2,
+    gSPWideTextureRectangle(OVERLAY_DISP++, posX << 2, posY << 2, (posX + sTexSize) << 2,
                             (posY + sTexSize) << 2, G_TX_RENDERTILE, 0, 0, sTexScale, sTexScale);
 
-    // SPWideTextureRectangle(OVERLAY_DISP++, ((rMagicBarX + gSaveContext.magicCapacity) + 8) << 2, magicBarY << 2,
-    //     ((rMagicBarX + gSaveContext.magicCapacity) + 16) << 2, (magicBarY + 16) << 2,
-    //     G_TX_RENDERTILE, 256, 0, 1 << 10, 1 << 10);
     posX += 13;
 
     uint8_t language = (gSaveContext.language == LANGUAGE_JPN) ? LANGUAGE_ENG : gSaveContext.language;
@@ -3461,6 +3466,9 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
     }
 
     Interface_DrawTextLineOverlay(play->state.gfxCtx, statusText, posX, posY, 255, 255, 255, 255, 0.8f, true);
+
+    gDPPipeSync(OVERLAY_DISP++);
+    CLOSE_DISPS(play->state.gfxCtx);
 }
 
 void Interface_DrawMagicBar(PlayState* play) {
