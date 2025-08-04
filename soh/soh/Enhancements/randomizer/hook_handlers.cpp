@@ -257,9 +257,10 @@ void RandomizerOnFlagSetHandler(int16_t flagType, int16_t flag) {
         Rando::Context::GetInstance()->GetOption(RSK_SHUFFLE_TOKENS).Is(RO_TOKENSANITY_OFF))
         return;
     auto loc = Rando::Context::GetInstance()->GetItemLocation(rc);
-    if (loc == nullptr || loc->HasObtained() || loc->GetPlacedRandomizerGet() == RG_NONE)
-        return;
-
+    if(rc != RC_HF_OCARINA_OF_TIME_ITEM) {
+        if (loc == nullptr || loc->HasObtained() || loc->GetPlacedRandomizerGet() == RG_NONE)
+            return;
+    }
     SPDLOG_INFO("Queuing RC: {}", static_cast<uint32_t>(rc));
     randomizerQueuedChecks.push(rc);
 }
@@ -299,6 +300,12 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
     bool inSameArea = false;
     if (gPlayState != nullptr) {
         inSameArea = scene == gPlayState->sceneNum;
+    }
+
+    // setting the ocarinina obtained event flag 
+    if(rc == RC_HF_OCARINA_OF_TIME_ITEM) {
+        randomizerQueuedChecks.push(rc);
+        return;
     }
 
     std::string logMessage = "";
@@ -373,6 +380,10 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
         RandomizerGet vanillaRandomizerGet = Rando::StaticData::GetLocation(rc)->GetVanillaItem();
         GetItemID vanillaItem = (GetItemID)Rando::StaticData::RetrieveItem(vanillaRandomizerGet).GetItemID();
         getItemEntry = Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)vanillaRandomizerGet);
+    }
+
+    if(rc == RC_HF_OCARINA_OF_TIME_ITEM && loc->HasObtained()) {
+        RandomizerOnExternalCheckHandler(RC_SONG_FROM_OCARINA_OF_TIME);
     }
 
     if (loc->HasObtained()) {
