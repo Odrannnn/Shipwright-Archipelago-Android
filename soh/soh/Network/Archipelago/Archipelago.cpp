@@ -60,8 +60,7 @@ bool ArchipelagoClient::StartClient() {
     apClient->set_socket_error_handler([&](const std::string& msg) {
         retries++;
         if (retries >= AP_Client_consts::MAX_RETRIES) {
-            ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server after several tries.\nAre the entered "
-                                           "server address and slot name correct?");
+            ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server after several tries.\nAre the entered server address and port correct?");
             CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // Connection error
             disconnecting = true;
 
@@ -70,7 +69,7 @@ bool ArchipelagoClient::StartClient() {
             }
             return;
         }
-        ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server, retrying...");
+        ArchipelagoConsole_SendMessage(std::string("[ERROR] " + msg).c_str());
     });
 
     apClient->set_room_info_handler([&]() {
@@ -108,6 +107,13 @@ bool ArchipelagoClient::StartClient() {
             ResetQueue();
             SynchSentLocations();
             SynchReceivedLocations();
+        }
+    });
+
+    apClient->set_slot_refused_handler([&](const std::list<std::string>& msgs) {
+        disconnecting = true;
+        for(const std::string& msg : msgs) {
+            ArchipelagoConsole_SendMessage(std::string("[ERROR] "+ msg).c_str());
         }
     });
 
