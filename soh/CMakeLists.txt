@@ -352,6 +352,8 @@ if (BUILD_REMOTE_CONTROL)
         sslCertStore
     )
 
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/networking/cacert.pem DESTINATION ./networking COMPONENT ship)
+
 endif()
 
 if (ESPEAK)
