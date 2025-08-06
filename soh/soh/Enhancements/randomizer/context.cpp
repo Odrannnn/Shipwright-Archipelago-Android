@@ -474,6 +474,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_DOOR_OF_TIME].Set(slotData["door_of_time"]);
     mOptions[RSK_ZORAS_FOUNTAIN].Set(slotData["zoras_fountain"]);
     mOptions[RSK_SLEEPING_WATERFALL].Set(slotData["sleeping_waterfall"]);
+    mOptions[RSK_JABU_OPEN].Set(slotData["jabu_jabu"]);
     mOptions[RSK_STARTING_AGE].Set(RO_AGE_CHILD);
     mOptions[RSK_SELECTED_STARTING_AGE].Set(0);
     mOptions[RSK_GERUDO_FORTRESS].Set(slotData["fortress_carpenters"]);
