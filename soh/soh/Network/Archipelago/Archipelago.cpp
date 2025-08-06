@@ -53,7 +53,7 @@ bool ArchipelagoClient::StartClient() {
     uri = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281");
     password = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), "");
 
-    apClient = std::unique_ptr<APClient>(new APClient(uuid, AP_Client_consts::AP_GAME_NAME, uri, "cacert.pem"));
+    apClient = std::unique_ptr<APClient>(new APClient(uuid, AP_Client_consts::AP_GAME_NAME, uri, "networking/cacert.pem"));
 
     CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 1); // Connecting
 

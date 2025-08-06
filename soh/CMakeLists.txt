@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.26.0 FATAL_ERROR)
+include(FetchContent)
 
 set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
 
@@ -339,6 +340,18 @@ if (BUILD_REMOTE_CONTROL)
         message(STATUS "OpenSSL not found (it's possible the version installed is too old). Disabling BUILD_REMOTE_CONTROL.")
         set(BUILD_REMOTE_CONTROL 0)
     endif()
+
+    FetchContent_Declare(
+        sslCertStore
+        URL https://curl.se/ca/cacert.pem
+        DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/networking
+        DOWNLOAD_NO_EXTRACT TRUE
+    )
+
+    FetchContent_MakeAvailable(
+        sslCertStore
+    )
+
 endif()
 
 if (ESPEAK)
