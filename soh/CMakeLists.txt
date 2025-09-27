@@ -284,6 +284,8 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUNTIME_LIBRARY_STR})
 endif()
 
+include(FetchContent)
+
 ################################################################################
 # apclientpp + dependencies
 ################################################################################
@@ -301,10 +303,17 @@ if(BUILD_REMOTE_CONTROL)
     else()
         find_package(valijson REQUIRED)
     endif()
+
+    FetchContent_Declare(
+            asio
+            GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+            GIT_TAG asio-1-30-2
+    )
+    FetchContent_MakeAvailable(asio)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${asio_SOURCE_DIR}/asio/include)
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/asio/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/websocketpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/wswrap/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/apclientpp
@@ -312,8 +321,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 # Find/download Dr Libs (For custom audio)
 ################################################################################
-include(FetchContent)
-
 FetchContent_Declare(
         dr_libs
         GIT_REPOSITORY https://github.com/mackron/dr_libs.git
