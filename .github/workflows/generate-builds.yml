@@ -246,6 +246,15 @@ jobs:
         cd build
         cmake ..
         sudo cmake --install .
+    # websocketpp has a known issue when using older versions of gcc and cpp 20
+    # https://github.com/zaphoyd/websocketpp/issues/991
+    # we can patch it here to work with the old version until we update the runner
+    # to a version of ubuntu that has newer versions of gcc
+    - name: Patch websocketpp
+      run: |
+        sudo sed -i 's/endpoint<connection,config>(/endpoint(/g' /usr/include/websocketpp/endpoint.hpp
+        sudo sed -i 's/basic<concurrency,names>(/basic(/g' /usr/include/websocketpp/logger/basic.hpp
+        sudo sed -i 's/server<config>(/server(/g' /usr/include/websocketpp/roles/server_endpoint.hpp
     - name: Download soh.o2r
       uses: actions/download-artifact@v4
       with:

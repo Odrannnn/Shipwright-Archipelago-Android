@@ -311,10 +311,23 @@ if(BUILD_REMOTE_CONTROL)
     )
     FetchContent_MakeAvailable(asio)
     target_include_directories(${PROJECT_NAME} PRIVATE ${asio_SOURCE_DIR}/asio/include)
+
+    # websocketpp has been temporarily removed from vcpkg, see
+    # https://github.com/microsoft/vcpkg/pull/42678#issuecomment-2914451436
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        FetchContent_Declare(
+            websocketpp
+            GIT_REPOSITORY https://github.com/zaphoyd/websocketpp.git
+            GIT_TAG 0.8.2
+        )
+        FetchContent_Populate(websocketpp)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${websocketpp_SOURCE_DIR})
+    else()
+        find_package(websocketpp REQUIRED)
+    endif()
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/websocketpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/wswrap/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/apclientpp
 )
