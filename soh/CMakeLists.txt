@@ -318,7 +318,8 @@ if (BUILD_REMOTE_CONTROL)
     find_package(SDL2_net)
 
     if(NOT SDL2_net_FOUND)
-        message(STATUS "SDL2_net not found (it's possible the version installed is too old). Disabling BUILD_REMOTE_CONTROL.")
+        # todo: make archi optional so this can build with BUILD_REMOTE_CONTROL off
+        message(FATAL_ERROR "SDL2_net not found (it's possible the version installed is too old).")
         set(BUILD_REMOTE_CONTROL 0)
     else()
         set(SDL2-NET-INCLUDE ${SDL_NET_INCLUDE_DIRS})
@@ -337,7 +338,8 @@ if (BUILD_REMOTE_CONTROL)
 
     find_package(OpenSSL)
     if(NOT OPENSSL_FOUND)
-        message(STATUS "OpenSSL not found (it's possible the version installed is too old). Disabling BUILD_REMOTE_CONTROL.")
+        # todo: make archi optional so this can build with BUILD_REMOTE_CONTROL off
+        message(FATAL_ERROR "OpenSSL not found (it's possible the version installed is too old).")
         set(BUILD_REMOTE_CONTROL 0)
     endif()
 
