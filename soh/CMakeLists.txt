@@ -289,11 +289,24 @@ endif()
 ################################################################################
 add_compile_definitions(ASIO_STANDALONE)
 
+if(BUILD_REMOTE_CONTROL)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        FetchContent_Declare(
+            valijson
+            GIT_REPOSITORY https://github.com/tristanpenman/valijson.git
+            GIT_TAG v1.0.6
+        )
+        FetchContent_MakeAvailable(valijson)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${valijson_SOURCE_DIR}/include)
+    else()
+        find_package(valijson REQUIRED)
+    endif()
+endif()
+
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/asio/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/websocketpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/wswrap/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/valijson/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/apclientpp
 )
 
