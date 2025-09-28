@@ -325,10 +325,17 @@ if(BUILD_REMOTE_CONTROL)
     else()
         find_package(websocketpp REQUIRED)
     endif()
+
+    FetchContent_Declare(
+            wswrap
+            GIT_REPOSITORY https://github.com/black-sliver/wswrap.git
+            GIT_TAG 47438193ec50427ee28aadf294ba57baefd9f3f1
+    )
+    FetchContent_MakeAvailable(wswrap)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${wswrap_SOURCE_DIR}/include)
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/wswrap/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/apclientpp
 )
 
