@@ -333,11 +333,15 @@ if(BUILD_REMOTE_CONTROL)
     )
     FetchContent_MakeAvailable(wswrap)
     target_include_directories(${PROJECT_NAME} PRIVATE ${wswrap_SOURCE_DIR}/include)
-endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/apclientpp
-)
+    FetchContent_Declare(
+            apclientpp
+            GIT_REPOSITORY https://github.com/black-sliver/apclientpp.git
+            GIT_TAG 65638b7479f6894eda172e603cffa79762c0ddc1
+    )
+    FetchContent_MakeAvailable(apclientpp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${apclientpp_SOURCE_DIR})
+endif()
 
 # Find/download Dr Libs (For custom audio)
 ################################################################################
