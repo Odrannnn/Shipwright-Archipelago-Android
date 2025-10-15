@@ -487,7 +487,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_ZORAS_FOUNTAIN].Set(slotData["zoras_fountain"]);
     mOptions[RSK_SLEEPING_WATERFALL].Set(slotData["sleeping_waterfall"]);
     mOptions[RSK_JABU_OPEN].Set(slotData["jabu_jabu"]);
-    mOptions[RSK_STARTING_AGE].Set(RO_AGE_CHILD);
+    mOptions[RSK_STARTING_AGE].Set(slotData["starting_age"]);
     mOptions[RSK_SELECTED_STARTING_AGE].Set(0);
     mOptions[RSK_GERUDO_FORTRESS].Set(slotData["fortress_carpenters"]);
     mOptions[RSK_RAINBOW_BRIDGE].Set(slotData["rainbow_bridge"]);
@@ -496,9 +496,13 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_RAINBOW_BRIDGE_REWARD_COUNT].Set(slotData["rainbow_bridge_dungeon_rewards_required"]);
     mOptions[RSK_RAINBOW_BRIDGE_DUNGEON_COUNT].Set(slotData["rainbow_bridge_dungeons_required"]);
     mOptions[RSK_RAINBOW_BRIDGE_TOKEN_COUNT].Set(slotData["rainbow_bridge_skull_tokens_required"]);
-    mOptions[RSK_BRIDGE_OPTIONS].Set(0);
-    mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SET_NUMBER);
-    mOptions[RSK_TRIAL_COUNT].Set(slotData["ganons_trials_required"]);
+    mOptions[RSK_BRIDGE_OPTIONS].Set(slotData["rainbow_bridge_greg_modifier"]);
+    if (slotData["skip_ganons_trials"] == 0) {
+        mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SET_NUMBER);
+    } else {
+        mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SKIP);
+    }
+    mOptions[RSK_TRIAL_COUNT].Set(6);
     mOptions[RSK_STARTING_OCARINA].Set(RO_GENERIC_NO);
     mOptions[RSK_SHUFFLE_OCARINA].Set(RO_GENERIC_YES);
     mOptions[RSK_SHUFFLE_OCARINA_BUTTONS].Set(slotData["shuffle_ocarina_buttons"]);
@@ -673,7 +677,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_LACS_REWARD_COUNT].Set(slotData["ganons_castle_boss_key_dungeon_rewards_required"]);
     mOptions[RSK_LACS_DUNGEON_COUNT].Set(slotData["ganons_castle_boss_key_dungeons_required"]);
     mOptions[RSK_LACS_TOKEN_COUNT].Set(slotData["ganons_castle_boss_key_skull_tokens_required"]);
-    mOptions[RSK_LACS_OPTIONS].Set(0);
+    mOptions[RSK_LACS_OPTIONS].Set(slotData["ganons_castle_boss_key_greg_modifier"]);
     if (slotData["key_rings"] == 0) {
         mOptions[RSK_KEYRINGS].Set(RO_KEYRINGS_OFF);
     } else if (slotData["key_rings"] == 1) {
@@ -709,7 +713,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_DAMAGE_MULTIPLIER].Set(0);
     mOptions[RSK_ALL_LOCATIONS_REACHABLE].Set(0);
     mOptions[RSK_SHUFFLE_BOSS_ENTRANCES].Set(0);
-    mOptions[RSK_SHUFFLE_100_GS_REWARD].Set(RO_GENERIC_NO);
+    mOptions[RSK_SHUFFLE_100_GS_REWARD].Set(slotData["shuffle_100_gs_reward"]);
     mOptions[RSK_TRIFORCE_HUNT].Set(slotData["triforce_hunt"]);
     uint16_t triforcePiecesRequired = slotData["triforce_hunt_required_pieces"];
     float triforcePiecesExtraMultiplier = 1 + (float(slotData["triforce_hunt_extra_pieces_percentage"]) / 100);
@@ -737,7 +741,10 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SHUFFLE_DEKU_STICK_BAG].Set(slotData["shuffle_deku_stick_bag"]);
     mOptions[RSK_SHUFFLE_DEKU_NUT_BAG].Set(slotData["shuffle_deku_nut_bag"]);
     mOptions[RSK_SHUFFLE_FREESTANDING].Set(slotData["shuffle_freestanding_items"]);
-    mOptions[RSK_SHUFFLE_FAIRIES].Set(slotData["shuffle_fairies"]);
+    mOptions[RSK_SHUFFLE_FOUNTAIN_FAIRIES].Set(slotData["shuffle_fountain_fairies"]);
+    mOptions[RSK_SHUFFLE_STONE_FAIRIES].Set(slotData["shuffle_stone_fairies"]);
+    mOptions[RSK_SHUFFLE_BEAN_FAIRIES].Set(slotData["shuffle_bean_fairies"]);
+    mOptions[RSK_SHUFFLE_SONG_FAIRIES].Set(slotData["shuffle_song_fairies"]);
     mOptions[RSK_LOCK_OVERWORLD_DOORS].Set(slotData["lock_overworld_doors"]);
     mOptions[RSK_SHUFFLE_GRASS].Set(slotData["shuffle_grass"]);
     mOptions[RSK_SHUFFLE_TREES].Set(slotData["shuffle_trees"]);
