@@ -194,6 +194,10 @@ void GameInteractor_ExecuteOnPlayDestroy() {
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnPlayDestroy>();
 }
 
+void GameInteractor_ExecuteOnPlayDrawBegin() {
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnPlayDrawBegin>();
+}
+
 void GameInteractor_ExecuteOnPlayDrawEnd() {
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnPlayDrawEnd>();
 }
@@ -333,7 +337,6 @@ void GameInteractor_ExecuteOnKaleidoUpdate() {
 }
 
 // Mark: Randomizer
-
 void GameInteractor_ExecuteOnRandomizerItemGivenHooks(uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped) {
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnRandomizerItemGivenHooks>(rc, gi, isGiSkipped);
 }
@@ -345,4 +348,9 @@ void GameInteractor_ExecuteOnArchipelagoItemReceived(uint32_t rg) {
 
 void GameInteractor_ExecuteOnRandomizerExternalCheck(uint32_t rc) {
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnRandomizerExternalCheck>(rc);
+}
+
+// Mark: Audio
+void GameInteractor_ExecuteOnSeqPlayerInit(int32_t playerIdx, int32_t seqId) {
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnSeqPlayerInit>(playerIdx, seqId);
 }
