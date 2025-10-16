@@ -753,6 +753,7 @@ void Context::ParseArchipelagoOptions() {
 
 void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient::ApItem>& scouted_items) {
     const std::string SlotName = ArchipelagoClient::GetInstance().GetSlotName();
+    nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
 
     // Zero out the location table first
     for (int rc = 1; rc < RC_MAX; rc++) {
@@ -760,13 +761,12 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
     }
 
     for (const ArchipelagoClient::ApItem& ap_item : scouted_items) {
-        // const RandomizerCheck rc = StaticData::APcheckToSoh.find(ap_item.locationName)->second;
         const RandomizerCheck rc = StaticData::locationNameToEnum[ap_item.locationName];
 
         itemLocationTable[rc].SetCustomPrice(10);
 
         if (SlotName == ap_item.playerName) {
-            // our item
+            // Our item
             SPDLOG_TRACE("Populated item {} at location {}", ap_item.itemName, ap_item.locationName);
             const RandomizerGet item = StaticData::itemNameToEnum[ap_item.itemName];
             itemLocationTable[rc].SetPlacedItem(item);
@@ -783,6 +783,25 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
                 itemLocationTable[rc].SetPlacedItem(RG_ARCHIPELAGO_ITEM_JUNK);
             }
         }
+    }
+
+    // Place vanilla shop items
+    nlohmann::json vanillaShopItems = slotData["shop_vanilla_items"];
+    for (auto it = vanillaShopItems.begin(); it != vanillaShopItems.end(); it++) {
+        std::string location = it.key();
+        std::string itemName = it.value();
+        const RandomizerCheck rc = StaticData::locationNameToEnum[location];
+        const RandomizerGet item = StaticData::itemNameToEnum[itemName];
+        itemLocationTable[rc].SetPlacedItem(item);
+    }
+
+    // Set all shop item prices
+    nlohmann::json shopPrices = slotData["shop_prices"];
+    for (auto it = shopPrices.begin(); it != shopPrices.end(); it++) {
+        std::string location = it.key();
+        uint16_t price = it.value();
+        const RandomizerCheck rc = StaticData::locationNameToEnum[location];
+        itemLocationTable[rc].SetCustomPrice(price);
     }
 
     itemLocationTable[RC_ZR_MAGIC_BEAN_SALESMAN].SetCustomPrice(60);
