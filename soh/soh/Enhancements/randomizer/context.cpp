@@ -436,7 +436,7 @@ void Context::ParseArchipelago() {
     Rando::Settings::GetInstance()->ResetExcludedLocations();
     ArchipelagoClient& apClient = ArchipelagoClient::GetInstance();
     ParseArchipelagoItemsLocations(apClient.GetScoutedItems());
-    ParseArchipelagoOptions(apClient.GetSlotData());
+    ParseArchipelagoOptions();
     mEntranceShuffler->UnshuffleAllEntrances();
     mDungeons->ResetAllDungeons();
     mTrials->RemoveAllTrials();
@@ -475,7 +475,7 @@ void Context::ParseItemLocationsJson(nlohmann::json spoilerFileJson) {
     }
 }
 
-void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_data) {
+void Context::ParseArchipelagoOptions() {
     // Set options to what Archipelago expects. Need to slowly convert these to options in apworld and
     // load those in instead.
 
@@ -536,7 +536,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE);
     mOptions[RSK_SHUFFLE_TOKENS].Set(slotData["shuffle_skull_tokens"]);
     mOptions[RSK_SHOPSANITY].Set(slotData["shuffle_shops"]);
-    mOptions[RSK_SHOPSANITY_COUNT].Set(4);
+    mOptions[RSK_SHOPSANITY_COUNT].Set(slotData["shuffle_shops_item_amount"]);
     mOptions[RSK_SHOPSANITY_PRICES].Set(RO_PRICE_FIXED);
     mOptions[RSK_SHOPSANITY_PRICES_FIXED_PRICE].Set(1);
     mOptions[RSK_SHOPSANITY_PRICES_RANGE_1].Set(0);
@@ -639,7 +639,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SKIP_EPONA_RACE].Set(slotData["skip_epona_race"]);
     mOptions[RSK_COMPLETE_MASK_QUEST].Set(slotData["complete_mask_quest"]);
     mOptions[RSK_SKIP_SCARECROWS_SONG].Set(slotData["skip_scarecrows_song"]);
-    mOptions[RSK_SKULLS_SUNS_SONG].Set(0);
+    mOptions[RSK_SKULLS_SUNS_SONG].Set(slotData["skulls_sun_song"]);
     mOptions[RSK_SHUFFLE_ADULT_TRADE].Set(slotData["shuffle_adult_trade_items"]);
     mOptions[RSK_SHUFFLE_MERCHANTS].Set(slotData["shuffle_merchants"]);
     mOptions[RSK_MERCHANT_PRICES].Set(0);
@@ -654,6 +654,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_MERCHANT_PRICES_AFFORDABLE].Set(0);
     mOptions[RSK_BLUE_FIRE_ARROWS].Set(slotData["blue_fire_arrows"]);
     mOptions[RSK_SUNLIGHT_ARROWS].Set(slotData["sunlight_arrows"]);
+    mOptions[RSK_SLINGBOW_BREAK_BEEHIVES].Set(slotData["slingbow_break_beehives"]);
     mOptions[RSK_ENABLE_BOMBCHU_DROPS].Set(slotData["bombchu_drops"]);
     mOptions[RSK_BOMBCHU_BAG].Set(slotData["bombchu_bag"]);
     mOptions[RSK_LINKS_POCKET].Set(RO_LINKS_POCKET_ANYTHING);
