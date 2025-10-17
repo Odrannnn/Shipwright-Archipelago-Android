@@ -770,6 +770,12 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
             SPDLOG_TRACE("Populated item {} at location {}", ap_item.itemName, ap_item.locationName);
             const RandomizerGet item = StaticData::itemNameToEnum[ap_item.itemName];
             itemLocationTable[rc].SetPlacedItem(item);
+
+            if (item == RG_ICE_TRAP) {
+                RandomizerGet iceTrapItem = ArchipelagoClient::GetInstance().GetIceTrapItem();
+                overrides[rc] = ItemOverride(rc, iceTrapItem);
+                overrides[rc].SetTrickName(Text(GetIceTrapName(iceTrapItem)));
+            }
         } else {
             // Other player item
             // If progressive or trap bit flag is set, make item progressive.

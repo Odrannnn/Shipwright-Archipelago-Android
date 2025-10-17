@@ -47,6 +47,7 @@ class ArchipelagoClient {
     void OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped);
     void SendDeathLink();
     void SetDeathLinkTag();
+    RandomizerGet GetIceTrapItem();
     const nlohmann::json GetSlotData();
     const std::vector<ApItem>& GetScoutedItems();
 
