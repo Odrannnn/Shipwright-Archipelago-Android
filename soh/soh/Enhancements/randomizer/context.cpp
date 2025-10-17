@@ -763,8 +763,6 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
     for (const ArchipelagoClient::ApItem& ap_item : scouted_items) {
         const RandomizerCheck rc = StaticData::locationNameToEnum[ap_item.locationName];
 
-        itemLocationTable[rc].SetCustomPrice(10);
-
         if (SlotName == ap_item.playerName) {
             // Our item
             SPDLOG_TRACE("Populated item {} at location {}", ap_item.itemName, ap_item.locationName);
@@ -810,6 +808,16 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
         itemLocationTable[rc].SetCustomPrice(price);
     }
 
+    // Set all scrub prices
+    nlohmann::json scrubPrices = slotData["scrub_prices"];
+    for (auto it = scrubPrices.begin(); it != scrubPrices.end(); it++) {
+        std::string location = it.key();
+        uint16_t price = it.value();
+        const RandomizerCheck rc = StaticData::locationNameToEnum[location];
+        itemLocationTable[rc].SetCustomPrice(price);
+    }
+
+    // Set merchant prices
     itemLocationTable[RC_ZR_MAGIC_BEAN_SALESMAN].SetCustomPrice(60);
     itemLocationTable[RC_KAK_GRANNYS_SHOP].SetCustomPrice(100);
     itemLocationTable[RC_WASTELAND_BOMBCHU_SALESMAN].SetCustomPrice(200);
