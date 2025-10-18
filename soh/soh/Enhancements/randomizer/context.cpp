@@ -698,6 +698,7 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_SHUFFLE_DUNGEON_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_OVERWORLD_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_INTERIOR_ENTRANCES].Set(0);
+    mOptions[RSK_SHUFFLE_THIEVES_HIDEOUT_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_GROTTO_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_OWL_DROPS].Set(0);
     mOptions[RSK_SHUFFLE_WARP_SONGS].Set(0);
@@ -707,6 +708,7 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_MIX_BOSS_ENTRANCES].Set(0);
     mOptions[RSK_MIX_OVERWORLD_ENTRANCES].Set(0);
     mOptions[RSK_MIX_INTERIOR_ENTRANCES].Set(0);
+    mOptions[RSK_MIX_THIEVES_HIDEOUT_ENTRANCES].Set(0);
     mOptions[RSK_MIX_GROTTO_ENTRANCES].Set(0);
     mOptions[RSK_DECOUPLED_ENTRANCES].Set(0);
     mOptions[RSK_STARTING_SKULLTULA_TOKEN].Set(0);
