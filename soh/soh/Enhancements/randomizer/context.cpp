@@ -716,14 +716,8 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_SHUFFLE_BOSS_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_100_GS_REWARD].Set(slotData["shuffle_100_gs_reward"]);
     mOptions[RSK_TRIFORCE_HUNT].Set(slotData["triforce_hunt"]);
-    uint16_t triforcePiecesRequired = slotData["triforce_hunt_required_pieces"];
-    float triforcePiecesExtraMultiplier = 1 + (float(slotData["triforce_hunt_extra_pieces_percentage"]) / 100);
-    uint16_t triforcePiecesTotal = floor(triforcePiecesRequired * triforcePiecesExtraMultiplier);
-    if (triforcePiecesTotal > 100) {
-        triforcePiecesTotal = 100;
-    }
-    mOptions[RSK_TRIFORCE_HUNT_PIECES_TOTAL].Set((triforcePiecesTotal - 1));
-    mOptions[RSK_TRIFORCE_HUNT_PIECES_REQUIRED].Set((triforcePiecesRequired - 1));
+    mOptions[RSK_TRIFORCE_HUNT_PIECES_TOTAL].Set(slotData["triforce_hunt_pieces_total"]);
+    mOptions[RSK_TRIFORCE_HUNT_PIECES_REQUIRED].Set(slotData["triforce_hunt_pieces_required"]);
     mOptions[RSK_SHUFFLE_BOSS_SOULS].Set(slotData["shuffle_boss_souls"]);
     if (slotData["shuffle_fish"] == 0) {
         mOptions[RSK_FISHSANITY].Set(RO_FISHSANITY_OFF);
