@@ -4697,6 +4697,12 @@ CustomMessage Randomizer::GetMerchantMessage(RandomizerCheck rc, TextIDs textId,
     } else if (shopItemGet == RG_ICE_TRAP) {
         shopItemGet = ctx->overrides[rc].LooksLike();
         shopItemName = CustomMessage(ctx->overrides[rc].GetTrickName());
+    } else if (shopItemGet == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || shopItemGet == RG_ARCHIPELAGO_ITEM_USEFUL ||
+               shopItemGet == RG_ARCHIPELAGO_ITEM_JUNK) {
+        auto shopItem = Rando::StaticData::RetrieveItem(shopItemGet);
+        std::string apItemName = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].itemName) + " (" +
+                     std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].playerName) + ")";
+        shopItemName = { Text(apItemName) };
     } else {
         auto shopItem = Rando::StaticData::RetrieveItem(shopItemGet);
         shopItemName = { shopItem.GetName() };
