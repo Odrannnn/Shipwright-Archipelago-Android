@@ -81,7 +81,7 @@ bool ArchipelagoClient::StartClient() {
             tags.push_back("DeathLink");
         }
         apClient->ConnectSlot(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), password, 0b0101, tags,
-                              { 0, 6, 4 });
+                              { 0, 6, 3 });
     });
 
     apClient->set_slot_connected_handler([&](const nlohmann::json data) {
@@ -90,6 +90,18 @@ bool ArchipelagoClient::StartClient() {
         ArchipelagoClient::StartLocationScouts();
 
         slotData = data;
+
+        std::string expectedVersion = AP_Client_consts::AP_WORLD_VERSION;
+        std::string apworldVersion = slotData["apworld_version"];
+        if (apworldVersion != expectedVersion) {
+            disconnecting = true;
+            std::string errorMessage =
+                "[ERROR] Client version does not match the APWorld's version.\nExpected version is " + expectedVersion +
+                ". APWorld is on version " + apworldVersion +
+                " instead.\nPlease use the SoH AP client matching the APWorld's version.\nDisconnecting...";
+            ArchipelagoConsole_SendMessage(errorMessage.c_str());
+            return;
+        }
 
         // if we are already in game when we connect
         // we won't have to request an itemSynch
