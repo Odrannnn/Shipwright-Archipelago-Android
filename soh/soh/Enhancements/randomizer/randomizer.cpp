@@ -4701,7 +4701,7 @@ CustomMessage Randomizer::GetMerchantMessage(RandomizerCheck rc, TextIDs textId,
                shopItemGet == RG_ARCHIPELAGO_ITEM_JUNK) {
         auto shopItem = Rando::StaticData::RetrieveItem(shopItemGet);
         std::string apItemName = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].itemName) + " (" +
-                     std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].playerName) + ")";
+                                 std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].playerName) + ")";
         shopItemName = { Text(apItemName) };
     } else {
         auto shopItem = Rando::StaticData::RetrieveItem(shopItemGet);

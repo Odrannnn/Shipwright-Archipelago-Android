@@ -80,7 +80,8 @@ bool ArchipelagoClient::StartClient() {
         if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0)) {
             tags.push_back("DeathLink");
         }
-        apClient->ConnectSlot(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), password, 0b0101, tags, {0, 6, 4});
+        apClient->ConnectSlot(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), password, 0b0101, tags,
+                              { 0, 6, 4 });
     });
 
     apClient->set_slot_connected_handler([&](const nlohmann::json data) {

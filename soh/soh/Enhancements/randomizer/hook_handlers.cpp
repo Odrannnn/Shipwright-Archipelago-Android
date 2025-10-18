@@ -1137,30 +1137,30 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                 } else if (item00->itemEntry.modIndex == MOD_RANDOMIZER) {
                     std::string message;
                     std::string itemName;
-                    
+
                     if (!(item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE ||
                           item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
                           item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
-                            
+
                         switch (gSaveContext.language) {
                             case LANGUAGE_FRA:
                                 message = "Vous obtenez: ";
                                 itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
-                                            .GetName()
-                                            .french;
+                                               .GetName()
+                                               .french;
                                 break;
                             case LANGUAGE_GER:
                                 message = "Du erhältst: ";
                                 itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
-                                            .GetName()
-                                            .german;
+                                               .GetName()
+                                               .german;
                                 break;
                             case LANGUAGE_ENG:
                             default:
                                 message = "You found ";
                                 itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
-                                            .GetName()
-                                            .english;
+                                               .GetName()
+                                               .english;
                                 break;
                         }
 
