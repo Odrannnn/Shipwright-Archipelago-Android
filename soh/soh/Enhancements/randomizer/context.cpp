@@ -488,7 +488,7 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_SLEEPING_WATERFALL].Set(slotData["sleeping_waterfall"]);
     mOptions[RSK_JABU_OPEN].Set(slotData["jabu_jabu"]);
     mOptions[RSK_STARTING_AGE].Set(slotData["starting_age"]);
-    mOptions[RSK_SELECTED_STARTING_AGE].Set(0);
+    mOptions[RSK_SELECTED_STARTING_AGE].Set(slotData["starting_age"]);
     mOptions[RSK_GERUDO_FORTRESS].Set(slotData["fortress_carpenters"]);
     mOptions[RSK_RAINBOW_BRIDGE].Set(slotData["rainbow_bridge"]);
     mOptions[RSK_RAINBOW_BRIDGE_STONE_COUNT].Set(slotData["rainbow_bridge_stones_required"]);
