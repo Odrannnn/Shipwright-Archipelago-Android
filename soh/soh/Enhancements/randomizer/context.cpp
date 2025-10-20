@@ -718,8 +718,9 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_SHUFFLE_BOSS_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_100_GS_REWARD].Set(slotData["shuffle_100_gs_reward"]);
     mOptions[RSK_TRIFORCE_HUNT].Set(slotData["triforce_hunt"]);
-    mOptions[RSK_TRIFORCE_HUNT_PIECES_TOTAL].Set(slotData["triforce_hunt_pieces_total"]);
-    mOptions[RSK_TRIFORCE_HUNT_PIECES_REQUIRED].Set(slotData["triforce_hunt_pieces_required"]);
+    // For some reason, ship adds 1 after the option is parsed in normal rando, so we subtract 1 here.
+    mOptions[RSK_TRIFORCE_HUNT_PIECES_TOTAL].Set((slotData["triforce_hunt_pieces_total"] - 1));
+    mOptions[RSK_TRIFORCE_HUNT_PIECES_REQUIRED].Set((slotData["triforce_hunt_pieces_required"] - 1));
     mOptions[RSK_SHUFFLE_BOSS_SOULS].Set(slotData["shuffle_boss_souls"]);
     if (slotData["shuffle_fish"] == 0) {
         mOptions[RSK_FISHSANITY].Set(RO_FISHSANITY_OFF);
