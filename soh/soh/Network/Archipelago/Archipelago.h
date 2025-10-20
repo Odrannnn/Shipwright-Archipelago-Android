@@ -16,7 +16,7 @@ static constexpr int MAX_PLAYER_NAME_LENGHT = 17;
 static constexpr int MAX_PASSWORD_LENGTH = 32;
 
 static constexpr char const* AP_GAME_NAME = "Ship of Harkinian";
-static constexpr char const* AP_WORLD_VERSION = "0.0.1";
+static constexpr char const* AP_WORLD_VERSION = "0.0.2";
 static constexpr int MAX_RETRIES = 3;
 } // namespace AP_Client_consts
 
