@@ -263,7 +263,7 @@ void RandomizerOnFlagSetHandler(int16_t flagType, int16_t flag) {
     if (rc != RC_HF_OCARINA_OF_TIME_ITEM) {
         if (loc == nullptr || loc->HasObtained() || loc->GetPlacedRandomizerGet() == RG_NONE)
             Rando::Context::GetInstance()->GetItemLocation(rc)->SetCheckStatus(RCSHOW_COLLECTED);
-            return;
+        return;
     }
     SPDLOG_INFO("Queuing RC: {}", static_cast<uint32_t>(rc));
     randomizerQueuedChecks.push(rc);
