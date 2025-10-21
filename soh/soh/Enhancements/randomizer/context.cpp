@@ -438,6 +438,7 @@ void Context::ParseArchipelago() {
     ParseArchipelagoItemsLocations(apClient.GetScoutedItems());
     ParseArchipelagoOptions();
     ParseArchipelagoTricks();
+    ParseArchipelagoExcludedLocations();
     mEntranceShuffler->UnshuffleAllEntrances();
     mDungeons->ResetAllDungeons();
     mTrials->RemoveAllTrials();
@@ -756,6 +757,15 @@ void Context::ParseArchipelagoTricks() {
 
     // TODO: Implement trick parsing from slot data
     // See Context::ParseTricksJson for more info
+}
+
+void Context::ParseArchipelagoExcludedLocations() {
+    // Maybe eventually we can add locations that are excluded on AP's side.
+    // For now, remove all of them to prevent seed bleed from normal rando seeds.
+    const auto ctx = Rando::Context::GetInstance();
+    for (int count = 0; count < RC_MAX; count++) {
+        ctx->GetItemLocation(count)->SetExcludedOption(RO_GENERIC_OFF);
+    };
 }
 
 void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient::ApItem>& scouted_items) {
