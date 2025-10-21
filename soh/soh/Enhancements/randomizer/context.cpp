@@ -437,6 +437,7 @@ void Context::ParseArchipelago() {
     ArchipelagoClient& apClient = ArchipelagoClient::GetInstance();
     ParseArchipelagoItemsLocations(apClient.GetScoutedItems());
     ParseArchipelagoOptions();
+    ParseArchipelagoTricks();
     mEntranceShuffler->UnshuffleAllEntrances();
     mDungeons->ResetAllDungeons();
     mTrials->RemoveAllTrials();
@@ -748,6 +749,13 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_LOCK_OVERWORLD_DOORS].Set(slotData["lock_overworld_doors"]);
     mOptions[RSK_SHUFFLE_GRASS].Set(slotData["shuffle_grass"]);
     mOptions[RSK_SHUFFLE_TREES].Set(slotData["shuffle_trees"]);
+}
+
+void Context::ParseArchipelagoTricks() {
+    Context::ResetTrickOptions();
+
+    // TODO: Implement trick parsing from slot data
+    // See Context::ParseTricksJson for more info
 }
 
 void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient::ApItem>& scouted_items) {

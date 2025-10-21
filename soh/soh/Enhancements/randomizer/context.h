@@ -138,6 +138,7 @@ class Context {
 
     void ParseArchipelago();
     void ParseArchipelagoOptions();
+    void ParseArchipelagoTricks();
     void ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient::ApItem>& slot_data);
 
     /**
