@@ -439,6 +439,7 @@ void Context::ParseArchipelago() {
     ParseArchipelagoOptions();
     ParseArchipelagoTricks();
     ParseArchipelagoExcludedLocations();
+    CreateStaticHints();
     mEntranceShuffler->UnshuffleAllEntrances();
     mDungeons->ResetAllDungeons();
     mTrials->RemoveAllTrials();
