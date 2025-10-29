@@ -307,8 +307,9 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
         inSameArea = scene == gPlayState->sceneNum;
     }
 
-    // setting the ocarinina obtained event flag
-    if (rc == RC_HF_OCARINA_OF_TIME_ITEM) {
+    // Receiving the OoT or Iron Boots chest locations without preventing the locations locked behind them.
+    // OoT locks Song of Time, Iron boots chest locks the song from Sheik in Ice Cavern.
+    if (rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST) {
         randomizerQueuedChecks.push(rc);
         return;
     }
@@ -387,8 +388,11 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
         getItemEntry = Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)vanillaRandomizerGet);
     }
 
-    if (rc == RC_HF_OCARINA_OF_TIME_ITEM && loc->HasObtained()) {
-        RandomizerOnExternalCheckHandler(RC_SONG_FROM_OCARINA_OF_TIME);
+    // When Ocarina or Iron Boots chest has been received externally before, and then picked up in the game itself, 
+    // it'll be skipped and not give the song properly because the RC is already checked off. So instead we handle
+    // it here and send out the check locked behind them manually.
+    if ((rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST) && loc->HasObtained()) {
+        RandomizerOnExternalCheckHandler(rc);
     }
 
     if (loc->HasObtained()) {
