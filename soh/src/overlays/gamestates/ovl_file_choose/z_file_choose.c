@@ -1708,6 +1708,7 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
                                        &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
                 return;
             }
+            SohFileSelect_ShowPresetModal();
             Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
                                    &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
             ParseArchipelago();

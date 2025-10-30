@@ -388,7 +388,7 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
         getItemEntry = Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)vanillaRandomizerGet);
     }
 
-    // When Ocarina or Iron Boots chest has been received externally before, and then picked up in the game itself, 
+    // When Ocarina or Iron Boots chest has been received externally before, and then picked up in the game itself,
     // it'll be skipped and not give the song properly because the RC is already checked off. So instead we handle
     // it here and send out the check locked behind them manually.
     if ((rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST) && loc->HasObtained()) {
