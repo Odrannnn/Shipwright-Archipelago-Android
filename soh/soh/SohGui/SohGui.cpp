@@ -265,4 +265,8 @@ void ShowRandomizerSettingsMenu() {
 void ShowArchipelagoSettingsMenu() {
     mArchipelagoSettingsWindow->Show();
 }
+
+void ShowEscMenu() {
+    mSohMenu->Show();
+}
 } // namespace SohGui
