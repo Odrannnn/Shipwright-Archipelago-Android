@@ -311,7 +311,7 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
     // OoT locks Song of Time, Iron boots chest locks the song from Sheik in Ice Cavern.
     // We also skip the bow chest in Forest Temple as the chest would spawn while the Stalfos fight still happens,
     // leading to a double chest spawn.
-    if (rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST || RC_FOREST_TEMPLE_BOW_CHEST) {
+    if (rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST || rc == RC_FOREST_TEMPLE_BOW_CHEST) {
         randomizerQueuedChecks.push(rc);
         return;
     }
