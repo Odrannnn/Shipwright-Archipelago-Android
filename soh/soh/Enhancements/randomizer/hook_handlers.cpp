@@ -540,6 +540,10 @@ void EnExItem_WaitForObjectRandomized(EnExItem* enExItem, PlayState* play) {
 }
 
 void EnItem00_DrawRandomizedItem(EnItem00* enItem00, PlayState* play) {
+    // Don't draw overhead items in cutscenes so they don't overlap during GI animations.
+    if (enItem00->actor.params == ITEM00_SOH_GIVE_ITEM_ENTRY && GameInteractor::IsGameplayPaused()) {
+        return;
+    }
     f32 mtxScale = CVarGetFloat(CVAR_RANDOMIZER_ENHANCEMENT("TimeSavers.SkipGetItemAnimationScale"), 10.0f);
     Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
     GetItemEntry randoItem = enItem00->itemEntry;
