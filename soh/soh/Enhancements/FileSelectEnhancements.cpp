@@ -68,68 +68,68 @@ std::array<std::string, LANGUAGE_MAX> ArchipelagoSettingsMenuText[ASM_MAX]{
     // ASM_START_ARCHIPELAGO
     {
         "Start Archipelago",
-        "Todo",
-        "Todo",
+        "Start Archipelago",
+        "Start Archipelago",
     },
     // ASM_CHANGE_CONNECTION_INFO
     {
         "Change Connection Info",
-        "Todo",
-        "Todo",
+        "Change Connection Info",
+        "Change Connection Info",
     },
     // ASM_SERVER_ADDRESS
     {
         "Server Address: ",
-        "Todo",
-        "Todo",
+        "Server Address: ",
+        "Server Address: ",
     },
     // ASM_SLOT_NAME
     {
         "Slot Name: ",
-        "Todo",
-        "Todo",
+        "Slot Name: ",
+        "Slot Name: ",
     },
     // ASM_NOT_CONNECTED
     {
         "Not Connected",
-        "Todo",
-        "Todo",
+        "Not Connected",
+        "Not Connected",
     },
     // ASM_CONNECTING
     {
         "Connecting...",
-        "Todo",
-        "Todo",
+        "Connecting...",
+        "Connecting...",
     },
     // ASM_CONNECTED
     {
         "Connected",
-        "Todo",
-        "Todo",
+        "Connected",
+        "Connected",
     },
     // ASM_STATUS
     {
         "Status:",
-        "Todo",
-        "Todo",
+        "Status:",
+        "Status:",
     },
     // ASM_CHAR_START_TO_CONNECT
     {
         "Start to automatically connect to this slot",
-        "Todo",
-        "Todo",
+        "Start to automatically connect to this slot",
+        "Start to automatically connect to this slot",
     },
     // ASM_CHAR_SELECT_CONNECTED_TO_OTHER_SLOT
     {
         "Connected to a different slot",
-        "Todo",
-        "Todo",
+        "Connected to a different slot",
+        "Connected to a different slot",
     },
     // ASM_CHAR_SELECT_CHANGE_CONNECTION_INFO
     {
         "Z-Connection Settings",
-        "Z-Todo",
-        "Z-Todo",
+        "Z-Connection Settings",
+        "Z-Connection Settings",
     }
 };
 

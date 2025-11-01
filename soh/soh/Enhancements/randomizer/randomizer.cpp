@@ -5504,8 +5504,8 @@ void CreateArchipelagoItemMessage() {
     customMessageManager->CreateMessage(
         Randomizer::archipelagoItemsTableID, 0,
         CustomMessage("You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
-                      "You found \x05\x06[[apitem]]\x05\x00 for \x05\x05[[applayer]]\x05\x00!",
-                      "You found \x05\x06[[apitem]]\x05\x00 for \x05\x05[[applayer]]\x05\x00!"));
+                      "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
+                      "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!"));
 }
 
 CustomMessage Randomizer::GetArchipelagoItemMessage(int16_t randomizerGet, uint32_t randomizerCheck) {
