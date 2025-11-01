@@ -5501,11 +5501,10 @@ CustomMessage Randomizer::GetGoronMessage(u16 index) {
 void CreateArchipelagoItemMessage() {
     CustomMessageManager* customMessageManager = CustomMessageManager::Instance;
     customMessageManager->AddCustomMessageTable(Randomizer::archipelagoItemsTableID);
-    customMessageManager->CreateMessage(
-        Randomizer::archipelagoItemsTableID, 0,
-        CustomMessage("You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
-                      "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
-                      "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!"));
+    customMessageManager->CreateMessage(Randomizer::archipelagoItemsTableID, 0,
+                                        CustomMessage("You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
+                                                      "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
+                                                      "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!"));
 }
 
 CustomMessage Randomizer::GetArchipelagoItemMessage(int16_t randomizerGet, uint32_t randomizerCheck) {
