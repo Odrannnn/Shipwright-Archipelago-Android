@@ -537,7 +537,10 @@ void Context::ParseArchipelagoOptions() {
         mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_ANYWHERE);
     }
     mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE);
-    mOptions[RSK_SHUFFLE_TOKENS].Set(slotData["shuffle_skull_tokens"]);
+    // Shuffle tokens is always set to all so the tokens are properly send to the AP server.
+    // Instead, over at AP's side, we're placing tokens on vanilla locations properly based
+    // on the chosen settings.
+    mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_ALL);
     mOptions[RSK_SHOPSANITY].Set(slotData["shuffle_shops"]);
     mOptions[RSK_SHOPSANITY_COUNT].Set(slotData["shuffle_shops_item_amount"]);
     mOptions[RSK_SHOPSANITY_PRICES].Set(RO_PRICE_FIXED);
