@@ -13,6 +13,7 @@ DEFINE_HOOK(OnExitGame, (int32_t fileNum));
 DEFINE_HOOK(OnGameStateMainStart, ());
 DEFINE_HOOK(OnGameFrameUpdate, ());
 DEFINE_HOOK(OnItemReceive, (GetItemEntry itemEntry));
+DEFINE_HOOK(OnEquipmentDelete, (int16_t equipmentType, uint16_t equipValue));
 DEFINE_HOOK(OnSaleEnd, (GetItemEntry itemEntry));
 DEFINE_HOOK(OnTransitionEnd, (int16_t sceneNum));
 DEFINE_HOOK(OnSceneInit, (int16_t sceneNum));
@@ -25,11 +26,15 @@ DEFINE_HOOK(OnSceneSpawnActors, ());
 DEFINE_HOOK(OnPlayerUpdate, ());
 DEFINE_HOOK(OnPlayerDeath, ());
 DEFINE_HOOK(OnSetDoAction, (uint16_t action));
+DEFINE_HOOK(OnPlayerSfx, (u16 sfxId));
 DEFINE_HOOK(OnOcarinaSongAction, ());
 DEFINE_HOOK(OnCuccoOrChickenHatch, ());
 DEFINE_HOOK(OnShopSlotChange, (uint8_t cursorIndex, int16_t price));
+DEFINE_HOOK(OnDungeonKeyUsed, (uint16_t mapIndex));
+DEFINE_HOOK(ShouldActorInit, (void* actor, bool* result));
 DEFINE_HOOK(OnActorInit, (void* actor));
 DEFINE_HOOK(OnActorSpawn, (void* actor));
+DEFINE_HOOK(ShouldActorUpdate, (void* actor, bool* result));
 DEFINE_HOOK(OnActorUpdate, (void* actor));
 DEFINE_HOOK(OnActorKill, (void* actor));
 DEFINE_HOOK(OnActorDestroy, (void* actor));
@@ -47,7 +52,7 @@ DEFINE_HOOK(OnPlayDestroy, ());
 DEFINE_HOOK(OnPlayDrawBegin, ());
 DEFINE_HOOK(OnPlayDrawEnd, ());
 DEFINE_HOOK(OnVanillaBehavior, (GIVanillaBehavior flag, bool* result, va_list originalArgs));
-DEFINE_HOOK(OnSaveFile, (int32_t fileNum));
+DEFINE_HOOK(OnSaveFile, (int32_t fileNum, int32_t sectionID));
 DEFINE_HOOK(OnLoadFile, (int32_t fileNum));
 DEFINE_HOOK(OnDeleteFile, (int32_t fileNum));
 
@@ -83,3 +88,8 @@ DEFINE_HOOK(OnRandomizerExternalCheck, (uint32_t rc));
 
 // Audio
 DEFINE_HOOK(OnSeqPlayerInit, (int32_t playerIdx, int32_t seqId));
+
+// Rando
+DEFINE_HOOK(OnRandoSetCheckStatus, (RandomizerCheck rc, RandomizerCheckStatus status));
+DEFINE_HOOK(OnRandoSetIsSkipped, (RandomizerCheck rc, bool isSkipped));
+DEFINE_HOOK(OnRandoEntranceDiscovered, (u16 entranceIndex, u8 isReversedEntrance));
