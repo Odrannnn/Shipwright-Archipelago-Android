@@ -20,6 +20,7 @@
 #include "soh/SaveManager.h"
 #include "soh/SohGui/SohGui.hpp"
 #include "soh/OTRGlobals.h"
+#include "soh/Network/Anchor/Anchor.h"
 
 extern "C" {
 #include "variables.h"
@@ -387,6 +388,11 @@ void ArchipelagoClient::QueueExternalCheck(const int64_t apLocation) {
 bool ArchipelagoClient::IsConnected() {
     if (apClient == nullptr) {
         return false;
+    }
+
+    CVarSetInteger(CVAR_REMOTE_ANCHOR("RoomSettings.SyncItemsAndFlags"), 0);
+    if (Anchor::Instance->isConnected && Anchor::Instance->roomState.ownerClientId == Anchor::Instance->ownClientId) {
+        Anchor::Instance->SendPacket_UpdateRoomState();
     }
 
     return apClient->get_state() == APClient::State::SLOT_CONNECTED;
