@@ -56,7 +56,9 @@ static const std::unordered_map<int32_t, const char*> chestStyleMatchesContentsO
 static const std::unordered_map<int32_t, const char*> timeTravelOptions = {
     { TIME_TRAVEL_DISABLED, "Disabled" },
     { TIME_TRAVEL_OOT, "Ocarina of Time" },
+    { TIME_TRAVEL_OOT_MS, "Ocarina of Time + Master Sword" },
     { TIME_TRAVEL_ANY, "Any Ocarina" },
+    { TIME_TRAVEL_ANY_MS, "Any Ocarina + Master Sword" },
 };
 
 static const std::unordered_map<int32_t, const char*> sleepingWaterfallOptions = {
@@ -332,8 +334,7 @@ void SohMenu::AddMenuEnhancements() {
     AddWidget(path, "Skip Feeding Jabu-Jabu", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("TimeSavers.SkipJabuJabuFish"))
         .PreFunc([](WidgetInfo& info) {
-            info.options->disabled =
-                IS_RANDO && OTRGlobals::Instance->gRandoContext->GetOption(RSK_JABU_OPEN).Is(RO_JABU_OPEN);
+            info.options->disabled = IS_RANDO;
             info.options->disabledTooltip =
                 "This setting is disabled because a randomizer savefile with \"Jabu-Jabu: Open\" is loaded.";
         })
@@ -410,10 +411,11 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().DefaultValue(IS_RANDO));
     AddWidget(path, "Exclude Glitch-Aiding Cutscenes", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("TimeSavers.SkipCutscene.GlitchAiding"))
-        .Options(CheckboxOptions().Tooltip(
-            "Don't skip cutscenes that are associated with useful glitches. Currently, it is "
-            "only the Fire Temple Darunia CS, Forest Temple Poe Sisters CS, Dodongo Boss "
-            "Door Switch CS, Water Temple Dragon Switch CS, and the Box Skip One Point in Jabu."));
+        .Options(
+            CheckboxOptions().Tooltip("Don't skip cutscenes that are associated with useful glitches. Currently, it is "
+                                      "only the Fire Temple Darunia CS, Forest Temple Poe Sisters CS, Dodongo Boss "
+                                      "Door Switch CS, Water Temple Dragon Switch CS, the Box Skip One Point in Jabu, "
+                                      "Early Hammer Switch CS in MQ Spirit, and Cow Switch Chest CS in MQ Jabu."));
 
     AddWidget(path, "Text", WIDGET_SEPARATOR_TEXT);
     AddWidget(path, "Skip Bottle Pickup Messages", WIDGET_CVAR_CHECKBOX)
@@ -466,7 +468,7 @@ void SohMenu::AddMenuEnhancements() {
         .Options(IntSliderOptions().Min(0).Max(5).DefaultValue(0).Format("+%d"));
     AddWidget(path, "Crawl Speed %dx", WIDGET_CVAR_SLIDER_INT)
         .CVar(CVAR_ENHANCEMENT("CrawlSpeed"))
-        .Options(IntSliderOptions().Min(1).Max(4).DefaultValue(1).Format("%dx"));
+        .Options(IntSliderOptions().Min(1).Max(5).DefaultValue(1).Format("%dx"));
     AddWidget(path, "Exclude Glitch-Aiding Crawlspaces", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("GlitchAidingCrawlspaces"))
         .PreFunc([](WidgetInfo& info) { info.isHidden = CVarGetInteger(CVAR_ENHANCEMENT("CrawlSpeed"), 0) == 1; })
@@ -534,12 +536,6 @@ void SohMenu::AddMenuEnhancements() {
     path.column = SECTION_COLUMN_1;
 
     AddWidget(path, "Mods", WIDGET_SEPARATOR_TEXT);
-    AddWidget(path, "Use Alternate Assets", WIDGET_CVAR_CHECKBOX)
-        .CVar(CVAR_SETTING("AltAssets"))
-        .RaceDisable(false)
-        .Options(CheckboxOptions().Tooltip(
-            "Toggle between standard assets and alternate assets. Usually mods will indicate if "
-            "this setting has to be used or not."));
     AddWidget(path, "Disable Bomb Billboarding", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("DisableBombBillboarding"))
         .RaceDisable(false)
@@ -552,12 +548,17 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().Tooltip(
             "Disables Grottos rotating with the Camera. To be used in conjuction with mods that want to "
             "replace grottos with 3D objects."));
+    AddWidget(path, "Disable 2D Pre-Rendered Scenes", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("3DSceneRender"))
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip("Disables 2D pre-rendered backgrounds. Enable this when using a mod that "
+                                           "implements 3D backdrops for these areas.\n"
+                                           "Requires Scene Change to alter."));
     AddWidget(path, "Ingame Text Spacing: %d", WIDGET_CVAR_SLIDER_INT)
         .CVar(CVAR_ENHANCEMENT("TextSpacing"))
         .RaceDisable(false)
         .Options(IntSliderOptions().Min(4).Max(6).DefaultValue(6).Tooltip(
             "Space between text characters (useful for HD font textures)."));
-
     AddWidget(path, "Models & Textures", WIDGET_SEPARATOR_TEXT);
     AddWidget(path, "Disable LOD", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("DisableLOD"))
@@ -601,7 +602,7 @@ void SohMenu::AddMenuEnhancements() {
     AddWidget(path, "Color Temple of Time's Medallions", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("ToTMedallionsColors"))
         .RaceDisable(false)
-        .Callback([](WidgetInfo& info) { PatchToTMedallions(); })
+        .Callback([](WidgetInfo& info) { UpdateToTMedallions(); })
         .Options(CheckboxOptions().Tooltip(
             "When Medallions are collected, the Medallion imprints around the Master Sword Pedestal in the Temple "
             "of Time will become colored-in."));
@@ -783,9 +784,9 @@ void SohMenu::AddMenuEnhancements() {
                      .Tooltip("Allows Link to freely change age by playing the Song of Time.\n"
                               "Time Blocks can still be used properly.\n\n"
                               "Requirements:\n"
-                              " - Obtained the Ocarina of Time (depends on selection)\n"
                               " - Obtained the Song of Time\n"
-                              " - Obtained the Master Sword\n"
+                              " - Obtained the Ocarina of Time (depends on selection)\n"
+                              " - Obtained the Master Sword (depends on selection)\n"
                               " - Not within range of a Time Block\n"
                               " - Not within range of Ocarina Playing spots"));
 
@@ -940,6 +941,10 @@ void SohMenu::AddMenuEnhancements() {
         })
         .Options(CheckboxOptions().Tooltip(
             "Fixes a bug where the Gravedigging Tour Heart Piece disappears if the area reloads."));
+    AddWidget(path, "Fix Dampé Going Backwards", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("FixDampeGoingBackwards"))
+        .Options(CheckboxOptions().Tooltip(
+            "Fixes Dampé going backwards in certain circumstances when the player is going backwards."));
     AddWidget(path, "Fix Raised Floor Switches", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("FixFloorSwitches"))
         .Options(CheckboxOptions().Tooltip(
@@ -1077,7 +1082,7 @@ void SohMenu::AddMenuEnhancements() {
         .RaceDisable(false)
         .Callback([](WidgetInfo& info) {
             if (gPlayState != NULL) {
-                UpdateDirtPathFixState(gPlayState->sceneNum);
+                DirtPathFix_UpdateZFightingMode(gPlayState->sceneNum);
             }
         })
         .Options(
@@ -1159,6 +1164,14 @@ void SohMenu::AddMenuEnhancements() {
         .CVar(CVAR_ENHANCEMENT("NGCKaleidoSwitcher"))
         .Options(CheckboxOptions().Tooltip(
             "Makes L and R switch pages like on the GameCube. Z opens the Debug Menu instead."));
+    AddWidget(path, "Wide Door Ranges", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("WideShutterDoorRange"))
+        .Options(CheckboxOptions().Tooltip("Restores the wider range of certain shutter doors from NTSC 1.0.\n"
+                                           "Notably affects Jabu-Jabu and boss doors."));
+    AddWidget(path, "Grave Hole Jumps", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("GraveHoles"))
+        .Options(CheckboxOptions().Tooltip(
+            "Restores NTSC 1.0 behavior where Link jumps over grave holes and grabs the ledges."));
 
     // Difficulty Options
     path.sidebarName = "Difficulty";
@@ -1266,7 +1279,7 @@ void SohMenu::AddMenuEnhancements() {
         .CVar(CVAR_ENHANCEMENT("DampeWin"))
         .Options(CheckboxOptions().Tooltip(
             "Always win the Heart Piece/Purple Rupee on the first dig in Dampe's Grave Digging game. "
-            "In a Randomizer file, this is always enabled."));
+            "In a Randomizer file, this defaults to on if this enhancement has never been changed."));
     AddWidget(path, "All Dogs are Richard", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("AllDogsRichard"))
         .Options(CheckboxOptions().Tooltip("All dogs can be traded in and will count as Richard."));
@@ -1726,6 +1739,9 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().Tooltip(
             "Keese and Guay no longer target you and simply ignore you as if you were wearing the "
             "Skull Mask."));
+    AddWidget(path, "Disable Haunted Wasteland Sandstorm", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("DisableSandstorm"))
+        .Options(CheckboxOptions().Tooltip("Disables sandstorm effect in Haunted Wasteland."));
 
     AddWidget(path, "Glitch Aids", WIDGET_SEPARATOR_TEXT);
     AddWidget(path, "Easy Frame Advancing with Pause", WIDGET_CVAR_CHECKBOX)
@@ -1829,6 +1845,7 @@ void SohMenu::AddMenuEnhancements() {
         .CVar(CVAR_WINDOW("CosmeticsEditor"))
         .RaceDisable(false)
         .WindowName("Cosmetics Editor")
+        .HideInSearch(true)
         .Options(WindowButtonOptions().Tooltip("Enables the separate Cosmetics Editor Window."));
 
     // Audio Editor
@@ -1838,6 +1855,7 @@ void SohMenu::AddMenuEnhancements() {
         .CVar(CVAR_WINDOW("AudioEditor"))
         .RaceDisable(false)
         .WindowName("Audio Editor")
+        .HideInSearch(true)
         .Options(WindowButtonOptions().Tooltip("Enables the separate Audio Editor Window."));
 
     // Gameplay Stats
@@ -1847,6 +1865,7 @@ void SohMenu::AddMenuEnhancements() {
         .CVar(CVAR_WINDOW("GameplayStats"))
         .RaceDisable(false)
         .WindowName("Gameplay Stats")
+        .HideInSearch(true)
         .Options(WindowButtonOptions().Tooltip("Enables the separate Gameplay Stats Window."));
 
     // Time Splits
@@ -1856,6 +1875,7 @@ void SohMenu::AddMenuEnhancements() {
         .CVar(CVAR_WINDOW("TimeSplits"))
         .RaceDisable(false)
         .WindowName("Time Splits")
+        .HideInSearch(true)
         .Options(WindowButtonOptions().Tooltip("Enables the separate Time Splits Window."));
 
     // Timers

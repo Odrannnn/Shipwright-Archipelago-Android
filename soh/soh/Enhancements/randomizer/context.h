@@ -137,7 +137,9 @@ class Context {
     RandomizerArea GetAreaFromString(std::string str);
 
     void ParseArchipelago();
-    void ParseArchipelagoOptions(const std::map<std::string, int>& slot_data);
+    void ParseArchipelagoOptions();
+    void ParseArchipelagoTricks();
+    void ParseArchipelagoExcludedLocations();
     void ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient::ApItem>& slot_data);
 
     /**

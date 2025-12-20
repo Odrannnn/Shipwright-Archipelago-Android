@@ -44,6 +44,7 @@ DEFINE_HOOK(OnPlayerFirstPersonControl, (Player * player));
 DEFINE_HOOK(OnPlayerProcessStick, ());
 DEFINE_HOOK(OnPlayerShieldControl, (float_t * sp50, float_t* sp54));
 DEFINE_HOOK(OnPlayDestroy, ());
+DEFINE_HOOK(OnPlayDrawBegin, ());
 DEFINE_HOOK(OnPlayDrawEnd, ());
 DEFINE_HOOK(OnVanillaBehavior, (GIVanillaBehavior flag, bool* result, va_list originalArgs));
 DEFINE_HOOK(OnSaveFile, (int32_t fileNum));
@@ -70,12 +71,15 @@ DEFINE_HOOK(OnUpdateFileBossRushOptionSelection, (uint8_t optionIndex, uint8_t o
 DEFINE_HOOK(OnUpdateFileRandomizerOptionSelection, (uint8_t optionIndex));
 DEFINE_HOOK(OnUpdateFileNameSelection, (int16_t charCode));
 DEFINE_HOOK(OnFileChooseMain, (void* gameState));
+DEFINE_HOOK(OnGenerationCompletion, ());
 
 DEFINE_HOOK(OnSetGameLanguage, ());
-DEFINE_HOOK(OnFileDropped, (std::string filePath));
 DEFINE_HOOK(OnAssetAltChange, ());
 DEFINE_HOOK(OnKaleidoUpdate, ());
 
 DEFINE_HOOK(OnRandomizerItemGivenHooks, (uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped));
 DEFINE_HOOK(OnArchipelagoItemReceived, (uint32_t rg));
 DEFINE_HOOK(OnRandomizerExternalCheck, (uint32_t rc));
+
+// Audio
+DEFINE_HOOK(OnSeqPlayerInit, (int32_t playerIdx, int32_t seqId));

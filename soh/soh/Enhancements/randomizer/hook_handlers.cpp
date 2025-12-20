@@ -1,4 +1,4 @@
-#include <libultraship/bridge.h>
+﻿#include <libultraship/bridge.h>
 #include "soh/OTRGlobals.h"
 #include "soh/ResourceManagerHelpers.h"
 #include "soh/Enhancements/enhancementTypes.h"
@@ -49,6 +49,7 @@ extern "C" {
 #include "src/overlays/actors/ovl_En_Ds/z_en_ds.h"
 #include "src/overlays/actors/ovl_En_Gm/z_en_gm.h"
 #include "src/overlays/actors/ovl_En_Js/z_en_js.h"
+#include "src/overlays/actors/ovl_En_Okarina_Tag/z_en_okarina_tag.h"
 #include "src/overlays/actors/ovl_En_Door/z_en_door.h"
 #include "src/overlays/actors/ovl_Door_Shutter/z_door_shutter.h"
 #include "src/overlays/actors/ovl_Door_Gerudo/z_door_gerudo.h"
@@ -254,12 +255,16 @@ void RandomizerOnFlagSetHandler(int16_t flagType, int16_t flag) {
         return;
 
     if (flagType == FLAG_GS_TOKEN &&
-        Rando::Context::GetInstance()->GetOption(RSK_SHUFFLE_TOKENS).Is(RO_TOKENSANITY_OFF))
+        Rando::Context::GetInstance()->GetOption(RSK_SHUFFLE_TOKENS).Is(RO_TOKENSANITY_OFF)) {
+        Rando::Context::GetInstance()->GetItemLocation(rc)->SetCheckStatus(RCSHOW_COLLECTED);
         return;
+    }
     auto loc = Rando::Context::GetInstance()->GetItemLocation(rc);
     if (rc != RC_HF_OCARINA_OF_TIME_ITEM) {
-        if (loc == nullptr || loc->HasObtained() || loc->GetPlacedRandomizerGet() == RG_NONE)
+        if (loc == nullptr || loc->HasObtained() || loc->GetPlacedRandomizerGet() == RG_NONE) {
+            Rando::Context::GetInstance()->GetItemLocation(rc)->SetCheckStatus(RCSHOW_COLLECTED);
             return;
+        }
     }
     SPDLOG_INFO("Queuing RC: {}", static_cast<uint32_t>(rc));
     randomizerQueuedChecks.push(rc);
@@ -302,8 +307,11 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
         inSameArea = scene == gPlayState->sceneNum;
     }
 
-    // setting the ocarinina obtained event flag
-    if (rc == RC_HF_OCARINA_OF_TIME_ITEM) {
+    // Receiving the OoT or Iron Boots chest locations without preventing the locations locked behind them.
+    // OoT locks Song of Time, Iron boots chest locks the song from Sheik in Ice Cavern.
+    // We also skip the bow chest in Forest Temple as the chest would spawn while the Stalfos fight still happens,
+    // leading to a double chest spawn.
+    if (rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST || rc == RC_FOREST_TEMPLE_BOW_CHEST) {
         randomizerQueuedChecks.push(rc);
         return;
     }
@@ -382,8 +390,15 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
         getItemEntry = Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)vanillaRandomizerGet);
     }
 
-    if (rc == RC_HF_OCARINA_OF_TIME_ITEM && loc->HasObtained()) {
-        RandomizerOnExternalCheckHandler(RC_SONG_FROM_OCARINA_OF_TIME);
+    // When Ocarina or Iron Boots chest has been received externally before, and then picked up in the game itself,
+    // it'll be skipped and not give the song properly because the RC is already checked off. So instead we handle
+    // it here and send out the check locked behind them manually.
+    if (loc->HasObtained()) {
+        if (rc == RC_HF_OCARINA_OF_TIME_ITEM) {
+            RandomizerOnExternalCheckHandler(RC_SONG_FROM_OCARINA_OF_TIME);
+        } else if (rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST) {
+            RandomizerOnExternalCheckHandler(RC_SHEIK_IN_ICE_CAVERN);
+        }
     }
 
     if (loc->HasObtained()) {
@@ -413,8 +428,10 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
                     getItemEntry.modIndex == MOD_RANDOMIZER) &&
                   (getItemEntry.getItemCategory == ITEM_CATEGORY_JUNK ||
                    getItemEntry.getItemCategory == ITEM_CATEGORY_SKULLTULA_TOKEN ||
-                   getItemEntry.getItemCategory == ITEM_CATEGORY_LESSER))))) {
-
+                   getItemEntry.getItemCategory == ITEM_CATEGORY_LESSER ||
+                   // Treat small keys as junk if Skeleton Key is obtained.
+                   (getItemEntry.getItemCategory == ITEM_CATEGORY_SMALL_KEY &&
+                    Flags_GetRandomizerInf(RAND_INF_HAS_SKELETON_KEY))))))) {
             Item_DropCollectible(gPlayState, &spawnPos, static_cast<int16_t>(ITEM00_SOH_GIVE_ITEM_ENTRY | 0x8000));
 
             isGiSkipped = 1;
@@ -529,6 +546,10 @@ void EnExItem_WaitForObjectRandomized(EnExItem* enExItem, PlayState* play) {
 }
 
 void EnItem00_DrawRandomizedItem(EnItem00* enItem00, PlayState* play) {
+    // Don't draw overhead items in cutscenes so they don't overlap during GI animations.
+    if (enItem00->actor.params == ITEM00_SOH_GIVE_ITEM_ENTRY && GameInteractor::IsGameplayPaused()) {
+        return;
+    }
     f32 mtxScale = CVarGetFloat(CVAR_RANDOMIZER_ENHANCEMENT("TimeSavers.SkipGetItemAnimationScale"), 10.0f);
     Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
     GetItemEntry randoItem = enItem00->itemEntry;
@@ -960,7 +981,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             *should = !Flags_GetEventChkInf(EVENTCHKINF_BONGO_BONGO_ESCAPED_FROM_WELL) && LINK_IS_ADULT &&
                       gEntranceTable[((void)0, gSaveContext.entranceIndex)].scene == SCENE_KAKARIKO_VILLAGE &&
                       CHECK_QUEST_ITEM(QUEST_MEDALLION_FOREST) && CHECK_QUEST_ITEM(QUEST_MEDALLION_FIRE) &&
-                      CHECK_QUEST_ITEM(QUEST_MEDALLION_WATER);
+                      CHECK_QUEST_ITEM(QUEST_MEDALLION_WATER) && gSaveContext.cutsceneIndex < 0xFFF0;
             break;
         case VB_BE_ELIGIBLE_FOR_CHILD_ROLLING_GORON_REWARD: {
             // Don't require a bomb bag to get prize in rando
@@ -976,7 +997,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             break;
         }
         case VB_GIVE_ITEM_MASTER_SWORD:
-            if (RAND_GET_OPTION(RSK_SHUFFLE_MASTER_SWORD)) {
+            if (RAND_GET_OPTION(RSK_SHUFFLE_MASTER_SWORD) || RAND_GET_OPTION(RSK_STARTING_MASTER_SWORD)) {
                 *should = false;
             } else {
                 *should = true;
@@ -1111,20 +1132,59 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                 }
 
                 if (item00->itemEntry.modIndex == MOD_NONE) {
+                    std::string message;
+
+                    switch (gSaveContext.language) {
+                        case LANGUAGE_FRA:
+                            message = "Vous obtenez: ";
+                            break;
+                        case LANGUAGE_GER:
+                            message = "Du erhältst: ";
+                            break;
+                        case LANGUAGE_ENG:
+                        default:
+                            message = "You found ";
+                            break;
+                    }
+
                     Notification::Emit({
                         .itemIcon = GetTextureForItemId(item00->itemEntry.itemId),
-                        .message = "You found ",
+                        .message = message,
                         .suffix = SohUtils::GetItemName(item00->itemEntry.itemId),
                     });
                 } else if (item00->itemEntry.modIndex == MOD_RANDOMIZER) {
+                    std::string message;
+                    std::string itemName;
+
                     if (!(item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE ||
                           item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
                           item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
+
+                        switch (gSaveContext.language) {
+                            case LANGUAGE_FRA:
+                                message = "Vous obtenez: ";
+                                itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
+                                               .GetName()
+                                               .french;
+                                break;
+                            case LANGUAGE_GER:
+                                message = "Du erhältst: ";
+                                itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
+                                               .GetName()
+                                               .german;
+                                break;
+                            case LANGUAGE_ENG:
+                            default:
+                                message = "You found ";
+                                itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
+                                               .GetName()
+                                               .english;
+                                break;
+                        }
+
                         Notification::Emit({
-                            .message = "You found ",
-                            .suffix = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
-                                          .GetName()
-                                          .english,
+                            .message = message,
+                            .suffix = itemName,
                         });
                     }
                 }
@@ -1184,7 +1244,8 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             break;
         }
         case VB_SELL_POES_TO_POE_COLLECTOR: {
-            if (!Flags_GetRandomizerInf(RAND_INF_10_BIG_POES) && HIGH_SCORE(HS_POE_POINTS) >= 1000) {
+            if (!Flags_GetRandomizerInf(RAND_INF_10_BIG_POES) && HIGH_SCORE(HS_POE_POINTS) >= 1000 &&
+                !(GET_PLAYER(gPlayState)->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS)) {
                 EnGb* enGb = va_arg(args, EnGb*);
                 enGb->textId = 0x70F8;
                 Message_ContinueTextbox(gPlayState, enGb->textId);
@@ -1421,6 +1482,30 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             *should |= RAND_GET_OPTION(RSK_SHUFFLE_ADULT_TRADE) == RO_GENERIC_OFF;
             break;
         }
+        case VB_OKARINA_TAG_COMPLETE: {
+            if (gPlayState->sceneNum == SCENE_BOTTOM_OF_THE_WELL) {
+                auto dungeon =
+                    OTRGlobals::Instance->gRandoContext->GetDungeons()->GetDungeonFromScene(SCENE_BOTTOM_OF_THE_WELL);
+                if (dungeon->IsVanilla()) {
+                    EnOkarinaTag* enOkarinaTag = va_arg(args, EnOkarinaTag*);
+                    if (enOkarinaTag->switchFlag >= 0 && Flags_GetSwitch(gPlayState, enOkarinaTag->switchFlag)) {
+                        Flags_UnsetSwitch(gPlayState, enOkarinaTag->switchFlag);
+                        *should = false;
+                    }
+                }
+            }
+            break;
+        }
+        case VB_OKARINA_TAG_COMPLETED: {
+            if (gPlayState->sceneNum == SCENE_BOTTOM_OF_THE_WELL) {
+                auto dungeon =
+                    OTRGlobals::Instance->gRandoContext->GetDungeons()->GetDungeonFromScene(SCENE_BOTTOM_OF_THE_WELL);
+                if (dungeon->IsVanilla()) {
+                    *should = false;
+                }
+            }
+            break;
+        }
         case VB_GRANNY_SAY_INSUFFICIENT_RUPEES: {
             if (EnDs_RandoCanGetGrannyItem()) {
                 *should = gSaveContext.rupees <
@@ -1537,7 +1622,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             break;
         }
         case VB_GERUDO_GUARD_SET_ACTION_AFTER_TALK:
-            if (gPlayState->msgCtx.choiceIndex == 0) {
+            if (gPlayState->msgCtx.choiceIndex == 0 && gPlayState->sceneNum == SCENE_GERUDOS_FORTRESS) {
                 EnGe2* enGe2 = va_arg(args, EnGe2*);
                 EnGe2_SetupCapturePlayer(enGe2, gPlayState);
                 *should = false;
@@ -1806,6 +1891,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
         case VB_GIVE_ITEM_WATER_MEDALLION:
         case VB_GIVE_ITEM_SPIRIT_MEDALLION:
         case VB_GIVE_ITEM_SHADOW_MEDALLION:
+        case VB_CHEST_USE_ICE_EFFECT:
             *should = false;
             break;
         case VB_GIVE_ITEM_SKULL_TOKEN:
@@ -2205,6 +2291,15 @@ void RandomizerOnActorInitHandler(void* actorRef) {
           Entrance_SceneAndSpawnAre(SCENE_SHOOTING_GALLERY, 0x01)))) {
         Actor_Kill(actor);
         return;
+    }
+
+    // Turn MQ switch into toggle
+    if (actor->id == ACTOR_OBJ_SWITCH && gPlayState->sceneNum == SCENE_BOTTOM_OF_THE_WELL && (actor->params & 7) == 3) {
+        auto dungeon =
+            OTRGlobals::Instance->gRandoContext->GetDungeons()->GetDungeonFromScene(SCENE_BOTTOM_OF_THE_WELL);
+        if (dungeon->IsMQ()) {
+            actor->params |= 0x10;
+        }
     }
 
     // In ER, once Link has spawned we know the scene has loaded, so we can sanitize the last known entrance type

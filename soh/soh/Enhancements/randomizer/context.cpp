@@ -54,7 +54,10 @@ Context::Context() {
         &mOptions[RSK_SHUFFLE_FROG_SONG_RUPEES],
         &mOptions[RSK_SHUFFLE_ADULT_TRADE],
         &mOptions[RSK_SHUFFLE_100_GS_REWARD],
-        &mOptions[RSK_SHUFFLE_FAIRIES],
+        &mOptions[RSK_SHUFFLE_FOUNTAIN_FAIRIES],
+        &mOptions[RSK_SHUFFLE_STONE_FAIRIES],
+        &mOptions[RSK_SHUFFLE_BEAN_FAIRIES],
+        &mOptions[RSK_SHUFFLE_SONG_FAIRIES],
         &mOptions[RSK_GOSSIP_STONE_HINTS],
     };
 }
@@ -126,8 +129,7 @@ void Context::PlaceItemInLocation(const RandomizerCheck locKey, const Randomizer
     SPDLOG_DEBUG(StaticData::RetrieveItem(item).GetName().GetEnglish() + " placed at " +
                  StaticData::GetLocation(locKey)->GetName() + "\n");
 
-    if (applyEffectImmediately || mOptions[RSK_LOGIC_RULES].Is(RO_LOGIC_GLITCHLESS) ||
-        mOptions[RSK_LOGIC_RULES].Is(RO_LOGIC_VANILLA)) {
+    if (applyEffectImmediately || mOptions[RSK_LOGIC_RULES].Is(RO_LOGIC_GLITCHLESS)) {
         StaticData::RetrieveItem(item).ApplyEffect();
     }
 
@@ -163,12 +165,16 @@ bool Context::IsQuestOfLocationActive(RandomizerCheck rc) {
 
 void Context::GenerateLocationPool() {
     allLocations.clear();
+    overworldLocations.clear();
+    for (auto dungeon : ctx->GetDungeons()->GetDungeonList()) {
+        dungeon->locations.clear();
+    }
     for (Location& location : StaticData::GetLocationTable()) {
         // skip RCs that shouldn't be in the pool for any reason (i.e. settings, unsupported check type, etc.)
         // TODO: Exclude checks for some of the older shuffles from the pool too i.e. Frog Songs, Scrubs, etc.)
         if (location.GetRandomizerCheck() == RC_UNKNOWN_CHECK ||
             location.GetRandomizerCheck() == RC_TRIFORCE_COMPLETED || // already in pool
-            (location.GetRandomizerCheck() == RC_MASTER_SWORD_PEDESTAL &&
+            (location.GetRandomizerCheck() == RC_TOT_MASTER_SWORD &&
              mOptions[RSK_SHUFFLE_MASTER_SWORD].Is(RO_GENERIC_OFF)) ||
             (location.GetRandomizerCheck() == RC_KAK_100_GOLD_SKULLTULA_REWARD &&
              mOptions[RSK_SHUFFLE_100_GS_REWARD].Is(RO_GENERIC_OFF)) ||
@@ -191,9 +197,15 @@ void Context::GenerateLocationPool() {
             (location.GetRCType() == RCTYPE_GRASS && mOptions[RSK_SHUFFLE_GRASS].Is(RO_SHUFFLE_GRASS_OFF)) ||
             (location.GetRCType() == RCTYPE_CRATE && mOptions[RSK_SHUFFLE_CRATES].Is(RO_SHUFFLE_CRATES_OFF)) ||
             (location.GetRCType() == RCTYPE_NLCRATE && (mOptions[RSK_SHUFFLE_CRATES].Is(RO_SHUFFLE_CRATES_OFF) ||
-                                                        !mOptions[RSK_LOGIC_RULES].Is(RO_LOGIC_NO_LOGIC))) ||
+                                                        mOptions[RSK_LOGIC_RULES].IsNot(RO_LOGIC_NO_LOGIC))) ||
             (location.GetRCType() == RCTYPE_SMALL_CRATE && mOptions[RSK_SHUFFLE_CRATES].Is(RO_SHUFFLE_CRATES_OFF)) ||
-            (location.GetRCType() == RCTYPE_FAIRY && !mOptions[RSK_SHUFFLE_FAIRIES]) ||
+            (location.GetRCType() == RCTYPE_FOUNTAIN_FAIRY && !mOptions[RSK_SHUFFLE_FOUNTAIN_FAIRIES]) ||
+            (location.GetRCType() == RCTYPE_STONE_FAIRY && !mOptions[RSK_SHUFFLE_STONE_FAIRIES]) ||
+            (location.GetRCType() == RCTYPE_BEAN_FAIRY && !mOptions[RSK_SHUFFLE_BEAN_FAIRIES]) ||
+            (location.GetRCType() == RCTYPE_SONG_FAIRY && !mOptions[RSK_SHUFFLE_SONG_FAIRIES]) ||
+            (location.GetRCType() == RCTYPE_TREE && !mOptions[RSK_SHUFFLE_TREES]) ||
+            (location.GetRCType() == RCTYPE_NLTREE &&
+             (!mOptions[RSK_SHUFFLE_TREES] || mOptions[RSK_LOGIC_RULES].IsNot(RO_LOGIC_NO_LOGIC))) ||
             (location.GetRCType() == RCTYPE_FREESTANDING &&
              mOptions[RSK_SHUFFLE_FREESTANDING].Is(RO_SHUFFLE_FREESTANDING_OFF)) ||
             (location.GetRCType() == RCTYPE_BEEHIVE && !mOptions[RSK_SHUFFLE_BEEHIVES])) {
@@ -424,7 +436,10 @@ void Context::ParseArchipelago() {
     Rando::Settings::GetInstance()->ResetExcludedLocations();
     ArchipelagoClient& apClient = ArchipelagoClient::GetInstance();
     ParseArchipelagoItemsLocations(apClient.GetScoutedItems());
-    ParseArchipelagoOptions(apClient.GetSlotData());
+    ParseArchipelagoOptions();
+    ParseArchipelagoTricks();
+    ParseArchipelagoExcludedLocations();
+    CreateStaticHints();
     mEntranceShuffler->UnshuffleAllEntrances();
     mDungeons->ResetAllDungeons();
     mTrials->RemoveAllTrials();
@@ -463,20 +478,20 @@ void Context::ParseItemLocationsJson(nlohmann::json spoilerFileJson) {
     }
 }
 
-void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_data) {
+void Context::ParseArchipelagoOptions() {
     // Set options to what Archipelago expects. Need to slowly convert these to options in apworld and
     // load those in instead.
 
     nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
-    mOptions[RSK_LOGIC_RULES].Set(RO_LOGIC_NO_LOGIC);
+    mOptions[RSK_LOGIC_RULES].Set(RO_LOGIC_GLITCHLESS);
     mOptions[RSK_FOREST].Set(slotData["closed_forest"]);
     mOptions[RSK_KAK_GATE].Set(slotData["kakariko_gate"]);
     mOptions[RSK_DOOR_OF_TIME].Set(slotData["door_of_time"]);
     mOptions[RSK_ZORAS_FOUNTAIN].Set(slotData["zoras_fountain"]);
     mOptions[RSK_SLEEPING_WATERFALL].Set(slotData["sleeping_waterfall"]);
     mOptions[RSK_JABU_OPEN].Set(slotData["jabu_jabu"]);
-    mOptions[RSK_STARTING_AGE].Set(RO_AGE_CHILD);
-    mOptions[RSK_SELECTED_STARTING_AGE].Set(0);
+    mOptions[RSK_STARTING_AGE].Set(slotData["starting_age"]);
+    mOptions[RSK_SELECTED_STARTING_AGE].Set(slotData["starting_age"]);
     mOptions[RSK_GERUDO_FORTRESS].Set(slotData["fortress_carpenters"]);
     mOptions[RSK_RAINBOW_BRIDGE].Set(slotData["rainbow_bridge"]);
     mOptions[RSK_RAINBOW_BRIDGE_STONE_COUNT].Set(slotData["rainbow_bridge_stones_required"]);
@@ -484,9 +499,13 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_RAINBOW_BRIDGE_REWARD_COUNT].Set(slotData["rainbow_bridge_dungeon_rewards_required"]);
     mOptions[RSK_RAINBOW_BRIDGE_DUNGEON_COUNT].Set(slotData["rainbow_bridge_dungeons_required"]);
     mOptions[RSK_RAINBOW_BRIDGE_TOKEN_COUNT].Set(slotData["rainbow_bridge_skull_tokens_required"]);
-    mOptions[RSK_BRIDGE_OPTIONS].Set(0);
-    mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SET_NUMBER);
-    mOptions[RSK_TRIAL_COUNT].Set(slotData["ganons_trials_required"]);
+    mOptions[RSK_BRIDGE_OPTIONS].Set(slotData["rainbow_bridge_greg_modifier"]);
+    if (slotData["skip_ganons_trials"] == 0) {
+        mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SET_NUMBER);
+    } else {
+        mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SKIP);
+    }
+    mOptions[RSK_TRIAL_COUNT].Set(6);
     mOptions[RSK_STARTING_OCARINA].Set(RO_GENERIC_NO);
     mOptions[RSK_SHUFFLE_OCARINA].Set(RO_GENERIC_YES);
     mOptions[RSK_SHUFFLE_OCARINA_BUTTONS].Set(slotData["shuffle_ocarina_buttons"]);
@@ -518,9 +537,12 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
         mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_ANYWHERE);
     }
     mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE);
-    mOptions[RSK_SHUFFLE_TOKENS].Set(slotData["shuffle_skull_tokens"]);
+    // Shuffle tokens is always set to all so the tokens are properly send to the AP server.
+    // Instead, over at AP's side, we're placing tokens on vanilla locations properly based
+    // on the chosen settings.
+    mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_ALL);
     mOptions[RSK_SHOPSANITY].Set(slotData["shuffle_shops"]);
-    mOptions[RSK_SHOPSANITY_COUNT].Set(4);
+    mOptions[RSK_SHOPSANITY_COUNT].Set(slotData["shuffle_shops_item_amount"]);
     mOptions[RSK_SHOPSANITY_PRICES].Set(RO_PRICE_FIXED);
     mOptions[RSK_SHOPSANITY_PRICES_FIXED_PRICE].Set(1);
     mOptions[RSK_SHOPSANITY_PRICES_RANGE_1].Set(0);
@@ -623,7 +645,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SKIP_EPONA_RACE].Set(slotData["skip_epona_race"]);
     mOptions[RSK_COMPLETE_MASK_QUEST].Set(slotData["complete_mask_quest"]);
     mOptions[RSK_SKIP_SCARECROWS_SONG].Set(slotData["skip_scarecrows_song"]);
-    mOptions[RSK_SKULLS_SUNS_SONG].Set(0);
+    mOptions[RSK_SKULLS_SUNS_SONG].Set(slotData["skulls_sun_song"]);
     mOptions[RSK_SHUFFLE_ADULT_TRADE].Set(slotData["shuffle_adult_trade_items"]);
     mOptions[RSK_SHUFFLE_MERCHANTS].Set(slotData["shuffle_merchants"]);
     mOptions[RSK_MERCHANT_PRICES].Set(0);
@@ -638,6 +660,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_MERCHANT_PRICES_AFFORDABLE].Set(0);
     mOptions[RSK_BLUE_FIRE_ARROWS].Set(slotData["blue_fire_arrows"]);
     mOptions[RSK_SUNLIGHT_ARROWS].Set(slotData["sunlight_arrows"]);
+    mOptions[RSK_SLINGBOW_BREAK_BEEHIVES].Set(slotData["slingbow_break_beehives"]);
     mOptions[RSK_ENABLE_BOMBCHU_DROPS].Set(slotData["bombchu_drops"]);
     mOptions[RSK_BOMBCHU_BAG].Set(slotData["bombchu_bag"]);
     mOptions[RSK_LINKS_POCKET].Set(RO_LINKS_POCKET_ANYTHING);
@@ -661,7 +684,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_LACS_REWARD_COUNT].Set(slotData["ganons_castle_boss_key_dungeon_rewards_required"]);
     mOptions[RSK_LACS_DUNGEON_COUNT].Set(slotData["ganons_castle_boss_key_dungeons_required"]);
     mOptions[RSK_LACS_TOKEN_COUNT].Set(slotData["ganons_castle_boss_key_skull_tokens_required"]);
-    mOptions[RSK_LACS_OPTIONS].Set(0);
+    mOptions[RSK_LACS_OPTIONS].Set(slotData["ganons_castle_boss_key_greg_modifier"]);
     if (slotData["key_rings"] == 0) {
         mOptions[RSK_KEYRINGS].Set(RO_KEYRINGS_OFF);
     } else if (slotData["key_rings"] == 1) {
@@ -681,6 +704,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SHUFFLE_DUNGEON_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_OVERWORLD_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_INTERIOR_ENTRANCES].Set(0);
+    mOptions[RSK_SHUFFLE_THIEVES_HIDEOUT_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_GROTTO_ENTRANCES].Set(0);
     mOptions[RSK_SHUFFLE_OWL_DROPS].Set(0);
     mOptions[RSK_SHUFFLE_WARP_SONGS].Set(0);
@@ -690,6 +714,7 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_MIX_BOSS_ENTRANCES].Set(0);
     mOptions[RSK_MIX_OVERWORLD_ENTRANCES].Set(0);
     mOptions[RSK_MIX_INTERIOR_ENTRANCES].Set(0);
+    mOptions[RSK_MIX_THIEVES_HIDEOUT_ENTRANCES].Set(0);
     mOptions[RSK_MIX_GROTTO_ENTRANCES].Set(0);
     mOptions[RSK_DECOUPLED_ENTRANCES].Set(0);
     mOptions[RSK_STARTING_SKULLTULA_TOKEN].Set(0);
@@ -697,16 +722,13 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_DAMAGE_MULTIPLIER].Set(0);
     mOptions[RSK_ALL_LOCATIONS_REACHABLE].Set(0);
     mOptions[RSK_SHUFFLE_BOSS_ENTRANCES].Set(0);
-    mOptions[RSK_SHUFFLE_100_GS_REWARD].Set(RO_GENERIC_NO);
+    mOptions[RSK_SHUFFLE_100_GS_REWARD].Set(slotData["shuffle_100_gs_reward"]);
     mOptions[RSK_TRIFORCE_HUNT].Set(slotData["triforce_hunt"]);
-    uint16_t triforcePiecesRequired = slotData["triforce_hunt_required_pieces"];
-    float triforcePiecesExtraMultiplier = 1 + (float(slotData["triforce_hunt_extra_pieces_percentage"]) / 100);
-    uint16_t triforcePiecesTotal = floor(triforcePiecesRequired * triforcePiecesExtraMultiplier);
-    if (triforcePiecesTotal > 100) {
-        triforcePiecesTotal = 100;
-    }
-    mOptions[RSK_TRIFORCE_HUNT_PIECES_TOTAL].Set((triforcePiecesTotal - 1));
-    mOptions[RSK_TRIFORCE_HUNT_PIECES_REQUIRED].Set((triforcePiecesRequired - 1));
+    // For some reason, ship adds 1 after the option is parsed in normal rando, so we subtract 1 here.
+    uint8_t triforcePieceTotal = slotData["triforce_hunt_pieces_total"];
+    uint8_t triforcePieceRequired = slotData["triforce_hunt_pieces_required"];
+    mOptions[RSK_TRIFORCE_HUNT_PIECES_TOTAL].Set((triforcePieceTotal - 1));
+    mOptions[RSK_TRIFORCE_HUNT_PIECES_REQUIRED].Set((triforcePieceRequired - 1));
     mOptions[RSK_SHUFFLE_BOSS_SOULS].Set(slotData["shuffle_boss_souls"]);
     if (slotData["shuffle_fish"] == 0) {
         mOptions[RSK_FISHSANITY].Set(RO_FISHSANITY_OFF);
@@ -725,13 +747,34 @@ void Context::ParseArchipelagoOptions(const std::map<std::string, int>& slot_dat
     mOptions[RSK_SHUFFLE_DEKU_STICK_BAG].Set(slotData["shuffle_deku_stick_bag"]);
     mOptions[RSK_SHUFFLE_DEKU_NUT_BAG].Set(slotData["shuffle_deku_nut_bag"]);
     mOptions[RSK_SHUFFLE_FREESTANDING].Set(slotData["shuffle_freestanding_items"]);
-    mOptions[RSK_SHUFFLE_FAIRIES].Set(slotData["shuffle_fairies"]);
+    mOptions[RSK_SHUFFLE_FOUNTAIN_FAIRIES].Set(slotData["shuffle_fountain_fairies"]);
+    mOptions[RSK_SHUFFLE_STONE_FAIRIES].Set(slotData["shuffle_stone_fairies"]);
+    mOptions[RSK_SHUFFLE_BEAN_FAIRIES].Set(slotData["shuffle_bean_fairies"]);
+    mOptions[RSK_SHUFFLE_SONG_FAIRIES].Set(slotData["shuffle_song_fairies"]);
     mOptions[RSK_LOCK_OVERWORLD_DOORS].Set(slotData["lock_overworld_doors"]);
     mOptions[RSK_SHUFFLE_GRASS].Set(slotData["shuffle_grass"]);
+    mOptions[RSK_SHUFFLE_TREES].Set(slotData["shuffle_trees"]);
+}
+
+void Context::ParseArchipelagoTricks() {
+    Context::ResetTrickOptions();
+
+    // TODO: Implement trick parsing from slot data
+    // See Context::ParseTricksJson for more info
+}
+
+void Context::ParseArchipelagoExcludedLocations() {
+    // Maybe eventually we can add locations that are excluded on AP's side.
+    // For now, remove all of them to prevent seed bleed from normal rando seeds.
+    const auto ctx = Rando::Context::GetInstance();
+    for (int count = 0; count < RC_MAX; count++) {
+        ctx->GetItemLocation(count)->SetExcludedOption(RO_GENERIC_OFF);
+    };
 }
 
 void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient::ApItem>& scouted_items) {
     const std::string SlotName = ArchipelagoClient::GetInstance().GetSlotName();
+    nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
 
     // Zero out the location table first
     for (int rc = 1; rc < RC_MAX; rc++) {
@@ -739,16 +782,19 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
     }
 
     for (const ArchipelagoClient::ApItem& ap_item : scouted_items) {
-        // const RandomizerCheck rc = StaticData::APcheckToSoh.find(ap_item.locationName)->second;
         const RandomizerCheck rc = StaticData::locationNameToEnum[ap_item.locationName];
 
-        itemLocationTable[rc].SetCustomPrice(10);
-
         if (SlotName == ap_item.playerName) {
-            // our item
+            // Our item
             SPDLOG_TRACE("Populated item {} at location {}", ap_item.itemName, ap_item.locationName);
             const RandomizerGet item = StaticData::itemNameToEnum[ap_item.itemName];
             itemLocationTable[rc].SetPlacedItem(item);
+
+            if (item == RG_ICE_TRAP) {
+                RandomizerGet iceTrapItem = ArchipelagoClient::GetInstance().GetIceTrapItem();
+                overrides[rc] = ItemOverride(rc, iceTrapItem);
+                overrides[rc].SetTrickName(Text(GetIceTrapName(iceTrapItem)));
+            }
         } else {
             // Other player item
             // If progressive or trap bit flag is set, make item progressive.
@@ -764,6 +810,35 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
         }
     }
 
+    // Place vanilla shop items
+    nlohmann::json vanillaShopItems = slotData["shop_vanilla_items"];
+    for (auto it = vanillaShopItems.begin(); it != vanillaShopItems.end(); it++) {
+        std::string location = it.key();
+        std::string itemName = it.value();
+        const RandomizerCheck rc = StaticData::locationNameToEnum[location];
+        const RandomizerGet item = StaticData::itemNameToEnum[itemName];
+        itemLocationTable[rc].SetPlacedItem(item);
+    }
+
+    // Set all shop item prices
+    nlohmann::json shopPrices = slotData["shop_prices"];
+    for (auto it = shopPrices.begin(); it != shopPrices.end(); it++) {
+        std::string location = it.key();
+        uint16_t price = it.value();
+        const RandomizerCheck rc = StaticData::locationNameToEnum[location];
+        itemLocationTable[rc].SetCustomPrice(price);
+    }
+
+    // Set all scrub prices
+    nlohmann::json scrubPrices = slotData["scrub_prices"];
+    for (auto it = scrubPrices.begin(); it != scrubPrices.end(); it++) {
+        std::string location = it.key();
+        uint16_t price = it.value();
+        const RandomizerCheck rc = StaticData::locationNameToEnum[location];
+        itemLocationTable[rc].SetCustomPrice(price);
+    }
+
+    // Set merchant prices
     itemLocationTable[RC_ZR_MAGIC_BEAN_SALESMAN].SetCustomPrice(60);
     itemLocationTable[RC_KAK_GRANNYS_SHOP].SetCustomPrice(100);
     itemLocationTable[RC_WASTELAND_BOMBCHU_SALESMAN].SetCustomPrice(200);

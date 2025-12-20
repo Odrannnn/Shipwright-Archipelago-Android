@@ -284,23 +284,67 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUNTIME_LIBRARY_STR})
 endif()
 
+include(FetchContent)
+
 ################################################################################
 # apclientpp + dependencies
 ################################################################################
 add_compile_definitions(ASIO_STANDALONE)
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/asio/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/websocketpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/wswrap/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/valijson/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../subprojects/apclientpp
-)
+if(BUILD_REMOTE_CONTROL)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        FetchContent_Declare(
+            valijson
+            GIT_REPOSITORY https://github.com/tristanpenman/valijson.git
+            GIT_TAG v1.0.6
+        )
+        FetchContent_MakeAvailable(valijson)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${valijson_SOURCE_DIR}/include)
+    else()
+        find_package(valijson REQUIRED)
+    endif()
+
+    FetchContent_Declare(
+            asio
+            GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+            GIT_TAG asio-1-30-2
+    )
+    FetchContent_MakeAvailable(asio)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${asio_SOURCE_DIR}/asio/include)
+
+    # websocketpp has been temporarily removed from vcpkg, see
+    # https://github.com/microsoft/vcpkg/pull/42678#issuecomment-2914451436
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        FetchContent_Declare(
+            websocketpp
+            GIT_REPOSITORY https://github.com/zaphoyd/websocketpp.git
+            GIT_TAG 0.8.2
+        )
+        FetchContent_Populate(websocketpp)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${websocketpp_SOURCE_DIR})
+    else()
+        find_package(websocketpp REQUIRED)
+    endif()
+
+    FetchContent_Declare(
+            wswrap
+            GIT_REPOSITORY https://github.com/black-sliver/wswrap.git
+            GIT_TAG 47438193ec50427ee28aadf294ba57baefd9f3f1
+    )
+    FetchContent_MakeAvailable(wswrap)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${wswrap_SOURCE_DIR}/include)
+
+    FetchContent_Declare(
+            apclientpp
+            GIT_REPOSITORY https://github.com/black-sliver/apclientpp.git
+            GIT_TAG 65638b7479f6894eda172e603cffa79762c0ddc1
+    )
+    FetchContent_MakeAvailable(apclientpp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${apclientpp_SOURCE_DIR})
+endif()
 
 # Find/download Dr Libs (For custom audio)
 ################################################################################
-include(FetchContent)
-
 FetchContent_Declare(
         dr_libs
         GIT_REPOSITORY https://github.com/mackron/dr_libs.git
@@ -318,7 +362,8 @@ if (BUILD_REMOTE_CONTROL)
     find_package(SDL2_net)
 
     if(NOT SDL2_net_FOUND)
-        message(STATUS "SDL2_net not found (it's possible the version installed is too old). Disabling BUILD_REMOTE_CONTROL.")
+        # todo: make archi optional so this can build with BUILD_REMOTE_CONTROL off
+        message(FATAL_ERROR "SDL2_net not found (it's possible the version installed is too old).")
         set(BUILD_REMOTE_CONTROL 0)
     else()
         set(SDL2-NET-INCLUDE ${SDL_NET_INCLUDE_DIRS})
@@ -337,7 +382,8 @@ if (BUILD_REMOTE_CONTROL)
 
     find_package(OpenSSL)
     if(NOT OPENSSL_FOUND)
-        message(STATUS "OpenSSL not found (it's possible the version installed is too old). Disabling BUILD_REMOTE_CONTROL.")
+        # todo: make archi optional so this can build with BUILD_REMOTE_CONTROL off
+        message(FATAL_ERROR "OpenSSL not found (it's possible the version installed is too old).")
         set(BUILD_REMOTE_CONTROL 0)
     endif()
 
@@ -367,31 +413,7 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE assets
 	${CMAKE_CURRENT_SOURCE_DIR}/include/
 	${CMAKE_CURRENT_SOURCE_DIR}/src/
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship
     ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/include
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/log
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/debug
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/menu
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/utils
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/utils/binarytools
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/config
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/resource
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/resource/type
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/resource/factory
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/audio
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/window
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/window/gui
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/config
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/public
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/public/libultra
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/public/bridge
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/extern
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/extern/tinyxml2
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/libultraship/Lib/
-	${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/libultraship/Lib/libjpeg/include/
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/graphic/Fast3D/U64/PR
-    ${CMAKE_CURRENT_SOURCE_DIR}/../libultraship/src/graphic
     ${CMAKE_CURRENT_SOURCE_DIR}/../ZAPDTR/ZAPD/resource/type
 	${SDL2-INCLUDE}
     ${SDL2-NET-INCLUDE}
@@ -551,6 +573,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
     if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         target_compile_options(${PROJECT_NAME} PRIVATE
             -Wall -Wextra -Wno-error
+            -Wformat-security
             -Wno-return-type
             -Wno-unused-parameter
             -Wno-unused-function
@@ -578,6 +601,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
     elseif (CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
         target_compile_options(${PROJECT_NAME} PRIVATE
             -Wall -Wextra -Wno-error
+            -Wformat-security
             -Wno-return-type
             -Wno-unused-parameter
             -Wno-unused-function
@@ -628,6 +652,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
 
         target_compile_options(${PROJECT_NAME} PRIVATE
             -Wall -Wextra -Wno-error
+            -Wformat-security
             -Wno-unused-parameter
             -Wno-unused-function
             -Wno-unused-variable
@@ -793,7 +818,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/soh/soh.o2r DESTINATION . COMPONENT ship)
 endif()
 
 find_program(CURL NAMES curl DOC "Path to the curl program.  Used to download files.")
-execute_process(COMMAND ${CURL} -sSfL https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt -o ${CMAKE_BINARY_DIR}/gamecontrollerdb.txt OUTPUT_VARIABLE RESULT)
+execute_process(COMMAND ${CURL} -sSfL https://raw.githubusercontent.com/mdqinc/SDL_GameControllerDB/master/gamecontrollerdb.txt -o ${CMAKE_BINARY_DIR}/gamecontrollerdb.txt OUTPUT_VARIABLE RESULT)
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/macosx/Info.plist.in ${CMAKE_BINARY_DIR}/macosx/Info.plist @ONLY)
