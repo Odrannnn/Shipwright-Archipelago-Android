@@ -1,4 +1,3 @@
-#ifdef ENABLE_REMOTE_CONTROL
 #include "SohMenu.h"
 #include <soh/Notification/Notification.h>
 #include <soh/Network/Network.h>
@@ -15,9 +14,22 @@ using namespace UIWidgets;
 void SohMenu::AddMenuNetwork() {
     // Add Network Menu
     AddMenuEntry("Network", CVAR_SETTING("Menu.NetworkSidebarSection"));
+    WidgetPath path;
+
+#ifndef ENABLE_REMOTE_CONTROL
+    path = { "Network", "Info", SECTION_COLUMN_1 };
+    AddSidebarEntry("Network", path.sidebarName, 2);
+
+    AddWidget(path,
+              ICON_FA_EXCLAMATION_TRIANGLE " The Network features are unavailable because SoH was compiled without "
+                                           "network support (\"ENABLE_REMOTE_CONTROL\" build flag).",
+              WIDGET_TEXT)
+        .Options(TextOptions().Color(Colors::Orange));
+    return;
+#endif
 
     // Archipelago
-    WidgetPath path = { "Network", "Archipelago", SECTION_COLUMN_1 };
+    path = { "Network", "Archipelago", SECTION_COLUMN_1 };
     AddSidebarEntry(path.sectionName, path.sidebarName, 2);
     AddWidget(path, "Popout Archipelago Settings Window", WIDGET_WINDOW_BUTTON)
         .CVar(CVAR_WINDOW("ArchipelagoSettings"))
@@ -33,8 +45,7 @@ void SohMenu::AddMenuNetwork() {
         .Options(WindowButtonOptions().Tooltip("Enables the Archipelago Console Window."));
 
     // Sail
-    path.sidebarName = "Sail";
-    path.column = SECTION_COLUMN_1;
+    path = { "Network", "Sail", SECTION_COLUMN_1 };
     AddSidebarEntry("Network", path.sidebarName, 3);
 
     AddWidget(path,
@@ -185,7 +196,8 @@ void SohMenu::AddMenuNetwork() {
         .RaceDisable(true)
         .Options(CheckboxOptions().Tooltip("Enemies spawned by CrowdControl won't be considered for \"clear enemy "
                                            "rooms\", so they don't need to be killed to complete these rooms."));
+    path.sidebarName = "Anchor";
+    AddSidebarEntry("Network", path.sidebarName, 2);
 }
 
 } // namespace SohGui
-#endif

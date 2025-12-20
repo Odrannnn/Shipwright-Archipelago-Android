@@ -35,6 +35,7 @@
 #include "soh/Network/Archipelago/ArchipelagoSettingsWindow.h"
 #include "soh/Network/Archipelago/ArchipelagoConsoleWindow.h"
 #include "soh/Enhancements/mod_menu.h"
+#include "soh/Network/Anchor/Anchor.h"
 
 namespace SohGui {
 
@@ -101,6 +102,7 @@ std::shared_ptr<RandomizerSettingsWindow> mRandomizerSettingsWindow;
 std::shared_ptr<SohModalWindow> mModalWindow;
 std::shared_ptr<Notification::Window> mNotificationWindow;
 std::shared_ptr<TimeDisplayWindow> mTimeDisplayWindow;
+std::shared_ptr<AnchorRoomWindow> mAnchorRoomWindow;
 
 UIWidgets::Colors GetMenuThemeColor() {
     return mSohMenu->GetMenuThemeColor();
@@ -214,6 +216,8 @@ void SetupGuiElements() {
     mNotificationWindow->Show();
     mTimeDisplayWindow = std::make_shared<TimeDisplayWindow>(CVAR_WINDOW("TimeDisplayEnabled"), "Additional Timers");
     gui->AddGuiWindow(mTimeDisplayWindow);
+    mAnchorRoomWindow = std::make_shared<AnchorRoomWindow>(CVAR_WINDOW("AnchorRoom"), "Anchor Room");
+    gui->AddGuiWindow(mAnchorRoomWindow);
 }
 
 void Destroy() {
@@ -251,6 +255,7 @@ void Destroy() {
     mArchipelagoSettingsWindow = nullptr;
     mArchipelagoConsoleWindow = nullptr;
     mTimeDisplayWindow = nullptr;
+    mAnchorRoomWindow = nullptr;
 }
 
 void RegisterPopup(std::string title, std::string message, std::string button1, std::string button2,
