@@ -539,10 +539,15 @@ void Context::ParseArchipelagoOptions() {
         mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_ANYWHERE);
     }
     mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE);
-    // Shuffle tokens is always set to all so the tokens are properly send to the AP server.
-    // Instead, over at AP's side, we're placing tokens on vanilla locations properly based
-    // on the chosen settings.
-    mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_ALL);
+    if (slotData["shuffle_skull_tokens"] == 3) {
+        mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_ALL);
+    } else if (slotData["shuffle_skull_tokens"] == 2) {
+        mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_OVERWORLD);
+    } else if (slotData["shuffle_skull_tokens"] == 1) {
+        mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_DUNGEONS);
+    } else {
+        mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_OFF);
+    }
     mOptions[RSK_SHOPSANITY].Set(slotData["shuffle_shops"]);
     mOptions[RSK_SHOPSANITY_COUNT].Set(slotData["shuffle_shops_item_amount"]);
     mOptions[RSK_SHOPSANITY_PRICES].Set(RO_PRICE_FIXED);
@@ -555,8 +560,10 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_SHOPSANITY_PRICES_GIANT_WALLET_WEIGHT].Set(0);
     mOptions[RSK_SHOPSANITY_PRICES_TYCOON_WALLET_WEIGHT].Set(0);
     mOptions[RSK_SHOPSANITY_PRICES_AFFORDABLE].Set(0);
-    if (slotData["shuffle_scrubs"] == 1) {
+    if (slotData["shuffle_scrubs"] == 2) {
         mOptions[RSK_SHUFFLE_SCRUBS].Set(RO_SCRUBS_ALL);
+    } else if (slotData["shuffle_scrubs"] == 1) {
+        mOptions[RSK_SHUFFLE_SCRUBS].Set(RO_SCRUBS_ONE_TIME_ONLY);
     } else {
         mOptions[RSK_SHUFFLE_SCRUBS].Set(RO_SCRUBS_OFF);
     }
