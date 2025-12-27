@@ -788,6 +788,10 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
     // Zero out the location table first
     for (int rc = 1; rc < RC_MAX; rc++) {
         itemLocationTable[rc].SetPlacedItem(RG_NONE);
+
+        if (StaticData::GetLocation((RandomizerCheck)rc)->GetRCType() == RCTYPE_SKULL_TOKEN) {
+            itemLocationTable[rc].SetPlacedItem(RG_GOLD_SKULLTULA_TOKEN);
+        }
     }
 
     for (const ArchipelagoClient::ApItem& ap_item : scouted_items) {
