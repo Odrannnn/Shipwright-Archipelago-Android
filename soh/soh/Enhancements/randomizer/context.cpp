@@ -782,7 +782,7 @@ void Context::ParseArchipelagoExcludedLocations() {
 }
 
 void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient::ApItem>& scouted_items) {
-    const std::string SlotName = ArchipelagoClient::GetInstance().GetSlotName();
+    const int Slot = ArchipelagoClient::GetInstance().GetSlot();
     nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
 
     // Zero out the location table first
@@ -797,7 +797,7 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
     for (const ArchipelagoClient::ApItem& ap_item : scouted_items) {
         const RandomizerCheck rc = StaticData::locationNameToEnum[ap_item.locationName];
 
-        if (SlotName == ap_item.playerName) {
+        if (Slot == ap_item.playerNumber) {
             // Our item
             SPDLOG_TRACE("Populated item {} at location {}", ap_item.itemName, ap_item.locationName);
             const RandomizerGet item = StaticData::itemNameToEnum[ap_item.itemName];

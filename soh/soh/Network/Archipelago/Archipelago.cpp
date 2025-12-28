@@ -145,6 +145,7 @@ bool ArchipelagoClient::StartClient() {
             apItem.itemName = apClient->get_item_name(item.item, AP_Client_consts::AP_GAME_NAME);
             apItem.locationName = apClient->get_location_name(item.location, game);
             apItem.playerName = apClient->get_player_alias(item.player);
+            apItem.playerNumber = item.player;
             apItem.flags = item.flags;
             apItem.index = item.index;
             OnItemReceived(apItem);
@@ -164,6 +165,7 @@ bool ArchipelagoClient::StartClient() {
             apItem.itemName = apClient->get_item_name(item.item, game);
             apItem.locationName = apClient->get_location_name(item.location, AP_Client_consts::AP_GAME_NAME);
             apItem.playerName = apClient->get_player_alias(item.player);
+            apItem.playerNumber = item.player;
             apItem.flags = item.flags;
             apItem.index = item.index;
             scoutedItems.push_back(apItem);
@@ -528,12 +530,28 @@ bool ArchipelagoClient::isRightSaveLoaded() const {
     return seedMatch && slotMatch;
 }
 
+int ArchipelagoClient::GetSlot() const {
+    if (apClient == nullptr) {
+        return -1;
+    }
+
+    return apClient->get_player_number();
+}
+
 const std::string ArchipelagoClient::GetSlotName() const {
     if (apClient == nullptr) {
         return "";
     }
 
     return apClient->get_slot();
+}
+
+const std::string ArchipelagoClient::GetAlias() const {
+    if (apClient == nullptr) {
+        return "";
+    }
+
+    return apClient->get_player_alias(apClient->get_player_number());
 }
 
 const nlohmann::json ArchipelagoClient::GetSlotData() {
