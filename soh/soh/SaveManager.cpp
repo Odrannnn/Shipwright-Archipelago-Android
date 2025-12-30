@@ -533,6 +533,7 @@ void SaveManager::StartupCheckAndInitMeta(int fileNum) {
         }
     }
     bool isRando = metaSaveBlock["fileType"] == FILE_TYPE_SAVE_RANDO;
+    bool isArchi = metaSaveBlock["fileType"] == FILE_TYPE_SAVE_ARCHI;
 
     fileMetaInfo[fileNum].valid = true;
     nlohmann::json& baseBlock = metaSaveBlock["sections"]["base"]["data"];
@@ -562,7 +563,8 @@ void SaveManager::StartupCheckAndInitMeta(int fileNum) {
     fileMetaInfo[fileNum].requiresMasterQuest = baseBlock["isMasterQuest"];
 
     fileMetaInfo[fileNum].randoSave = isRando;
-    if (isRando) {
+    fileMetaInfo[fileNum].archiSave = isArchi;
+    if (isRando || isArchi) {
         nlohmann::json& randoBlock = metaSaveBlock["sections"]["randomizer"]["data"];
 
         for (int i = 0; i < ARRAY_COUNT(fileMetaInfo[fileNum].seedHash); i++) {
@@ -1134,7 +1136,9 @@ void SaveManager::SaveFileThreaded(int fileNum, SaveContext* saveContext, int se
     SPDLOG_INFO("Save File - fileNum: {}", fileNum);
     // Needed for first time save, hasn't changed in forever anyway
     saveBlock["version"] = 1;
-    if (IS_RANDO) {
+    if (IS_ARCHIPELAGO) {
+        saveBlock["fileType"] = FILE_TYPE_SAVE_ARCHI;
+    } else if (IS_RANDO) {
         saveBlock["fileType"] = FILE_TYPE_SAVE_RANDO;
     } else {
         saveBlock["fileType"] = FILE_TYPE_SAVE_VANILLA;
@@ -1267,6 +1271,10 @@ void SaveManager::LoadFile(int fileNum) {
         }
         if (saveBlock.contains("fileType") && saveBlock["fileType"] == FILE_TYPE_SAVE_RANDO) {
             gSaveContext.ship.quest.id = QUEST_RANDOMIZER;
+        }
+        if (saveBlock.contains("fileType") && saveBlock["fileType"] == FILE_TYPE_SAVE_ARCHI) {
+            gSaveContext.ship.quest.id = QUEST_RANDOMIZER;
+            gSaveContext.ship.quest.data.archipelago.isArchipelago = 1;
         }
         switch (saveBlock["version"].get<int>()) {
             case 1:
