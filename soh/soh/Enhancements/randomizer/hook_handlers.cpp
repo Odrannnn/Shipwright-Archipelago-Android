@@ -307,11 +307,13 @@ void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
         inSameArea = scene == gPlayState->sceneNum;
     }
 
-    // Receiving the OoT or Iron Boots chest locations without preventing the locations locked behind them.
+    // Receiving the OoT or Iron Boots chest and Master sword locations without preventing the locations locked behind them.
     // OoT locks Song of Time, Iron boots chest locks the song from Sheik in Ice Cavern.
+    // Master Sword locks Gift From Raru.
     // We also skip the bow chest in Forest Temple as the chest would spawn while the Stalfos fight still happens,
     // leading to a double chest spawn.
-    if (rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST || rc == RC_FOREST_TEMPLE_BOW_CHEST) {
+    if (rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST 
+        || rc == RC_FOREST_TEMPLE_BOW_CHEST || rc == RC_TOT_MASTER_SWORD) {
         randomizerQueuedChecks.push(rc);
         return;
     }
@@ -398,6 +400,8 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
             RandomizerOnExternalCheckHandler(RC_SONG_FROM_OCARINA_OF_TIME);
         } else if (rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST) {
             RandomizerOnExternalCheckHandler(RC_SHEIK_IN_ICE_CAVERN);
+        } else if (rc == RC_TOT_MASTER_SWORD) {
+            RandomizerOnExternalCheckHandler(RC_GIFT_FROM_RAURU);
         }
     }
 
