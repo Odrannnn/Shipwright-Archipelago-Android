@@ -1,3 +1,9 @@
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
 #include "Archipelago.h"
 #include "soh/util.h"
 #include <apuuid.hpp>
@@ -21,6 +27,8 @@
 #include "soh/SohGui/SohGui.hpp"
 #include "soh/OTRGlobals.h"
 #include "soh/Network/Anchor/Anchor.h"
+
+
 
 extern "C" {
 #include "variables.h"
