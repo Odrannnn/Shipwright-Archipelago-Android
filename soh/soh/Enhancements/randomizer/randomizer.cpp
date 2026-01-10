@@ -3727,14 +3727,16 @@ ShopItemIdentity Randomizer::IdentifyShopItem(s32 sceneNum, u8 slotIndex) {
             shopItemIdentity.ogItemId =
                 (GetItemID)Rando::StaticData::RetrieveItem(location->GetVanillaItem()).GetItemID();
 
-            RandomizerGet randoGet =
-                Rando::Context::GetInstance()->GetItemLocation(shopItemIdentity.identity.randomizerCheck)->GetPlacedRandomizerGet();
+            RandomizerGet randoGet = Rando::Context::GetInstance()
+                                         ->GetItemLocation(shopItemIdentity.identity.randomizerCheck)
+                                         ->GetPlacedRandomizerGet();
             if (randomizerGetToEnGirlShopItem.find(randoGet) != randomizerGetToEnGirlShopItem.end()) {
                 shopItemIdentity.enGirlAShopItem = randomizerGetToEnGirlShopItem[randoGet];
             }
 
             shopItemIdentity.itemPrice =
-                OTRGlobals::Instance->gRandoContext->GetItemLocation(shopItemIdentity.identity.randomizerCheck)->GetPrice();
+                OTRGlobals::Instance->gRandoContext->GetItemLocation(shopItemIdentity.identity.randomizerCheck)
+                    ->GetPrice();
         }
     }
 

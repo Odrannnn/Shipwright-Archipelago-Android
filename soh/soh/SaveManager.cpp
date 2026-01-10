@@ -580,17 +580,14 @@ void SaveManager::StartupCheckAndInitMeta(int fileNum) {
         fileMetaInfo[fileNum].requiresOriginal = randoBlock["masterQuestDungeonCount"] < 12;
     }
 
-    if(isArchi) {
+    if (isArchi) {
         nlohmann::json& archiBlock = metaSaveBlock["sections"]["archipelagoData"]["data"];
-        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiRoomSeed,
-                                        archiBlock["roomHash"],
+        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiRoomSeed, archiBlock["roomHash"],
                                         ARRAY_COUNT(fileMetaInfo[fileNum].archiRoomSeed));
-        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].slotName,
-                                        archiBlock["slotName"],
+        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].slotName, archiBlock["slotName"],
                                         ARRAY_COUNT(fileMetaInfo[fileNum].slotName));
-        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiUri,
-                                        archiBlock["archiUri"],
-                                        ARRAY_COUNT(fileMetaInfo[fileNum].archiUri));       
+        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiUri, archiBlock["archiUri"],
+                                        ARRAY_COUNT(fileMetaInfo[fileNum].archiUri));
     }
 
     fileMetaInfo[fileNum].buildVersionMajor = metaSaveBlock["sections"]["sohStats"]["data"]["buildVersionMajor"];

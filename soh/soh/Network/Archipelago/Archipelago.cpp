@@ -28,8 +28,6 @@
 #include "soh/OTRGlobals.h"
 #include "soh/Network/Anchor/Anchor.h"
 
-
-
 extern "C" {
 #include "variables.h"
 #include "macros.h"

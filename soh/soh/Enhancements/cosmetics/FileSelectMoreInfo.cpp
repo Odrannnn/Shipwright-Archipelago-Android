@@ -785,8 +785,7 @@ void RegisterFileSelectMoreInfo() {
         s16 fileIndex = va_arg(args, s32);
         u32 textAlpha = va_arg(args, u32);
 
-        if (thisx->menuMode == FS_MENU_MODE_SELECT &&
-            Save_GetSaveMetaInfo(fileIndex)->archiSave == 0) {
+        if (thisx->menuMode == FS_MENU_MODE_SELECT && Save_GetSaveMetaInfo(fileIndex)->archiSave == 0) {
             DrawMoreInfo(thisx, fileIndex, textAlpha);
             *should = false;
         }
