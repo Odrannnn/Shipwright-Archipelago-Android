@@ -1,3 +1,9 @@
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
 #include "Archipelago.h"
 #include "soh/util.h"
 #include <apuuid.hpp>
@@ -12,7 +18,7 @@
 #include "soh/Network/Archipelago/ArchipelagoConsoleWindow.h"
 #include "soh/Enhancements/randomizer/randomizerTypes.h"
 #include "soh/Enhancements/randomizer/static_data.h"
-#include "soh/Enhancements/randomizer/context.h"
+#include "soh/Enhancements/randomizer/SeedContext.h"
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 #include "soh/Notification/Notification.h"
@@ -20,6 +26,9 @@
 #include "soh/SaveManager.h"
 #include "soh/SohGui/SohGui.hpp"
 #include "soh/OTRGlobals.h"
+#include "soh/Network/Anchor/Anchor.h"
+
+
 
 extern "C" {
 #include "variables.h"
@@ -144,6 +153,7 @@ bool ArchipelagoClient::StartClient() {
             apItem.itemName = apClient->get_item_name(item.item, AP_Client_consts::AP_GAME_NAME);
             apItem.locationName = apClient->get_location_name(item.location, game);
             apItem.playerName = apClient->get_player_alias(item.player);
+            apItem.playerNumber = item.player;
             apItem.flags = item.flags;
             apItem.index = item.index;
             OnItemReceived(apItem);
@@ -163,6 +173,7 @@ bool ArchipelagoClient::StartClient() {
             apItem.itemName = apClient->get_item_name(item.item, game);
             apItem.locationName = apClient->get_location_name(item.location, AP_Client_consts::AP_GAME_NAME);
             apItem.playerName = apClient->get_player_alias(item.player);
+            apItem.playerNumber = item.player;
             apItem.flags = item.flags;
             apItem.index = item.index;
             scoutedItems.push_back(apItem);
@@ -389,6 +400,11 @@ bool ArchipelagoClient::IsConnected() {
         return false;
     }
 
+    CVarSetInteger(CVAR_REMOTE_ANCHOR("RoomSettings.SyncItemsAndFlags"), 0);
+    if (Anchor::Instance->isConnected && Anchor::Instance->roomState.ownerClientId == Anchor::Instance->ownClientId) {
+        Anchor::Instance->SendPacket_UpdateRoomState();
+    }
+
     return apClient->get_state() == APClient::State::SLOT_CONNECTED;
 }
 
@@ -522,12 +538,28 @@ bool ArchipelagoClient::isRightSaveLoaded() const {
     return seedMatch && slotMatch;
 }
 
+int ArchipelagoClient::GetSlot() const {
+    if (apClient == nullptr) {
+        return -1;
+    }
+
+    return apClient->get_player_number();
+}
+
 const std::string ArchipelagoClient::GetSlotName() const {
     if (apClient == nullptr) {
         return "";
     }
 
     return apClient->get_slot();
+}
+
+const std::string ArchipelagoClient::GetAlias() const {
+    if (apClient == nullptr) {
+        return "";
+    }
+
+    return apClient->get_player_alias(apClient->get_player_number());
 }
 
 const nlohmann::json ArchipelagoClient::GetSlotData() {

@@ -13,8 +13,8 @@ extern "C"
 #include <libultraship/log/luslog.h>
 #include <soh/Enhancements/item-tables/ItemTableTypes.h>
 
-#if defined(INCLUDE_GAME_PRINTF) && defined(_DEBUG)
-#define osSyncPrintf(fmt, ...) lusprintf(__FILE__, __LINE__, 0, fmt, ##__VA_ARGS__)
+#if (LOG_LEVEL_GAME_PRINTS >= SPDLOG_ACTIVE_LEVEL) && !(LOG_LEVEL_GAME_PRINTS >= 6)
+#define osSyncPrintf(...) lusprintf(__FILE__, __LINE__, LOG_LEVEL_GAME_PRINTS , __VA_ARGS__)
 #else
 #define osSyncPrintf(fmt, ...) osSyncPrintfUnused(fmt, ##__VA_ARGS__)
 #endif
@@ -1090,9 +1090,9 @@ void Inventory_ChangeAmmo(s16 item, s16 ammoChange);
 void Magic_Fill(PlayState* play);
 void Magic_Reset(PlayState* play);
 s32 Magic_RequestChange(PlayState* play, s16 amount, s16 type);
-void func_80088AA0(s16 seconds);
-void func_80088AF0(PlayState* play);
-void func_80088B34(s16 arg0);
+void Interface_SetSubTimer(s16 seconds);
+void Interface_SetSubTimerToFinalSecond(PlayState* play);
+void Interface_SetTimer(s16 arg0);
 void Interface_Draw(PlayState* play);
 void Interface_DrawTotalGameplayTimer(PlayState* play);
 void Interface_Update(PlayState* play);

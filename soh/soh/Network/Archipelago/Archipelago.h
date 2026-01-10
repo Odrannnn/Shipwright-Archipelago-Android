@@ -26,6 +26,7 @@ class ArchipelagoClient {
         std::string itemName;
         std::string locationName;
         std::string playerName;
+        int playerNumber;
         unsigned int flags;
         uint64_t index;
     };
@@ -42,7 +43,9 @@ class ArchipelagoClient {
     void SynchReceivedLocations();
 
     // getters
+    int GetSlot() const;
     const std::string GetSlotName() const;
+    const std::string GetAlias() const;
 
     uint8_t GetConnectionStatus();
     void OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped);
