@@ -562,7 +562,7 @@ void Context::ParseArchipelagoOptions() {
     } else if (slotData["shuffle_dungeon_rewards"] == 2) {
         mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_ANYWHERE);
     }
-    mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE);  // Vanilla locations are placed by AP world
+    mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE); // Vanilla locations are placed by AP world
     if (slotData["shuffle_skull_tokens"] == 3) {
         mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_ALL);
     } else if (slotData["shuffle_skull_tokens"] == 2) {
@@ -655,8 +655,8 @@ void Context::ParseArchipelagoOptions() {
     } else if (slotData["maps_and_compasses"] == 1) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE);
     }
-    mOptions[RSK_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE);  // Vanilla locations are placed by AP world
-    mOptions[RSK_GERUDO_KEYS].Set(RO_GERUDO_KEYS_ANYWHERE);     // Vanilla locations are placed by AP world
+    mOptions[RSK_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE);      // Vanilla locations are placed by AP world
+    mOptions[RSK_GERUDO_KEYS].Set(RO_GERUDO_KEYS_ANYWHERE);         // Vanilla locations are placed by AP world
     mOptions[RSK_BOSS_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE); // Vanilla locations are placed by AP world
     if (slotData["ganons_castle_boss_key"] == 0) {
         mOptions[RSK_GANONS_BOSS_KEY].Set(RO_GANON_BOSS_KEY_VANILLA);
