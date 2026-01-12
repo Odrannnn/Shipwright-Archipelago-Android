@@ -690,6 +690,7 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_MERCHANT_PRICES_AFFORDABLE].Set(0);
     mOptions[RSK_BLUE_FIRE_ARROWS].Set(slotData["blue_fire_arrows"]);
     mOptions[RSK_SUNLIGHT_ARROWS].Set(slotData["sunlight_arrows"]);
+    mOptions[RSK_ROCS_FEATHER].Set(slotData["rocs_feather"]);
     mOptions[RSK_SLINGBOW_BREAK_BEEHIVES].Set(slotData["slingbow_break_beehives"]);
     mOptions[RSK_ENABLE_BOMBCHU_DROPS].Set(slotData["bombchu_drops"]);
     mOptions[RSK_BOMBCHU_BAG].Set(slotData["bombchu_bag"]);
@@ -789,8 +790,23 @@ void Context::ParseArchipelagoOptions() {
 void Context::ParseArchipelagoTricks() {
     Context::ResetTrickOptions();
 
-    // TODO: Implement trick parsing from slot data
-    // See Context::ParseTricksJson for more info
+    nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
+
+    if (slotData["enable_all_tricks"] == 0) {
+        nlohmann::json enabledTricksJson = slotData["tricks_in_logic"];
+        const auto& settings = Rando::Settings::GetInstance();
+
+        for (auto it : enabledTricksJson) {
+            int rt = settings->GetRandomizerTrickByName(it);
+            if (rt != -1) {
+                mTrickOptions[rt].Set(RO_GENERIC_ON);
+            }
+        }
+    } else {
+        for (int count = 0; count < RT_MAX; count++) {
+            mTrickOptions[count].Set(RO_GENERIC_ON);
+        }
+    }
 }
 
 void Context::ParseArchipelagoExcludedLocations() {

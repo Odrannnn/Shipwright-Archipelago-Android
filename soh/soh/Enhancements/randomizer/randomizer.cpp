@@ -68,6 +68,7 @@ const std::string Randomizer::triforcePieceMessageTableID = "RandomizerTriforceP
 const std::string Randomizer::NaviRandoMessageTableID = "RandomizerNavi";
 const std::string Randomizer::IceTrapRandoMessageTableID = "RandomizerIceTrap";
 const std::string Randomizer::randoMiscHintsTableID = "RandomizerMiscHints";
+const std::string Randomizer::RocsFeatherMessageTableID = "RandomizerRocsFeather";
 const std::string Randomizer::archipelagoItemsTableID = "ÁrchipelagoItems";
 
 static const char* englishRupeeNames[188] = {
@@ -984,7 +985,13 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
         case RG_FARORES_WIND:
             return INV_CONTENT(ITEM_FARORES_WIND) == ITEM_NONE ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
         case RG_NAYRUS_LOVE:
-            return INV_CONTENT(ITEM_NAYRUS_LOVE) == ITEM_NONE ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
+            if (!GetRandoSettingValue(RSK_ROCS_FEATHER)) {
+                return INV_CONTENT(ITEM_NAYRUS_LOVE) == ITEM_NONE ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
+            } else {
+                return Flags_GetRandomizerInf(RAND_INF_OBTAINED_NAYRUS_LOVE) ? CANT_OBTAIN_ALREADY_HAVE : CAN_OBTAIN;
+            }
+        case RG_ROCS_FEATHER:
+            return Flags_GetRandomizerInf(RAND_INF_OBTAINED_ROCS_FEATHER) ? CANT_OBTAIN_ALREADY_HAVE : CAN_OBTAIN;
 
         // Bottles
         case RG_EMPTY_BOTTLE:
@@ -3720,14 +3727,16 @@ ShopItemIdentity Randomizer::IdentifyShopItem(s32 sceneNum, u8 slotIndex) {
             shopItemIdentity.ogItemId =
                 (GetItemID)Rando::StaticData::RetrieveItem(location->GetVanillaItem()).GetItemID();
 
-            RandomizerGet randoGet =
-                Rando::Context::GetInstance()->GetItemLocation(shopItemIdentity.identity.randomizerCheck)->GetPlacedRandomizerGet();
+            RandomizerGet randoGet = Rando::Context::GetInstance()
+                                         ->GetItemLocation(shopItemIdentity.identity.randomizerCheck)
+                                         ->GetPlacedRandomizerGet();
             if (randomizerGetToEnGirlShopItem.find(randoGet) != randomizerGetToEnGirlShopItem.end()) {
                 shopItemIdentity.enGirlAShopItem = randomizerGetToEnGirlShopItem[randoGet];
             }
 
             shopItemIdentity.itemPrice =
-                OTRGlobals::Instance->gRandoContext->GetItemLocation(shopItemIdentity.identity.randomizerCheck)->GetPrice();
+                OTRGlobals::Instance->gRandoContext->GetItemLocation(shopItemIdentity.identity.randomizerCheck)
+                    ->GetPrice();
         }
     }
 
@@ -4321,6 +4330,22 @@ CustomMessage Randomizer::GetTriforcePieceMessage() {
     messageEntry.Replace("[[current]]", std::to_string(current));
     messageEntry.Replace("[[remaining]]", std::to_string(remaining));
     messageEntry.Replace("[[required]]", std::to_string(required));
+    messageEntry.Format();
+    return messageEntry;
+}
+
+void CreateRocsFeatherMessage() {
+    CustomMessage RocsFeatherMessage = {
+        { "You found %cRoc's Feather%w!", "You found %cRoc's Feather%w!", "You found %cRoc's Feather%w!" },
+    };
+    CustomMessageManager* customMessageManager = CustomMessageManager::Instance;
+    customMessageManager->AddCustomMessageTable(Randomizer::RocsFeatherMessageTableID);
+    customMessageManager->CreateMessage(Randomizer::RocsFeatherMessageTableID, 0, RocsFeatherMessage);
+}
+
+CustomMessage Randomizer::GetRocsFeatherMessage() {
+    CustomMessage messageEntry =
+        CustomMessageManager::Instance->RetrieveMessage(Randomizer::RocsFeatherMessageTableID, 0);
     messageEntry.Format();
     return messageEntry;
 }
@@ -5355,6 +5380,7 @@ void Randomizer::CreateCustomMessages() {
     } };
     CreateGetItemMessages(getItemMessages);
     CreateRupeeMessages();
+    CreateRocsFeatherMessage();
     CreateTriforcePieceMessages();
     CreateNaviRandoMessages();
     CreateFireTempleGoronMessages();
@@ -5817,6 +5843,12 @@ extern "C" u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
             Inventory_ChangeUpgrade(UPG_NUTS, 1);
             INV_CONTENT(ITEM_NUT) = ITEM_NUT;
             AMMO(ITEM_NUT) = static_cast<int8_t>(CUR_CAPACITY(UPG_NUTS));
+            break;
+        case RG_ROCS_FEATHER:
+            Flags_SetRandomizerInf(RAND_INF_OBTAINED_ROCS_FEATHER);
+            if (INV_CONTENT(ITEM_NAYRUS_LOVE) == ITEM_NONE) {
+                INV_CONTENT(ITEM_NAYRUS_LOVE) = ITEM_ROCS_FEATHER;
+            }
             break;
         default:
             LUSLOG_WARN("Randomizer_Item_Give didn't have behaviour specified for getItemId=%d", item);
