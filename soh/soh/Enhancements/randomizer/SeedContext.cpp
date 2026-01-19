@@ -666,8 +666,26 @@ void Context::ParseArchipelagoOptions() {
     } else if (slotData["small_key_shuffle"] == 4) {
         mOptions[RSK_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE);
     }
-    mOptions[RSK_GERUDO_KEYS].Set(RO_GERUDO_KEYS_ANYWHERE);         // Vanilla locations are placed by AP world
-    mOptions[RSK_BOSS_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE); // Vanilla locations are placed by AP world
+    if (slotData["gerudo_fortress_key_shuffle"] == 0) {
+        mOptions[RSK_GERUDO_KEYS].Set(RO_GERUDO_KEYS_VANILLA);
+    } else if (slotData["gerudo_fortress_key_shuffle"] == 1) {
+        mOptions[RSK_GERUDO_KEYS].Set(RO_GERUDO_KEYS_ANY_DUNGEON);
+    } else if (slotData["gerudo_fortress_key_shuffle"] == 2) {
+        mOptions[RSK_GERUDO_KEYS].Set(RO_GERUDO_KEYS_OVERWORLD);
+    } else if (slotData["gerudo_fortress_key_shuffle"] == 3) {
+        mOptions[RSK_GERUDO_KEYS].Set(RO_GERUDO_KEYS_ANYWHERE);
+    }
+    if (slotData["boss_key_shuffle"] == 0) {
+        mOptions[RSK_BOSS_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_VANILLA);
+    } else if (slotData["boss_key_shuffle"] == 1) {
+        mOptions[RSK_BOSS_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_OWN_DUNGEON);
+    } else if (slotData["boss_key_shuffle"] == 2) {
+        mOptions[RSK_BOSS_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_ANY_DUNGEON);
+    } else if (slotData["boss_key_shuffle"] == 3) {
+        mOptions[RSK_BOSS_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_OVERWORLD);
+    } else if (slotData["boss_key_shuffle"] == 4) {
+        mOptions[RSK_BOSS_KEYSANITY].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE);
+    }
     if (slotData["ganons_castle_boss_key"] == 0) {
         mOptions[RSK_GANONS_BOSS_KEY].Set(RO_GANON_BOSS_KEY_VANILLA);
     } else if (slotData["ganons_castle_boss_key"] == 1) {
