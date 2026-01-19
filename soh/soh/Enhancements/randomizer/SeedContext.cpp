@@ -562,7 +562,15 @@ void Context::ParseArchipelagoOptions() {
     } else if (slotData["shuffle_dungeon_rewards"] == 2) {
         mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_ANYWHERE);
     }
-    mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE); // Vanilla locations are placed by AP world
+    if (slotData["shuffle_songs"] == 0) {
+        mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_OFF);
+    } else if(slotData["shuffle_songs"] == 1) {
+        mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_SONG_LOCATIONS);
+    } else if(slotData["shuffle_songs"] == 2) {
+        mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_DUNGEON_REWARDS);
+    } else if(slotData["shuffle_songs"] == 3) {
+        mOptions[RSK_SHUFFLE_SONGS].Set(RO_SONG_SHUFFLE_ANYWHERE);
+    }
     if (slotData["shuffle_skull_tokens"] == 3) {
         mOptions[RSK_SHUFFLE_TOKENS].Set(RO_TOKENSANITY_ALL);
     } else if (slotData["shuffle_skull_tokens"] == 2) {
