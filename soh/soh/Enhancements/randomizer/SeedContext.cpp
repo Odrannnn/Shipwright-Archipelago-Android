@@ -661,6 +661,14 @@ void Context::ParseArchipelagoOptions() {
     if (slotData["maps_and_compasses"] == 0) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_STARTWITH);
     } else if (slotData["maps_and_compasses"] == 1) {
+        mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_VANILLA);
+    }else if (slotData["maps_and_compasses"] == 2) {
+        mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_OWN_DUNGEON);
+    }else if (slotData["maps_and_compasses"] == 3) {
+        mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_ANY_DUNGEON);
+    }else if (slotData["maps_and_compasses"] == 4) {
+        mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_OVERWORLD);
+    }else if (slotData["maps_and_compasses"] == 5) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE);
     }
     if (slotData["small_key_shuffle"] == 0) {
