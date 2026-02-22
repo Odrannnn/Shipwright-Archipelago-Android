@@ -536,8 +536,8 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_SHUFFLE_OCARINA].Set(slotData["shuffle_ocarinas"]);
     mOptions[RSK_SHUFFLE_OCARINA_BUTTONS].Set(slotData["shuffle_ocarina_buttons"]);
     mOptions[RSK_SHUFFLE_SWIM].Set(slotData["shuffle_swim"]);
-    mOptions[RSK_STARTING_DEKU_SHIELD].Set(RO_GENERIC_NO);
-    mOptions[RSK_STARTING_KOKIRI_SWORD].Set(RO_GENERIC_NO);
+    mOptions[RSK_STARTING_DEKU_SHIELD].Set(slotData["start_with_deku_shield"]);
+    mOptions[RSK_STARTING_KOKIRI_SWORD].Set(slotData["start_with_kokiri_sword"]);
     mOptions[RSK_STARTING_MASTER_SWORD].Set(RO_GENERIC_NO);
     mOptions[RSK_STARTING_ZELDAS_LULLABY].Set(RO_GENERIC_NO);
     mOptions[RSK_STARTING_EPONAS_SONG].Set(RO_GENERIC_NO);
