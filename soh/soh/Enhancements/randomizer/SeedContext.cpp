@@ -566,6 +566,10 @@ void Context::ParseArchipelagoOptions() {
     } else if (slotData["shuffle_dungeon_rewards"] == 1) {
         mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_END_OF_DUNGEON);
     } else if (slotData["shuffle_dungeon_rewards"] == 2) {
+        mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_ANY_DUNGEON);
+    } else if (slotData["shuffle_dungeon_rewards"] == 3) {
+        mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_OVERWORLD);
+    } else if (slotData["shuffle_dungeon_rewards"] == 4) {
         mOptions[RSK_SHUFFLE_DUNGEON_REWARDS].Set(RO_DUNGEON_REWARDS_ANYWHERE);
     }
     if (slotData["shuffle_songs"] == 0) {
