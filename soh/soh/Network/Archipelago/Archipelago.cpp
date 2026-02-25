@@ -350,6 +350,8 @@ void ArchipelagoClient::GameLoaded() {
     SynchItems();
     SynchSentLocations();
     SynchReceivedLocations();
+
+    gameWon = false;
 }
 
 void ArchipelagoClient::StartLocationScouts() {
