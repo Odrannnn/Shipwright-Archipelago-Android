@@ -553,7 +553,7 @@ void Context::ParseArchipelagoOptions() {
         }
     }
 
-    mOptions[RSK_MEDALLION_LOCKED_TRIALS].Set(RO_GENERIC_NO);
+    mOptions[RSK_MEDALLION_LOCKED_TRIALS].Set(slotData["medallion_locked_trials"]);
     if (slotData["ocarina_of_time"] == 0) {
         mOptions[RSK_STARTING_OCARINA].Set(RO_STARTING_OCARINA_OFF);
     } else if (slotData["ocarina_of_time"] == 1) {
