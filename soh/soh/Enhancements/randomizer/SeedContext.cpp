@@ -521,16 +521,38 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_RAINBOW_BRIDGE_DUNGEON_COUNT].Set(slotData["rainbow_bridge_dungeons_required"]);
     mOptions[RSK_RAINBOW_BRIDGE_TOKEN_COUNT].Set(slotData["rainbow_bridge_skull_tokens_required"]);
     mOptions[RSK_BRIDGE_OPTIONS].Set(slotData["rainbow_bridge_greg_modifier"]);
-    // todo parse trials properly when we add the option to select trials
     if (slotData["skip_ganons_trials"] == 0) {
-        mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SET_NUMBER);
-        mOptions[RSK_TRIAL_COUNT].Set(6);
-        mTrials->RequireAll();
-    } else {
         mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SKIP);
         mOptions[RSK_TRIAL_COUNT].Set(0);
         mTrials->RemoveAllTrials();
+    } else {
+        mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SET_NUMBER);
+        mOptions[RSK_TRIAL_COUNT].Set(slotData["ganons_trials_count"]);
+        std::vector<TrialKey> requiredTrials;
+        for(const nlohmann::basic_json<>& trialString : slotData["required_trials"]) {
+            if(trialString == "Forest Trial") {
+                requiredTrials.emplace_back(TrialKey::TK_FOREST_TRIAL);
+            } else if (trialString == "Fire Trial") {
+                requiredTrials.emplace_back(TrialKey::TK_FIRE_TRIAL);
+            } else if (trialString == "Water Trial") {
+                requiredTrials.emplace_back(TrialKey::TK_WATER_TRIAL);
+            } else if (trialString == "Shadow Trial") {
+                requiredTrials.emplace_back(TrialKey::TK_SHADOW_TRIAL);
+            } else if (trialString == "Spirit Trial") {
+                requiredTrials.emplace_back(TrialKey::TK_SPIRIT_TRIAL);
+            } else if (trialString == "Light Trial") {
+                requiredTrials.emplace_back(TrialKey::TK_LIGHT_TRIAL);
+            }
+        }
+
+        for (auto& trial : mTrials->GetTrialList()) {
+            trial->SetAsSkipped();
+            if(std::find(requiredTrials.begin(), requiredTrials.end(), trial->GetTrialKey()) != requiredTrials.end()) {
+                trial->SetAsRequired();
+            }
+        }
     }
+
     mOptions[RSK_MEDALLION_LOCKED_TRIALS].Set(RO_GENERIC_NO);
     if (slotData["ocarina_of_time"] == 0) {
         mOptions[RSK_STARTING_OCARINA].Set(RO_STARTING_OCARINA_OFF);
