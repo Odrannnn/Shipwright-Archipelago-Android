@@ -828,7 +828,8 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_MIX_GROTTO_ENTRANCES].Set(0);
     mOptions[RSK_DECOUPLED_ENTRANCES].Set(0);
     mOptions[RSK_STARTING_SKULLTULA_TOKEN].Set(0);
-    mOptions[RSK_STARTING_HEARTS].Set(2);
+    uint8_t slotDataStartingHearts = slotData["starting_hearts"];
+    mOptions[RSK_STARTING_HEARTS].Set(slotDataStartingHearts - 1);
     mOptions[RSK_DAMAGE_MULTIPLIER].Set(0);
     mOptions[RSK_ALL_LOCATIONS_REACHABLE].Set(0);
     mOptions[RSK_SHUFFLE_BOSS_ENTRANCES].Set(0);
