@@ -973,7 +973,7 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
         itemLocationTable[rc].SetPlacedItem(item);
     }
 
-    // Set all shop item prices
+    // Set all shop, scrub and merchant prices
     nlohmann::json shopPrices = slotData["shop_prices"];
     for (auto it = shopPrices.begin(); it != shopPrices.end(); it++) {
         std::string location = it.key();
@@ -981,21 +981,6 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
         const RandomizerCheck rc = StaticData::locationNameToEnum[location];
         itemLocationTable[rc].SetCustomPrice(price);
     }
-
-    // Set all scrub prices
-    nlohmann::json scrubPrices = slotData["scrub_prices"];
-    for (auto it = scrubPrices.begin(); it != scrubPrices.end(); it++) {
-        std::string location = it.key();
-        uint16_t price = it.value();
-        const RandomizerCheck rc = StaticData::locationNameToEnum[location];
-        itemLocationTable[rc].SetCustomPrice(price);
-    }
-
-    // Set merchant prices
-    itemLocationTable[RC_ZR_MAGIC_BEAN_SALESMAN].SetCustomPrice(60);
-    itemLocationTable[RC_KAK_GRANNYS_SHOP].SetCustomPrice(100);
-    itemLocationTable[RC_WASTELAND_BOMBCHU_SALESMAN].SetCustomPrice(200);
-    itemLocationTable[RC_GC_MEDIGORON].SetCustomPrice(200);
 }
 
 void Context::WriteHintJson(nlohmann::ordered_json& spoilerFileJson) {
