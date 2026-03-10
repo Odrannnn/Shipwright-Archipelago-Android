@@ -35,8 +35,6 @@ extern PlayState* gPlayState;
 }
 
 ArchipelagoClient::ArchipelagoClient() {
-    uuid = ap_get_uuid(Ship::Context::GetPathRelativeToAppDirectory("uuid"));
-
     gameWon = false;
     itemQueued = false;
     disconnecting = false;
@@ -60,6 +58,7 @@ bool ArchipelagoClient::StartClient() {
     uri = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281");
     password = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), "");
 
+    uuid = ap_get_uuid(Ship::Context::GetPathRelativeToAppDirectory("ap-client-uuid"));
     const std::string cert = Ship::Context::LocateFileAcrossAppDirs("networking/cacert.pem");
     SPDLOG_DEBUG("Location of cert: " + cert);
     apClient = std::unique_ptr<APClient>(new APClient(uuid, AP_Client_consts::AP_GAME_NAME, uri, cert));
