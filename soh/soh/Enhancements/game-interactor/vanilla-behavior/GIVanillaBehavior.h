@@ -2666,7 +2666,7 @@ typedef enum {
     // - `*ActorContext`
     // - `*ActorEntry`
     // - `*PlayState`
-    // - `*Actor`
+    // - `**Actor`
     VB_SPAWN_ACTOR_ENTRY,
 
     // #### `result`
