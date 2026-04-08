@@ -94,8 +94,8 @@ void BuildCustomItemMessage(Player* player, CustomMessage& msg) {
 
 void BuildArchipelagoItemMessage(int16_t randomizerGet, uint32_t randomizerCheck, CustomMessage& msg) {
     msg = CustomMessage("You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
-                                                      "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
-                                                      "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!");
+                        "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
+                        "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!");
     std::string itemColor = "";
     if (randomizerGet == RG_ARCHIPELAGO_ITEM_PROGRESSIVE) {
         itemColor = "%p";
@@ -107,9 +107,9 @@ void BuildArchipelagoItemMessage(int16_t randomizerGet, uint32_t randomizerCheck
 
     msg.Replace("[[apcolor]]", itemColor);
     msg.Replace("[[apitem]]",
-                         std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].itemName));
+                std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].itemName));
     msg.Replace("[[applayer]]",
-                         std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].playerName));
+                std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].playerName));
     msg.AutoFormat();
 }
 

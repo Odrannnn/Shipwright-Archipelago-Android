@@ -515,8 +515,8 @@ void Context::ParseArchipelagoOptions() {
         mOptions[RSK_GANONS_TRIALS].Set(RO_GANONS_TRIALS_SET_NUMBER);
         mOptions[RSK_TRIAL_COUNT].Set(slotData["ganons_trials_count"]);
         std::vector<TrialKey> requiredTrials;
-        for(const nlohmann::basic_json<>& trialString : slotData["required_trials"]) {
-            if(trialString == "Forest Trial") {
+        for (const nlohmann::basic_json<>& trialString : slotData["required_trials"]) {
+            if (trialString == "Forest Trial") {
                 requiredTrials.emplace_back(TrialKey::TK_FOREST_TRIAL);
             } else if (trialString == "Fire Trial") {
                 requiredTrials.emplace_back(TrialKey::TK_FIRE_TRIAL);
@@ -533,7 +533,7 @@ void Context::ParseArchipelagoOptions() {
 
         for (auto& trial : mTrials->GetTrialList()) {
             trial->SetAsSkipped();
-            if(std::find(requiredTrials.begin(), requiredTrials.end(), trial->GetTrialKey()) != requiredTrials.end()) {
+            if (std::find(requiredTrials.begin(), requiredTrials.end(), trial->GetTrialKey()) != requiredTrials.end()) {
                 trial->SetAsRequired();
             }
         }
@@ -654,7 +654,7 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_DAMPES_DIARY_HINT].Set(slotData["dampe_diary_hint"]);
     mOptions[RSK_GREG_HINT].Set(slotData["greg_hint"]);
     // Loach not currently enabled in AP
-    mOptions[RSK_LOACH_HINT].Set(RO_GENERIC_OFF);//slotData["hyrule_loach_hint"]);
+    mOptions[RSK_LOACH_HINT].Set(RO_GENERIC_OFF); // slotData["hyrule_loach_hint"]);
     mOptions[RSK_SARIA_HINT].Set(slotData["saria_hint"]);
     mOptions[RSK_MIDO_HINT].Set(slotData["mido_hint"]);
     mOptions[RSK_FROGS_HINT].Set(slotData["frog_game_hint"]);
@@ -681,13 +681,13 @@ void Context::ParseArchipelagoOptions() {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_STARTWITH);
     } else if (slotData["maps_and_compasses"] == 1) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_VANILLA);
-    }else if (slotData["maps_and_compasses"] == 2) {
+    } else if (slotData["maps_and_compasses"] == 2) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_OWN_DUNGEON);
-    }else if (slotData["maps_and_compasses"] == 3) {
+    } else if (slotData["maps_and_compasses"] == 3) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_ANY_DUNGEON);
-    }else if (slotData["maps_and_compasses"] == 4) {
+    } else if (slotData["maps_and_compasses"] == 4) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_OVERWORLD);
-    }else if (slotData["maps_and_compasses"] == 5) {
+    } else if (slotData["maps_and_compasses"] == 5) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_ANYWHERE);
     }
     if (slotData["small_key_shuffle"] == 0) {
@@ -772,7 +772,7 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_SLINGBOW_BREAK_BEEHIVES].Set(slotData["slingbow_break_beehives"]);
     mOptions[RSK_ENABLE_BOMBCHU_DROPS].Set(slotData["bombchu_drops"]);
     mOptions[RSK_BOMBCHU_BAG].Set(slotData["bombchu_bag"]);
-    if(slotData["start_with_links_pocket"] == 0) {
+    if (slotData["start_with_links_pocket"] == 0) {
         mOptions[RSK_LINKS_POCKET].Set(RO_LINKS_POCKET_DUNGEON_REWARD);
     } else if (slotData["start_with_links_pocket"] == 1) {
         mOptions[RSK_LINKS_POCKET].Set(RO_LINKS_POCKET_ADVANCEMENT);
@@ -972,11 +972,11 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
 void Context::ParseArchipelagoHints() {
     const auto& ApHintData = ArchipelagoClient::GetInstance().foreignHints;
     const auto ctx = Rando::Context::GetInstance();
-    for(const auto& ApHint: ApHintData) {
+    for (const auto& ApHint : ApHintData) {
         const RandomizerHint hintKey = ApHint.first;
         const StaticHintInfo hintInfo = StaticData::staticHintInfoMap[ApHint.first];
         std::vector<RandomizerArea> areas;
-        for(const ArchipelagoClient::ApForeignHint& hintData : ApHint.second) {
+        for (const ArchipelagoClient::ApForeignHint& hintData : ApHint.second) {
             areas.emplace_back(RA_ARCHIPELAGO_FOREIGN);
         }
         if (areas.empty()) {
@@ -984,7 +984,7 @@ void Context::ParseArchipelagoHints() {
         }
         HintType hintType;
         std::vector<RandomizerHintTextKey> textKeys;
-        switch(hintKey) {
+        switch (hintKey) {
             case RH_ALTAR_CHILD:
                 hintType = HINT_TYPE_ALTAR_CHILD;
                 break;
@@ -993,14 +993,15 @@ void Context::ParseArchipelagoHints() {
                 break;
             case RH_GANONDORF_HINT:
                 hintType = HINT_TYPE_AREA;
-                if (ctx->GetOption(RSK_SHUFFLE_MASTER_SWORD) && ctx->GetOption(RSK_STARTING_MASTER_SWORD).Is(RO_GENERIC_OFF)) {
+                if (ctx->GetOption(RSK_SHUFFLE_MASTER_SWORD) &&
+                    ctx->GetOption(RSK_STARTING_MASTER_SWORD).Is(RO_GENERIC_OFF)) {
                     textKeys = { RHT_GANONDORF_HINT_LA_ONLY, RHT_GANONDORF_HINT_MS_ONLY, RHT_GANONDORF_HINT_LA_AND_MS };
                 } else {
-                    textKeys = { RHT_GANONDORF_HINT_LA_ONLY };    
+                    textKeys = { RHT_GANONDORF_HINT_LA_ONLY };
                 }
                 break;
             case RH_GANONDORF_JOKE:
-                continue;   // just create a random joke
+                continue; // just create a random joke
             default:
                 hintType = hintInfo.type;
                 break;

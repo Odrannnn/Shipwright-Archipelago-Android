@@ -12,16 +12,18 @@
 //  - Todo clearing the trie for new data (should be as simple as re-assigning the root node)
 
 void ItemSuggestionTrie::AddItem(std::string ApItemName, const int64_t ApItemId) {
-    std::transform(ApItemName.begin(), ApItemName.end(), ApItemName.begin(), [](unsigned char c) { return std::tolower(c); });
+    std::transform(ApItemName.begin(), ApItemName.end(), ApItemName.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
     ApItemName.erase(std::remove_if(ApItemName.begin(), ApItemName.end(), [](unsigned char c) { return !isalpha(c); }),
-        ApItemName.end());
-    
+                     ApItemName.end());
+
     std::string_view view = ApItemName;
     while (!view.empty()) {
         AddWord(std::string(view), ApItemId);
         view = view.substr(1, view.size() - 1);
     }
-    std::transform(ApItemName.begin(), ApItemName.end(), ApItemName.begin(), [](unsigned char c) { return std::tolower(c); });
+    std::transform(ApItemName.begin(), ApItemName.end(), ApItemName.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
 }
 
 const std::unordered_set<int64_t> ItemSuggestionTrie::GetSuggestions(const std::string_view& searchString) const {
