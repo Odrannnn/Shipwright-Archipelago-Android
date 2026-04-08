@@ -150,6 +150,9 @@ bool ArchipelagoClient::StartClient() {
             ResetQueue();
             SynchSentLocations();
             SynchReceivedLocations();
+            if (gPlayState != nullptr) {
+                ArchipelagoClient::SetDataStorage("scene", gPlayState->sceneNum);
+            }
         }
 
         const int team_number = apClient->get_team_number();
@@ -639,6 +642,20 @@ void ArchipelagoClient::ResetQueue() {
     std::swap(receiveQueue, empty);
 }
 
+void ArchipelagoClient::OnSceneInit(uint16_t sceneNum) {
+    if (!ArchipelagoClient::IsConnected())
+        return;
+    if (gPlayState == nullptr)
+        return;
+    ArchipelagoClient::SetDataStorage("scene", sceneNum);
+}
+
+void ArchipelagoClient::SetDataStorage(const std::string& key, const nlohmann::json& value) const {
+    std::string full_key =
+        std::format("oot_soh_{}_{}_{}", key, apClient->get_team_number(), apClient->get_player_number());
+    std::list<APClient::DataStorageOperation> operations = { { "replace", value } };
+    apClient->Set(full_key, 0, false, operations);
+}   
 void ArchipelagoClient::OpenLocalHint(RandomizerCheck sohCheckId) {
     if (sohCheckId == RC_UNKNOWN_CHECK) {
         ArchipelagoConsole_SendMessage("[ERROR] Trying to hint an unknown location (RC_UNKOWN_CHECK), skipping");
@@ -1319,6 +1336,10 @@ void RegisterArchipelago() {
     COND_HOOK(GameInteractor::OnPlayerDeath, IS_ARCHIPELAGO,
               []() { ArchipelagoClient::GetInstance().SendDeathLink(); });
 
+    COND_HOOK(GameInteractor::OnSceneInit, IS_ARCHIPELAGO,
+              [](int16_t sceneNum) { ArchipelagoClient::GetInstance().OnSceneInit(sceneNum); 
+              });
+    }
     COND_HOOK(GameInteractor::OnDialogClose, IS_ARCHIPELAGO,
               []() { ArchipelagoClient::GetInstance().OnDialogCloseHook(); });
     COND_HOOK(GameInteractor::OnShopSlotChange, IS_ARCHIPELAGO,

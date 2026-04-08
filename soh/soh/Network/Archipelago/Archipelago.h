@@ -83,6 +83,10 @@ class ArchipelagoClient {
     void UpdateHints(const std::vector<nlohmann::json>& hints_json);
     void Poll();
     void ResetQueue();
+
+    void OnSceneInit(uint16_t sceneNum);
+    void SetDataStorage(const std::string& key, const nlohmann::json& value) const;
+
     void OpenLocalHint(RandomizerCheck sohCheckId);
     void OpenForeignHint(RandomizerHint randomizerHintId);
     void OnDialogHook();
