@@ -74,6 +74,8 @@ bool ArchipelagoClient::StartClient() {
             ArchipelagoConsole_SendMessage("[ERROR] Could not connect to server after several tries.\nAre the entered "
                                            "server address and port correct?");
             CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 2); // Connection error
+            CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0);
+
             disconnecting = true;
 
             if (GameInteractor::IsSaveLoaded) {
@@ -621,6 +623,8 @@ void ArchipelagoClient::Poll() {
         ResetQueue();
         disconnecting = false;
         CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0); // disconnected
+        CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0);
+
         std::vector<AP_Hint::Hint> empty_hints = {};
         ArchipelagoHintWindow_UpdateHints(empty_hints);
         return;
@@ -1217,6 +1221,10 @@ extern "C" void Archipelago_InitSaveFile() {
     }
 }
 
+extern "C" void Archipelago_InitConnection() {
+    ArchipelagoClient::GetInstance().StartClient();
+}
+
 void LoadArchipelagoData() {
     SaveManager::Instance->LoadData("isArchipelago", gSaveContext.ship.quest.data.archipelago.isArchipelago);
     SaveManager::Instance->LoadData("lastReceivedItemIndex",
@@ -1339,7 +1347,7 @@ void RegisterArchipelago() {
     COND_HOOK(GameInteractor::OnSceneInit, IS_ARCHIPELAGO,
               [](int16_t sceneNum) { ArchipelagoClient::GetInstance().OnSceneInit(sceneNum); 
               });
-    }
+    
     COND_HOOK(GameInteractor::OnDialogClose, IS_ARCHIPELAGO,
               []() { ArchipelagoClient::GetInstance().OnDialogCloseHook(); });
     COND_HOOK(GameInteractor::OnShopSlotChange, IS_ARCHIPELAGO,

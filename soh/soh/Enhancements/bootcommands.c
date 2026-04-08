@@ -13,6 +13,7 @@ void BootCommands_Init() {
     CVarClear(CVAR_GENERAL("BetterDebugWarpScreenMQModeScene"));
 
     CVarClear(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus")); // Clear on boot to reset connection status
+    CVarClear(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"));
     CVarClear(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeStarted"));
     CVarClear(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"));
     
