@@ -523,23 +523,19 @@ const HintText Hint::GetItemHintText(uint8_t slot, bool mysterious) const {
     auto ctx = Rando::Context::GetInstance();
     RandomizerCheck hintedCheck = locations[slot];
     RandomizerGet targetRG = ctx->GetItemLocation(hintedCheck)->GetPlacedRandomizerGet();
-    CustomMessage msg;
     if (mysterious) {
         return StaticData::hintTextTable[RHT_MYSTERIOUS_ITEM];
-    } else if (!ctx->GetOption(RSK_HINT_CLARITY).Is(RO_HINT_CLARITY_AMBIGUOUS) &&
-               targetRG == RG_ICE_TRAP) { // RANDOTODO store in item hint instead of item
-        msg = CustomMessage({ ctx->overrides[hintedCheck].GetTrickName() });
+    } else if (targetRG == RG_ICE_TRAP) { // RANDOTODO store in item hint instead of item
+        return HintText(CustomMessage({ ctx->overrides[hintedCheck].GetTrickName() }));
     } else if (ctx->GetOption(RSK_HINT_CLARITY).Is(RO_HINT_CLARITY_CLEAR) &&
                (targetRG == RG_ARCHIPELAGO_ITEM_JUNK || targetRG == RG_ARCHIPELAGO_ITEM_USEFUL ||
                 targetRG == RG_ARCHIPELAGO_ITEM_PROGRESSIVE)) {
         RandomizerCheck rc = ctx->GetItemLocation(hintedCheck)->GetRandomizerCheck();
         std::string apItemText = ArchipelagoClient::GetInstance().GetApItemHint(rc);
-        msg = CustomMessage({ Text(apItemText) });
+        return HintText(CustomMessage({ Text(apItemText) }));
     } else {
-        msg = ctx->GetItemLocation(hintedCheck)->GetPlacedItem().GetName();
+        return ctx->GetItemLocation(hintedCheck)->GetPlacedItem().GetHint();
     }
-    msg = CustomMessage(ctx->GetItemLocation(hintedCheck)->GetPlacedItem().GetArticle()) + msg;
-    return HintText(msg);
 }
 
 const HintText Hint::GetAreaHintText(uint8_t slot) const {

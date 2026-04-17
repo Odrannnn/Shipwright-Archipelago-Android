@@ -14,6 +14,7 @@
 #include "soh/ShipInit.hpp"
 #include "soh/ObjectExtension/ObjectExtension.h"
 #include "soh/Network/Archipelago/ArchipelagoConsoleWindow.h"
+#include "item_category_adj.h"
 
 extern "C" {
 #include "macros.h"
@@ -447,6 +448,7 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
         GetItemID vanillaItem = (GetItemID)Rando::StaticData::RetrieveItem(vanillaRandomizerGet).GetItemID();
         getItemEntry = Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)vanillaRandomizerGet);
     }
+    GetItemCategory getItemCategory = Randomizer_AdjustItemCategory(getItemEntry);
 
     // When Ocarina or Iron Boots chest has been received externally before, and then picked up in the game itself,
     // it'll be skipped and not give the song properly because the RC is already checked off. So instead we handle
@@ -486,13 +488,8 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
                   // crude fix to ensure map hints are readable. Ideally replace with better hint tracking.
                   !(getItemEntry.getItemId >= RG_DEKU_TREE_MAP && getItemEntry.getItemId <= RG_ICE_CAVERN_MAP &&
                     getItemEntry.modIndex == MOD_RANDOMIZER) &&
-                  (getItemEntry.getItemCategory == ITEM_CATEGORY_JUNK ||
-                   getItemEntry.getItemCategory == ITEM_CATEGORY_SKULLTULA_TOKEN ||
-                   getItemEntry.getItemCategory == ITEM_CATEGORY_HEALTH ||
-                   getItemEntry.getItemCategory == ITEM_CATEGORY_LESSER ||
-                   // Treat small keys as junk if Skeleton Key is obtained.
-                   (getItemEntry.getItemCategory == ITEM_CATEGORY_SMALL_KEY &&
-                    Flags_GetRandomizerInf(RAND_INF_HAS_SKELETON_KEY))))))) {
+                  (getItemCategory == ITEM_CATEGORY_JUNK || getItemCategory == ITEM_CATEGORY_SKULLTULA_TOKEN ||
+                   getItemCategory == ITEM_CATEGORY_HEALTH || getItemCategory == ITEM_CATEGORY_LESSER))))) {
             Item_DropCollectible(gPlayState, &spawnPos, static_cast<int16_t>(ITEM00_SOH_GIVE_ITEM_ENTRY | 0x8000));
 
             isGiSkipped = 1;
@@ -542,6 +539,54 @@ void RandomizerOnItemReceiveHandler(GetItemEntry receivedItemEntry) {
         SaveManager::Instance->SaveSection(gSaveContext.fileNum, SECTION_ID_TRACKER_DATA, true);
         randomizerQueuedCheck = RC_UNKNOWN_CHECK;
         randomizerQueuedItemEntry = GET_ITEM_NONE;
+    }
+
+    if (receivedItemEntry.modIndex == MOD_RANDOMIZER && receivedItemEntry.getItemId == RG_MAGIC_BEAN_PACK) {
+        if (OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_SKIP_PLANTING_BEANS)) {
+            gSaveContext.sceneFlags[SCENE_DEATH_MOUNTAIN_CRATER].swch |= (1 << 3);
+            if (gPlayState->sceneNum == SCENE_DEATH_MOUNTAIN_CRATER) {
+                Flags_SetSwitch(gPlayState, 3);
+            }
+            gSaveContext.sceneFlags[SCENE_DEATH_MOUNTAIN_TRAIL].swch |= (1 << 6);
+            if (gPlayState->sceneNum == SCENE_DEATH_MOUNTAIN_TRAIL) {
+                Flags_SetSwitch(gPlayState, 6);
+            }
+            gSaveContext.sceneFlags[SCENE_DESERT_COLOSSUS].swch |= (1 << 24);
+            if (gPlayState->sceneNum == SCENE_DESERT_COLOSSUS) {
+                Flags_SetSwitch(gPlayState, 24);
+            }
+            gSaveContext.sceneFlags[SCENE_GERUDO_VALLEY].swch |= (1 << 3);
+            if (gPlayState->sceneNum == SCENE_GERUDO_VALLEY) {
+                Flags_SetSwitch(gPlayState, 3);
+            }
+            gSaveContext.sceneFlags[SCENE_GRAVEYARD].swch |= (1 << 3);
+            if (gPlayState->sceneNum == SCENE_GRAVEYARD) {
+                Flags_SetSwitch(gPlayState, 3);
+            }
+            gSaveContext.sceneFlags[SCENE_KOKIRI_FOREST].swch |= (1 << 9);
+            if (gPlayState->sceneNum == SCENE_KOKIRI_FOREST) {
+                Flags_SetSwitch(gPlayState, 9);
+            }
+            gSaveContext.sceneFlags[SCENE_LAKE_HYLIA].swch |= (1 << 1);
+            if (gPlayState->sceneNum == SCENE_LAKE_HYLIA) {
+                Flags_SetSwitch(gPlayState, 1);
+            }
+            gSaveContext.sceneFlags[SCENE_LOST_WOODS].swch |= (1 << 4) | (1 << 18);
+            if (gPlayState->sceneNum == SCENE_LOST_WOODS) {
+                Flags_SetSwitch(gPlayState, 4);
+                Flags_SetSwitch(gPlayState, 18);
+            }
+            gSaveContext.sceneFlags[SCENE_ZORAS_RIVER].swch |= (1 << 3);
+            if (gPlayState->sceneNum == SCENE_ZORAS_RIVER) {
+                Flags_SetSwitch(gPlayState, 3);
+            }
+            ObjBean* bean = (ObjBean*)Actor_Find(&gPlayState->actorCtx, ACTOR_OBJ_BEAN, ACTORCAT_BG);
+            if (bean != nullptr) {
+                Flags_SetSwitch(gPlayState, bean->dyna.actor.params & 0x3F);
+                func_80B8FE00(bean);
+            }
+            AMMO(ITEM_BEAN) = 0;
+        }
     }
 
     if (receivedItemEntry.modIndex == MOD_NONE &&
@@ -1084,6 +1129,15 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                           OTRGlobals::Instance->gRandoContext->GetItemLocation(RC_ZR_MAGIC_BEAN_SALESMAN)->GetPrice();
             } else if (RAND_GET_OPTION(RSK_SKIP_PLANTING_BEANS)) {
                 *should = gSaveContext.rupees >= 60;
+            } else if (BEANS_BOUGHT == 9) {
+                *should = gSaveContext.rupees >= 99;
+            }
+            break;
+        }
+        case VB_MAGIC_BEAN_SALESMAN_TAKE_MONEY: {
+            if (BEANS_BOUGHT == 9) {
+                Rupees_ChangeBy(-99);
+                *should = false;
             }
             break;
         }

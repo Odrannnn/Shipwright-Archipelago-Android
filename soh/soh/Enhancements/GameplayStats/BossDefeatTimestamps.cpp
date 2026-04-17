@@ -18,9 +18,8 @@ static void RegisterBossDefeatTimestamps() {
     BOSS_DEFEAT_TIMESTAMP(ACTOR_BOSS_SST, TIMESTAMP_DEFEAT_BONGO_BONGO);
     BOSS_DEFEAT_TIMESTAMP(ACTOR_BOSS_TW, TIMESTAMP_DEFEAT_TWINROVA);
     BOSS_DEFEAT_TIMESTAMP(ACTOR_BOSS_GANON, TIMESTAMP_DEFEAT_GANONDORF);
-    BOSS_DEFEAT_TIMESTAMP(ACTOR_BOSS_GANON2, TIMESTAMP_DEFEAT_GANON);
-
     COND_ID_HOOK(OnBossDefeat, ACTOR_BOSS_GANON2, true, [](void* refActor) {
+        gSaveContext.ship.stats.itemTimestamp[TIMESTAMP_DEFEAT_GANON] = GAMEPLAYSTAT_TOTAL_TIME;
         gSaveContext.ship.stats.gameComplete = true;
         ArchipelagoClient::GetInstance().SendGameWon();
     });
