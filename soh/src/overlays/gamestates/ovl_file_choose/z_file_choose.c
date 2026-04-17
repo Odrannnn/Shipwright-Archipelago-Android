@@ -1035,7 +1035,7 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
             }
             // If not connected, try to connect.
             if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4) {
-                if (CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), "") != "" && CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "") != ""){
+                if (strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), ""), 10) > 0 && strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), 2) > 0){
                     Archipelago_InitConnection();
                     CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 1);
                 } else {
@@ -1830,10 +1830,6 @@ void FileChoose_DrawFileInfo(GameState* thisx, s16 fileIndex, s16 isActive) {
                                        SohFileSelect_GetArchipelagoSettingText(ASM_CHAR_START_TO_CONNECT, language), 58,
                                        144, 200, 200, 200, textAlpha, 0.8f, true);
             }
-
-            // Interface_DrawTextLine(this->state.gfxCtx,
-            //     SohFileSelect_GetArchipelagoSettingText(ASM_CHAR_SELECT_CHANGE_CONNECTION_INFO, language), 95, 220,
-            //     100, 250, 255, textAlpha, 1.0f, true);
         }
     }
 
@@ -2142,22 +2138,33 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
 
         uint8_t textIndex = 0;
 
-        for (uint8_t index = 0; index <= ASM_CHANGE_CONNECTION_INFO; index++) {
+        for (uint8_t index = ASM_START_ARCHIPELAGO; index <= ASM_CHANGE_CONNECTION_INFO; index++) {
             uint8_t textColorR = 255;
             uint8_t textColorG = 255;
             uint8_t textColorB = 255;
+            uint8_t textLine = index;
 
             // If current index is the selected one, make the text yellow.
             if (this->archipelagoIndex == index) {
                 textColorB = 80;
             }
 
+            // show "connect and start AP" message when not connected yet
+            if (index == ASM_START_ARCHIPELAGO && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) < 3 && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 0) {
+                if(strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), ""), 10) == 0 || strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), 2) == 0) {
+                    // if no text is entered into the connection fields, make the text gray
+                    textColorR = textColorG = textColorB = 100;
+                }
+                textLine = ASM_CONNECT_AND_START_ARCHIPELAGO;
+            }
+
             // If mid connection attempt, make Start Archipelago text gray.
             if (index == ASM_START_ARCHIPELAGO && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4 && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
                 textColorR = textColorG = textColorB = 100;
+                textLine = ASM_CONNECT_AND_START_ARCHIPELAGO;
             }
 
-            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(index, language), 70,
+            Interface_DrawTextLine(this->state.gfxCtx, SohFileSelect_GetArchipelagoSettingText(textLine, language), 70,
                                    (80 + index * 16), textColorR, textColorG, textColorB, textAlpha, 0.8f, true);
         }
 

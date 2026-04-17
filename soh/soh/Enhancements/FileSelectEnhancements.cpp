@@ -125,11 +125,11 @@ std::array<std::string, LANGUAGE_MAX> ArchipelagoSettingsMenuText[ASM_MAX]{
         "Connected to a different slot",
         "Connected to a different slot",
     },
-    // ASM_CHAR_SELECT_CHANGE_CONNECTION_INFO
+    // ASM_CONNECT_AND_START_ARCHIPELAGO
     {
-        "Z-Connection Settings",
-        "Z-Connection Settings",
-        "Z-Connection Settings",
+        "Connect and Start Archipelago",
+        "Connect and Start Archipelago",
+        "Connect and Start Archipelago"
     }
 };
 

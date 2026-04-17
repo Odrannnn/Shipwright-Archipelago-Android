@@ -3451,7 +3451,12 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
     int32_t sTexScale = 1024.0f / (scale / 100.0f);
 
     gDPSetEnvColor(OVERLAY_DISP++, 255, 255, 255, 255);
-    gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 255, 255, CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255));
+
+    int16_t alpha = 255;
+    if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255) < 0x3f) {
+        alpha = CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 0x3f) << 2;
+    }
+    gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 255, 255, alpha);
 
     gDPLoadTextureBlock(OVERLAY_DISP++, gArchipelagoItemTex, G_IM_FMT_RGBA, G_IM_SIZ_32b, 64, 64, 0,
                         G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, 0, 0, G_TX_NOLOD, G_TX_NOLOD);
@@ -3478,6 +3483,8 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
             break;
         case 4: // Connected + Locations Scouted
             statusText = SohFileSelect_GetArchipelagoSettingText(ASM_CONNECTED, language);
+
+            // start fadeout
             if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeStarted"), 0)) {
                 CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeStarted"), 1);
                 CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255);
@@ -3490,7 +3497,7 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
             break;
     }
 
-    Interface_DrawTextLineOverlay(play->state.gfxCtx, statusText, posX, posY, 255, 255, 255, CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255), 0.8f, true);
+    Interface_DrawTextLineOverlay(play->state.gfxCtx, statusText, posX, posY, 255, 255, 255, alpha, 0.8f, true);
 
     gDPPipeSync(OVERLAY_DISP++);
     CLOSE_DISPS(play->state.gfxCtx);
