@@ -26,6 +26,7 @@ class ArchipelagoClient {
   public:
     struct ApItem {
         std::string itemName;
+        std::string hintName;
         std::string locationName;
         std::string playerName;
         int playerNumber;
@@ -35,6 +36,7 @@ class ArchipelagoClient {
 
     struct ApForeignHint {
         std::string locationName;
+        std::string groupName;
         std::string playerName;
         int64_t locationId;
         int64_t playerId;
@@ -81,6 +83,8 @@ class ArchipelagoClient {
     void SendGameWon();
     void SendMessageToConsole(const std::string message);
     void UpdateHints(const std::vector<nlohmann::json>& hints_json);
+    void UpdateItemGroup(const std::string game, const nlohmann::json& item_group_json);
+    void UpdateLocationGroup(const std::string game, const nlohmann::json& location_group_json);
     void Poll();
     void ResetQueue();
 
@@ -103,6 +107,8 @@ class ArchipelagoClient {
     std::string uri;
     std::string password;
     std::unordered_map<RandomizerHint, std::vector<ApForeignHint>> foreignHints;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::string>>> item_groups;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::string>>> location_groups;
 
   protected:
     ArchipelagoClient();
@@ -112,6 +118,8 @@ class ArchipelagoClient {
     void operator=(const ArchipelagoClient&) = delete;
 
     bool isRightSaveLoaded() const;
+    std::string get_random_group_from_item(const std::string& item_name, unsigned int item_flags, const std::string& game);
+    std::string get_random_group_from_location(const std::string& item_name, const std::string& game);
 
     std::string uuid;
 

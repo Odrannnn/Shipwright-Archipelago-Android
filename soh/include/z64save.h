@@ -214,7 +214,8 @@ typedef struct ShipBossRushSaveContextData {
 } ShipBossRushSaveContextData;
 
 typedef struct ArchipelagoLocationData {
-    char itemName[100];
+    char itemName[50];
+    char hintName[50];
     char playerName[17];
 } ArchipelagoLocationData;
 
