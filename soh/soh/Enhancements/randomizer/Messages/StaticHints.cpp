@@ -142,9 +142,7 @@ void BuildSkulltulaPeopleMessage(uint16_t* textId, bool* loadFromMessageTable) {
     Text itemName = item.GetHint().GetHintMessage().GetForCurrentLanguage();
     RandomizerGet rg = item.GetRandomizerGet();
     if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
-        std::string apItemName = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].itemName);
-        std::string apPlayerName = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].playerName);
-        itemName = Text(apItemName + "(" + apPlayerName + ")");
+        itemName = ArchipelagoClient::GetInstance().GetApItemHint(rc, rg);
     }
     msg.InsertNumber(count);
     msg.Replace("[[color]]", item.GetColor());
@@ -168,11 +166,7 @@ void Build100SkullsHintMessage(uint16_t* textId, bool* loadFromMessageTable) {
     RandomizerGet rg = item.GetRandomizerGet();
     Text itemName = item.GetHint().GetHintMessage().GetForCurrentLanguage();
     if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
-        std::string apItemName =
-            std::string(gSaveContext.ship.quest.data.archipelago.locations[RC_KAK_100_GOLD_SKULLTULA_REWARD].itemName);
-        std::string apPlayerName = std::string(
-            gSaveContext.ship.quest.data.archipelago.locations[RC_KAK_100_GOLD_SKULLTULA_REWARD].playerName);
-        itemName = Text(apItemName + "(" + apPlayerName + ")");
+        itemName = ArchipelagoClient::GetInstance().GetApItemHint(RC_KAK_100_GOLD_SKULLTULA_REWARD, rg);
     }
     msg.Replace("[[color]]", item.GetColor());
     msg.InsertNames({ itemName });

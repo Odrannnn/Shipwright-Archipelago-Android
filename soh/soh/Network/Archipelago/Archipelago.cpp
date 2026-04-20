@@ -1165,9 +1165,14 @@ std::string ArchipelagoClient::GetApItemName(int64_t ApItemId) {
     return apClient->get_item_name(ApItemId, apClient->get_game());
 }
 
-std::string ArchipelagoClient::GetApItemHint(RandomizerCheck rc) {
-    std::string item_name = gSaveContext.ship.quest.data.archipelago.locations[rc].itemName;
+std::string ArchipelagoClient::GetApItemHint(RandomizerCheck rc, RandomizerGet rg) {
     std::string player_name = gSaveContext.ship.quest.data.archipelago.locations[rc].playerName;
+    std::string item_name = gSaveContext.ship.quest.data.archipelago.locations[rc].itemName;
+
+    if (Rando::StaticData::GetLocation(rc)->IsShop()) {
+        return item_name + " (" + player_name + ")";
+    }
+
     if (!player_name.empty()) {
         if (player_name.back() == 's') {
             player_name += "' ";
@@ -1175,7 +1180,31 @@ std::string ArchipelagoClient::GetApItemHint(RandomizerCheck rc) {
             player_name += "'s ";
         }
     }
-    return player_name + item_name;
+
+    const auto ctx = Rando::Context::GetInstance();
+    if (ctx->GetOption(RSK_HINT_CLARITY).Is(RO_HINT_CLARITY_CLEAR)) {
+        
+        return player_name + item_name;
+    }
+    
+    std::string item_tier;
+    switch(rg) {
+        case RandomizerGet::RG_ARCHIPELAGO_ITEM_JUNK:
+            item_tier = "Junk";
+            break;
+        case RandomizerGet::RG_ARCHIPELAGO_ITEM_USEFUL:
+            item_tier = "Item";
+            break;
+        case RandomizerGet::RG_ARCHIPELAGO_ITEM_PROGRESSIVE:
+            item_tier = "Progressive Item";
+            break;
+    };
+
+    if (ctx->GetOption(RSK_HINT_CLARITY).Is(RO_HINT_CLARITY_AMBIGUOUS)) {
+        // todo item group group instead of world
+        // return player_name + "world";
+    }
+    return item_tier + " from " + player_name + "world";
 }
 
 std::string ArchipelagoClient::GetApLocationHint(RandomizerHint rh, uint8_t index) {
@@ -1189,7 +1218,15 @@ std::string ArchipelagoClient::GetApLocationHint(RandomizerHint rh, uint8_t inde
             player_name += "'s ";
         }
     }
-    return player_name + location_name;
+
+    auto ctx = Rando::Context::GetInstance();
+    if (ctx->GetOption(RSK_HINT_CLARITY).Is(RO_HINT_CLARITY_CLEAR)) {
+        return player_name + location_name;
+    } else if (ctx->GetOption(RSK_HINT_CLARITY).Is(RO_HINT_CLARITY_AMBIGUOUS)) {
+        // todo location group instead of world
+        //return player_name + "world";
+    }
+    return player_name + "world";
 }
 
 extern "C" void Archipelago_InitSaveFile() {

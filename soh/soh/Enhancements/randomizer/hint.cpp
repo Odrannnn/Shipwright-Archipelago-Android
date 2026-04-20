@@ -527,11 +527,10 @@ const HintText Hint::GetItemHintText(uint8_t slot, bool mysterious) const {
         return StaticData::hintTextTable[RHT_MYSTERIOUS_ITEM];
     } else if (targetRG == RG_ICE_TRAP) { // RANDOTODO store in item hint instead of item
         return HintText(CustomMessage({ ctx->overrides[hintedCheck].GetTrickName() }));
-    } else if (ctx->GetOption(RSK_HINT_CLARITY).Is(RO_HINT_CLARITY_CLEAR) &&
-               (targetRG == RG_ARCHIPELAGO_ITEM_JUNK || targetRG == RG_ARCHIPELAGO_ITEM_USEFUL ||
-                targetRG == RG_ARCHIPELAGO_ITEM_PROGRESSIVE)) {
+    } else if (targetRG == RG_ARCHIPELAGO_ITEM_JUNK || targetRG == RG_ARCHIPELAGO_ITEM_USEFUL ||
+                targetRG == RG_ARCHIPELAGO_ITEM_PROGRESSIVE) {
         RandomizerCheck rc = ctx->GetItemLocation(hintedCheck)->GetRandomizerCheck();
-        std::string apItemText = ArchipelagoClient::GetInstance().GetApItemHint(rc);
+        std::string apItemText = ArchipelagoClient::GetInstance().GetApItemHint(rc, targetRG);
         return HintText(CustomMessage({ Text(apItemText) }));
     } else {
         return ctx->GetItemLocation(hintedCheck)->GetPlacedItem().GetHint();

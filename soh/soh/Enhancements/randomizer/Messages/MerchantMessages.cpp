@@ -37,9 +37,7 @@ void BuildMerchantMessage(CustomMessage& msg, RandomizerCheck rc, bool mysteriou
         color = "%g";
     } else if (rgid == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || rgid == RG_ARCHIPELAGO_ITEM_USEFUL ||
                rgid == RG_ARCHIPELAGO_ITEM_JUNK) {
-        std::string apItemName = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].itemName);
-        std::string apPlayerName = std::string(gSaveContext.ship.quest.data.archipelago.locations[rc].playerName);
-        itemName = { Text(apItemName + "(" + apPlayerName + ")") };
+        itemName = ArchipelagoClient::GetInstance().GetApItemHint(rc, rgid);
     } else {
         const Rando::Item& item = Rando::StaticData::RetrieveItem(rgid);
         if (Rando::StaticData::GetLocation(rc)->IsShop()) {
