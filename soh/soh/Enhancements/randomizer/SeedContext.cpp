@@ -675,7 +675,13 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_SCRUB_TEXT_HINT].Set(slotData["scrub_hints"]);
     mOptions[RSK_MERCHANT_TEXT_HINT].Set(slotData["merchant_hints"]);
     mOptions[RSK_FISHING_POLE_HINT].Set(slotData["fishing_pole_hint"]);
-    mOptions[RSK_HINT_CLARITY].Set(RO_HINT_CLARITY_CLEAR);
+    if (slotData["hint_clarity"] == 0) {
+        mOptions[RSK_HINT_CLARITY].Set(RO_HINT_CLARITY_OBSCURE);
+    } else if (slotData["hint_clarity"] == 1) {
+        mOptions[RSK_HINT_CLARITY].Set(RO_HINT_CLARITY_AMBIGUOUS);
+    } else if (slotData["hint_clarity"] == 2) {
+        mOptions[RSK_HINT_CLARITY].Set(RO_HINT_CLARITY_CLEAR);
+    } 
     mOptions[RSK_HINT_DISTRIBUTION].Set(0);
     if (slotData["maps_and_compasses"] == 0) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_STARTWITH);
