@@ -157,21 +157,22 @@ bool ArchipelagoClient::StartClient() {
 
         const int team_number = apClient->get_team_number();
         const int player_id = apClient->get_player_number();
-        std::list<std::string> hintNotificationKeys = { std::format("_read_hints_{}_{}", team_number, player_id) };
-        apClient->SetNotify(hintNotificationKeys);
-        apClient->Get(hintNotificationKeys);
+        std::list<std::string> requests;
+        std::stringstream hintNotificationKey;
+        hintNotificationKey << "_read_hints_" << team_number << "_" << player_id;
+        requests.emplace_back(hintNotificationKey.str());
+        apClient->SetNotify({ hintNotificationKey.str() });
 
         std::unordered_set<std::string> games;
         for (const APClient::NetworkPlayer& player : apClient->get_players()) {
             games.emplace(apClient->get_player_game(player.slot));
         }
 
-        std::list<std::string> grouping_keys;
         for (const std::string& game : games) {
-            grouping_keys.emplace_back(std::format("_read_item_name_groups_{}", game));
-            grouping_keys.emplace_back(std::format("_read_location_name_groups_{}", game));
+            requests.emplace_back("_read_item_name_groups_" + game);
+            requests.emplace_back("_read_location_name_groups_" + game);
         }
-        apClient->Get(grouping_keys);
+        apClient->Get(requests);
     });
 
     apClient->set_slot_refused_handler([&](const std::list<std::string>& msgs) {
@@ -339,8 +340,9 @@ bool ArchipelagoClient::StartClient() {
         // hints
         const int team_number = apClient->get_team_number();
         const int player_number = apClient->get_player_number();
-        std::string hint_key = std::format("_read_hints_{}_{}", team_number, player_number);
-        if (data["key"] == hint_key) {
+        std::stringstream hint_key;
+        hint_key << "_read_hints_" << team_number << "_" << player_number;
+        if (data["key"] == hint_key.str()) {
             UpdateHints(data["value"]);
             return;
         }
@@ -354,10 +356,10 @@ bool ArchipelagoClient::StartClient() {
     apClient->set_retrieved_handler([&](const std::map<std::string, nlohmann::json>& data) {
         const int team_number = apClient->get_team_number();
         const int player_number = apClient->get_player_number();
-        std::string hint_key = std::format("_read_hints_{}_{}", team_number, player_number);
-        if (data.contains(hint_key)) {
-            UpdateHints(data.at(hint_key));
-            return;
+        std::stringstream hint_key;
+        hint_key << "_read_hints_" << team_number << "_" << player_number;
+        if (data.contains(hint_key.str())) {
+            UpdateHints(data.at(hint_key.str()));
         }
 
         std::unordered_set<std::string> games;
@@ -368,12 +370,12 @@ bool ArchipelagoClient::StartClient() {
         // item & location groups
         bool groups_received = false;
         for (const std::string& game : games) {
-            const std::string item_group_key = std::format("_read_item_name_groups_{}", game);
+            const std::string item_group_key = "_read_item_name_groups_" + game;
             if (data.contains(item_group_key)) {
                 groups_received = true;
                 UpdateItemGroup(game, data.at(item_group_key));
             }
-            const std::string location_group_key = std::format("_read_location_name_groups_{}", game);
+            const std::string location_group_key = "_read_location_name_groups_" + game;
             if (data.contains(location_group_key)) {
                 groups_received = true;
                 UpdateLocationGroup(game, data.at(location_group_key));
@@ -768,10 +770,10 @@ void ArchipelagoClient::OnSceneInit(uint16_t sceneNum) {
 }
 
 void ArchipelagoClient::SetDataStorage(const std::string& key, const nlohmann::json& value) const {
-    std::string full_key =
-        std::format("oot_soh_{}_{}_{}", key, apClient->get_team_number(), apClient->get_player_number());
+    std::stringstream full_key;
+    full_key << "oot_soh_" << key << "_" << apClient->get_team_number() << "_" << apClient->get_player_number();
     std::list<APClient::DataStorageOperation> operations = { { "replace", value } };
-    apClient->Set(full_key, 0, false, operations);
+    apClient->Set(full_key.str(), 0, false, operations);
 }
 void ArchipelagoClient::OpenLocalHint(RandomizerCheck sohCheckId) {
     if (sohCheckId == RC_UNKNOWN_CHECK) {
