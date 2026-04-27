@@ -46,10 +46,10 @@ struct ColoredTextNode {
     std::string text;
     AP_Text::TextColor color;
 };
-} // namespace AP_Text
+}; // namespace AP_Text
 
 namespace AP_Hint {
-enum class HintStatus : char { UNSPECIFIED, NO_PRIORITY, AVOID, PRIORITY, FOUND };
+enum class HintStatus : char { UNSPECIFIED = 0, NO_PRIORITY, AVOID, PRIORITY, FOUND };
 
 static std::unordered_map<HintStatus, std::string> statusStrings = { { HintStatus::UNSPECIFIED, "Unspecified" },
                                                                      { HintStatus::NO_PRIORITY, "No Priority" },
