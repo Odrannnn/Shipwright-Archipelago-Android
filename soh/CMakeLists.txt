@@ -329,7 +329,7 @@ if(BUILD_REMOTE_CONTROL)
     FetchContent_Declare(
             wswrap
             GIT_REPOSITORY https://github.com/black-sliver/wswrap.git
-            GIT_TAG 47438193ec50427ee28aadf294ba57baefd9f3f1
+            GIT_TAG d0505e0ec53a26743f11051949a0dc66bcf44951
     )
     FetchContent_MakeAvailable(wswrap)
     target_include_directories(${PROJECT_NAME} PRIVATE ${wswrap_SOURCE_DIR}/include)
@@ -337,7 +337,7 @@ if(BUILD_REMOTE_CONTROL)
     FetchContent_Declare(
             apclientpp
             GIT_REPOSITORY https://github.com/black-sliver/apclientpp.git
-            GIT_TAG 557d70c9a8ba415c80f98b8c9774739e3bab16bf
+            GIT_TAG 7f33a3849887983378258c2fe8fc3887f687c430
     )
     FetchContent_MakeAvailable(apclientpp)
     target_include_directories(${PROJECT_NAME} PRIVATE ${apclientpp_SOURCE_DIR})
