@@ -37,13 +37,13 @@ void SohMenu::AddMenuNetwork() {
         .WindowName("Archipelago Settings")
         .Options(WindowButtonOptions().Tooltip("Enables the Archipelago Settings Window."));
 
-    path.column = SECTION_COLUMN_2;
     AddWidget(path, "Popout Archipelago Console Window", WIDGET_WINDOW_BUTTON)
         .CVar(CVAR_WINDOW("ArchipelagoConsole"))
         .RaceDisable(false)
         .WindowName("Archipelago Console")
         .Options(WindowButtonOptions().Tooltip("Enables the Archipelago Console Window."));
 
+    path.column = SECTION_COLUMN_2;
     AddWidget(path, "Popout Archipelago Hint Window", WIDGET_WINDOW_BUTTON)
         .CVar(CVAR_WINDOW("ArchipelagoHints"))
         .RaceDisable(false)
