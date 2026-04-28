@@ -39,7 +39,7 @@ class ItemSuggestionTrie {
         std::vector<std::unique_ptr<TrieNode>> children;
 
         TrieNode() = delete;
-        TrieNode(unsigned char letter) : c(letter) {};
+        TrieNode(unsigned char letter) : c(letter){};
     };
 
     std::unique_ptr<TrieNode> rootNode = std::make_unique<TrieNode>('_');

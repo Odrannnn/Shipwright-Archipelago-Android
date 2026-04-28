@@ -118,7 +118,8 @@ class ArchipelagoClient {
     void operator=(const ArchipelagoClient&) = delete;
 
     bool isRightSaveLoaded() const;
-    std::string get_random_group_from_item(const std::string& item_name, unsigned int item_flags, const std::string& game);
+    std::string get_random_group_from_item(const std::string& item_name, unsigned int item_flags,
+                                           const std::string& game);
     std::string get_random_group_from_location(const std::string& item_name, const std::string& game);
 
     std::string uuid;

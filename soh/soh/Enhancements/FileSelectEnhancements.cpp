@@ -126,11 +126,7 @@ std::array<std::string, LANGUAGE_MAX> ArchipelagoSettingsMenuText[ASM_MAX]{
         "Connected to a different slot",
     },
     // ASM_CONNECT_AND_START_ARCHIPELAGO
-    {
-        "Connect and Start Archipelago",
-        "Connect and Start Archipelago",
-        "Connect and Start Archipelago"
-    }
+    { "Connect and Start Archipelago", "Connect and Start Archipelago", "Connect and Start Archipelago" }
 };
 
 const char* SohFileSelect_GetRandomizerSettingText(uint8_t optionIndex, uint8_t language) {

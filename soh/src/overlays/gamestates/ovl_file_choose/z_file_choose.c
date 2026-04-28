@@ -996,7 +996,6 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
     Input* input = &this->state.input[0];
     bool dpad = CVarGetInteger(CVAR_SETTING("DpadInText"), 0);
 
-
     // Fade in elements after opening Archipelago Options menu
     this->archipelagoUIAlpha += 25;
     if (this->archipelagoUIAlpha > 255) {
@@ -1028,19 +1027,23 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
         return;
     }
 
-    if (CHECK_BTN_ALL(input->press.button, BTN_A) || CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
-        if (this->archipelagoIndex == ASM_START_ARCHIPELAGO || CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
-            if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4 && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
+    if (CHECK_BTN_ALL(input->press.button, BTN_A) ||
+        CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
+        if (this->archipelagoIndex == ASM_START_ARCHIPELAGO ||
+            CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
+            if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4 &&
+                CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
                 return;
             }
             // If not connected, try to connect.
             if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4) {
-                if (strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), ""), 10) > 0 && strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), 2) > 0){
+                if (strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), ""), 10) > 0 &&
+                    strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), 2) > 0) {
                     Archipelago_InitConnection();
                     CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 1);
                 } else {
                     Audio_PlaySoundGeneral(NA_SE_SY_FSEL_ERROR, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
-                                    &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+                                           &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
                 }
                 return;
             }
@@ -1049,7 +1052,7 @@ void FileChoose_UpdateArchipelagoMenu(GameState* thisx) {
             // Reset Fade Status before getting in game
             CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeStarted"), 0);
             CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255);
-            
+
             SohFileSelect_ShowPresetModal();
             Audio_PlaySoundGeneral(NA_SE_SY_FSEL_DECIDE_L, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
                                    &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
@@ -2150,8 +2153,10 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
             }
 
             // show "connect and start AP" message when not connected yet
-            if (index == ASM_START_ARCHIPELAGO && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) < 3 && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 0) {
-                if(strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), ""), 10) == 0 || strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), 2) == 0) {
+            if (index == ASM_START_ARCHIPELAGO && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) < 3 &&
+                CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 0) {
+                if (strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), ""), 10) == 0 ||
+                    strnlen(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), 2) == 0) {
                     // if no text is entered into the connection fields, make the text gray
                     textColorR = textColorG = textColorB = 100;
                 }
@@ -2159,7 +2164,8 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
             }
 
             // If mid connection attempt, make Start Archipelago text gray.
-            if (index == ASM_START_ARCHIPELAGO && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4 && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
+            if (index == ASM_START_ARCHIPELAGO && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0) != 4 &&
+                CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0) == 1) {
                 textColorR = textColorG = textColorB = 100;
                 textLine = ASM_CONNECT_AND_START_ARCHIPELAGO;
             }

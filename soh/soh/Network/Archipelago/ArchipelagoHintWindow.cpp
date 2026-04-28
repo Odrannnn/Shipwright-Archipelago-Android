@@ -17,7 +17,7 @@ bool hints_updated = false;
 using namespace UIWidgets;
 
 void ArchipelagoHintWindow::DrawElement() {
-    //ImGui::SeparatorText("Archipelago Hints");
+    // ImGui::SeparatorText("Archipelago Hints");
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.15f, 1.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(15.0f, 12.0f));
@@ -28,8 +28,9 @@ void ArchipelagoHintWindow::DrawElement() {
     int HintInputHeight = ImGui::GetTextLineHeightWithSpacing() * 2;
 
     static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_SortMulti |
-                                   ImGuiTableFlags_SortTristate | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuterH |
-                                   ImGuiTableFlags_BordersV | ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollY;
+                                   ImGuiTableFlags_SortTristate | ImGuiTableFlags_RowBg |
+                                   ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_BordersV |
+                                   ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollY;
 
     if (ImGui::BeginTable("archipelago_hint_table", 5, flags, ImVec2(0.0f, -HintInputHeight - 5))) {
         // headers
@@ -65,9 +66,8 @@ void ArchipelagoHintWindow::DrawElement() {
     ImGui::BeginChild("HintBoxLeft", ImVec2(-HintInputHeight * 3.5, 0.0f));
     ImGui::PopStyleColor();
 
-    int chatbarHeight = ImGui::GetTextLineHeight() + ImGui::GetStyle().ItemSpacing.x
-        + sendButtonOptions.padding.y
-        + 5.0f * 2.0f; // FrameBorderSize * 2
+    int chatbarHeight = ImGui::GetTextLineHeight() + ImGui::GetStyle().ItemSpacing.x + sendButtonOptions.padding.y +
+                        5.0f * 2.0f; // FrameBorderSize * 2
     float chatBarPadding = (ImGui::GetWindowHeight() - chatbarHeight) / 2.0f;
     if (chatBarPadding > 0.0f) {
         ImGui::Dummy(ImVec2(0.0f, chatBarPadding));

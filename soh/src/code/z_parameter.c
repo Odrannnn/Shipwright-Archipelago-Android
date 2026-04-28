@@ -3432,7 +3432,7 @@ void Interface_DrawLineupTick(PlayState* play) {
 }
 
 void Interface_ArchipelagoResetStatusFade() {
-    if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 0) != 255){
+    if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 0) != 255) {
         CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255);
     }
 }
@@ -3490,8 +3490,9 @@ void Interface_DrawArchipelagoStatusString(PlayState* play) {
                 CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255);
             }
 
-            if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 0) > 0){
-                CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255) - 1);
+            if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 0) > 0) {
+                CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"),
+                               CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusFadeCount"), 255) - 1);
             }
 
             break;
