@@ -49,13 +49,26 @@ struct ColoredTextNode {
 }; // namespace AP_Text
 
 namespace AP_Hint {
-enum class HintStatus : char { UNSPECIFIED = 0, NO_PRIORITY, AVOID, PRIORITY, FOUND };
+enum class HintStatus : char {
+    HINT_UNSPECIFIED = 0,
+    HINT_NO_PRIORITY,
+    HINT_AVOID,
+    HINT_PRIORITY,
+    HINT_FOUND
+};
 
-static std::unordered_map<HintStatus, std::string> statusStrings = { { HintStatus::UNSPECIFIED, "Unspecified" },
-                                                                     { HintStatus::NO_PRIORITY, "No Priority" },
-                                                                     { HintStatus::AVOID, "Avoid" },
-                                                                     { HintStatus::PRIORITY, "Priority" },
-                                                                     { HintStatus::FOUND, "Found" } };
+enum AP_Item_Flags {
+    FLAG_NONE = 0,
+    FLAG_ADVANCEMENT = 1,
+    FLAG_NEVER_EXCLUDE = 2,
+    FLAG_TRAP = 4,
+};
+
+static std::unordered_map<AP_Hint::HintStatus, const std::string> statusStrings = { { AP_Hint::HintStatus::HINT_UNSPECIFIED, "Unspecified" },
+                                                                     { AP_Hint::HintStatus::HINT_NO_PRIORITY, "No Priority" },
+                                                                     { AP_Hint::HintStatus::HINT_AVOID, "Avoid" },
+                                                                     { AP_Hint::HintStatus::HINT_PRIORITY, "Priority" },
+                                                                     { AP_Hint::HintStatus::HINT_FOUND, "Found" } };
 
 struct Hint {
     uint64_t index;
@@ -64,7 +77,7 @@ struct Hint {
     std::string location_name;
     std::string item_name;
     std::string entrance_name;
-    HintStatus hint_status;
+    AP_Hint::HintStatus hint_status;
     int item_flags;
     int finding_player_id;
     int location_id;
@@ -73,6 +86,6 @@ struct Hint {
     bool we_receive;
 };
 
-} // namespace AP_Hint
+}; // namespace AP_Hint
 
 #endif
