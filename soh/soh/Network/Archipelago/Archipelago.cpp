@@ -344,8 +344,17 @@ bool ArchipelagoClient::StartClient() {
                         Player* player = GET_PLAYER(gPlayState);
                         // 80 received points is one full heart aka 16 health.
                         Health_ChangeBy(gPlayState, receivedDamage / -5);
-                        func_80837C0C(gPlayState, player, 0, 0, 0, 0, 0);
-                        player->invincibilityTimer = 10;
+
+                        if (!(GameInteractor::IsGameplayPaused() || player->stateFlags2 & PLAYER_STATE2_CRAWLING)) {
+                            // If received damage is 3 hearts or more, do a knockback. Otherwise just do a small hit
+                            // animation.
+                            if (receivedDamage >= 240) {
+                                GameInteractor::RawAction::KnockbackPlayer(1.0f);
+                            } else {
+                                func_80837C0C(gPlayState, player, 0, 0, 0, 0, 0);
+                                player->invincibilityTimer = 10;
+                            }
+                        }
 
                         std::string damageLinkMessage =
                             "[LOG] Received damage link from " + std::string(data["data"]["source"]);
