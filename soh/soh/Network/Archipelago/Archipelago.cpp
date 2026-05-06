@@ -331,10 +331,11 @@ bool ArchipelagoClient::StartClient() {
 
                         gSaveContext.health = 0;
                         std::string prefixText = std::string(data["data"]["source"]) + " died.";
-                        Notification::Emit({ .prefix = prefixText, .message = "Cause:", .suffix = data["data"]["cause"] });
+                        Notification::Emit(
+                            { .prefix = prefixText, .message = "Cause:", .suffix = data["data"]["cause"] });
                         std::string deathLinkMessage = "[LOG] Received death link from " +
-                                                    std::string(data["data"]["source"]) +
-                                                    ". Cause: " + std::string(data["data"]["cause"]);
+                                                       std::string(data["data"]["source"]) +
+                                                       ". Cause: " + std::string(data["data"]["cause"]);
                         ArchipelagoConsole_SendMessage(deathLinkMessage.c_str());
                     } else if (damageLink) {
                         lastDamageLink = GetUnixTimestamp();
@@ -346,8 +347,8 @@ bool ArchipelagoClient::StartClient() {
                         func_80837C0C(gPlayState, player, 0, 0, 0, 0, 0);
                         player->invincibilityTimer = 10;
 
-                        std::string damageLinkMessage = "[LOG] Received damage link from " +
-                                                    std::string(data["data"]["source"]);
+                        std::string damageLinkMessage =
+                            "[LOG] Received damage link from " + std::string(data["data"]["source"]);
                         ArchipelagoConsole_SendMessage(damageLinkMessage.c_str());
                     }
                 }
@@ -1239,7 +1240,8 @@ void ArchipelagoClient::OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSk
 
 void ArchipelagoClient::SendDeathLink() {
     uint64_t currentTime = GetUnixTimestamp();
-    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0) && (currentTime - lastDeathLink) > 10000) {
+    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DeathLink"), 0) &&
+        (currentTime - lastDeathLink) > 10000) {
         nlohmann::json data{ { "time", apClient->get_server_time() },
                              { "cause", "Shipwrecked by King Harkinian." },
                              { "source", apClient->get_slot() } };
@@ -1252,15 +1254,17 @@ void ArchipelagoClient::SendDeathLink() {
 
 void ArchipelagoClient::SendDamageLink(int16_t amount) {
     uint64_t currentTime = GetUnixTimestamp();
-    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DamageLink"), 0) && (currentTime - lastDamageLink) > 1000) {
+    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DamageLink"), 0) &&
+        (currentTime - lastDamageLink) > 1000) {
 
-        // Every 80 points is 16 health. Don't emit anything under a quarter heart damage or if the player is getting healed.
+        // Every 80 points is 16 health. Don't emit anything under a quarter heart damage or if the player is getting
+        // healed.
         if (amount <= -4) {
             uint16_t damagePoints = amount * -5;
             nlohmann::json data{ { "time", apClient->get_server_time() },
-                                { "uuid", apClient->get_player_number() },
-                                { "source", apClient->get_slot() },
-                                { "damage_points", damagePoints } };
+                                 { "uuid", apClient->get_player_number() },
+                                 { "source", apClient->get_slot() },
+                                 { "damage_points", damagePoints } };
             apClient->Bounce(data, {}, {}, { "SharedDamage" });
 
             ArchipelagoConsole_SendMessage("[LOG] Took damage, sending damage link.");

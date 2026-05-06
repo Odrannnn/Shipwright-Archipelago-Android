@@ -76,11 +76,12 @@ void ArchipelagoSettingsWindow::DrawElement() {
         apClient.SetTags();
     }
 
-    if (UIWidgets::CVarCheckbox(
-            "Damage Link", CVAR_REMOTE_ARCHIPELAGO("DamageLink"),
-            UIWidgets::CheckboxOptions().Color(THEME_COLOR)
-            .Tooltip("Share damage taken with other players that have this enabled. "
-                "Note: This is a new setting, there probably won't be that many games that support this for now."))) {
+    if (UIWidgets::CVarCheckbox("Damage Link", CVAR_REMOTE_ARCHIPELAGO("DamageLink"),
+                                UIWidgets::CheckboxOptions()
+                                    .Color(THEME_COLOR)
+                                    .Tooltip("Share damage taken with other players that have this enabled. "
+                                             "Note: This is a new setting, there probably won't be that many games "
+                                             "that support this for now."))) {
         apClient.SetTags();
     }
 
