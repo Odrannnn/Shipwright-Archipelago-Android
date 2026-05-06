@@ -457,6 +457,14 @@ void Rando::StaticData::InitItemTable() {
     itemTable[RG_ROCS_FEATHER] =                        Item(RG_ROCS_FEATHER,                     Text{ "Roc's Feather", "Roc's Feather", "Roc's Feather" },                                                                           ITEMTYPE_ITEM,              0xE0,                 true,  LOGIC_ROCS_FEATHER,                 RHT_ROCS_FEATHER,                      RG_ROCS_FEATHER,                      OBJECT_GI_BOMB_2,       GID_ROCS_FEATHER,     TEXT_RANDOMIZER_CUSTOM_ITEM, 0x80, CHEST_ANIM_LONG,  ITEM_CATEGORY_MAJOR,  MOD_RANDOMIZER, {"a ", "ein ", "un "}).CustomIcon(gRocsFeatherTex);
     itemTable[RG_ROCS_FEATHER].SetCustomDrawFunc(Randomizer_DrawRocsFeather);
 
+    // Archipelago
+    itemTable[RG_ARCHIPELAGO_ITEM_USEFUL] =             Item(RG_ARCHIPELAGO_ITEM_USEFUL,          Text{"Useful AP Item", "Useful AP Item", "Useful AP Item"},                                                                    ITEMTYPE_EVENT,             GI_RUPEE_GREEN,       false, LOGIC_NONE,                         RHT_ARCHIPELAGO_ITEM_USEFUL,                 RG_ARCHIPELAGO_ITEM_USEFUL,           OBJECT_GI_LETTER,       GID_LETTER_ZELDA,     TEXT_RANDOMIZER_CUSTOM_ITEM, 0x80, CHEST_ANIM_SHORT, ITEM_CATEGORY_LESSER, MOD_RANDOMIZER);
+    itemTable[RG_ARCHIPELAGO_ITEM_USEFUL].SetCustomDrawFunc(Randomizer_DrawArchipelagoItem);
+    itemTable[RG_ARCHIPELAGO_ITEM_JUNK] =               Item(RG_ARCHIPELAGO_ITEM_JUNK,            Text{"Junk AP Item", "Junk AP Item", "Junk AP Item"},                                                                          ITEMTYPE_EVENT,             GI_RUPEE_GREEN,       false, LOGIC_NONE,                         RHT_ARCHIPELAGO_ITEM_JUNK,                   RG_ARCHIPELAGO_ITEM_JUNK,             OBJECT_GI_LETTER,       GID_LETTER_ZELDA,     TEXT_RANDOMIZER_CUSTOM_ITEM, 0x80, CHEST_ANIM_SHORT, ITEM_CATEGORY_JUNK,   MOD_RANDOMIZER);
+    itemTable[RG_ARCHIPELAGO_ITEM_JUNK].SetCustomDrawFunc(Randomizer_DrawArchipelagoItem);
+    itemTable[RG_ARCHIPELAGO_ITEM_PROGRESSIVE] =        Item(RG_ARCHIPELAGO_ITEM_PROGRESSIVE,     Text{"Progressive AP Item", "Progressive AP Item", "Progressive AP Item"},                                                     ITEMTYPE_EVENT,             GI_RUPEE_GREEN,       false, LOGIC_NONE,                         RHT_ARCHIPELAGO_ITEM_PROGRESSIVE,            RG_ARCHIPELAGO_ITEM_PROGRESSIVE,      OBJECT_GI_LETTER,       GID_LETTER_ZELDA,     TEXT_RANDOMIZER_CUSTOM_ITEM, 0x80, CHEST_ANIM_LONG,  ITEM_CATEGORY_MAJOR,  MOD_RANDOMIZER);
+    itemTable[RG_ARCHIPELAGO_ITEM_PROGRESSIVE].SetCustomDrawFunc(Randomizer_DrawArchipelagoItem);
+
     // clang-format on
 
     // Init itemNameToEnum

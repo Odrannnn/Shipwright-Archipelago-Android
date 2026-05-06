@@ -16,6 +16,7 @@ typedef struct {
     u32 requiresOriginal;
     u8 seedHash[5];
     u8 randoSave;
+    u8 archiSave;
     char buildVersion[50];
     s16 buildVersionMajor;
     s16 buildVersionMinor;
@@ -36,6 +37,10 @@ typedef struct {
     u8 maxTriforcePieces;
     bool hasFishingRod;
     bool fishingPoleShuffled;
+
+    char archiRoomSeed[100];
+    char slotName[17];
+    char archiUri[50];
 } SaveFileMetaInfo;
 
 typedef enum {

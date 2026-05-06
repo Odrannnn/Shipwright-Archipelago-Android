@@ -12,6 +12,7 @@
 #include "soh/Enhancements/randomizer/item.h"
 #include "soh/ShipInit.hpp"
 #include <soh/ResourceManagerHelpers.h>
+#include "soh/Enhancements/randomizer/hook_handlers.h"
 
 #include <cstdarg>
 
@@ -91,6 +92,27 @@ void BuildCustomItemMessage(Player* player, CustomMessage& msg) {
     }
 }
 
+void BuildArchipelagoItemMessage(int16_t randomizerGet, uint32_t randomizerCheck, CustomMessage& msg) {
+    msg = CustomMessage("You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
+                        "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!",
+                        "You found [[apcolor]][[apitem]]%w for %r[[applayer]]%w!");
+    std::string itemColor = "";
+    if (randomizerGet == RG_ARCHIPELAGO_ITEM_PROGRESSIVE) {
+        itemColor = "%p";
+    } else if (randomizerGet == RG_ARCHIPELAGO_ITEM_USEFUL) {
+        itemColor = "%b";
+    } else {
+        itemColor = "%c";
+    }
+
+    msg.Replace("[[apcolor]]", itemColor);
+    msg.Replace("[[apitem]]",
+                std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].itemName));
+    msg.Replace("[[applayer]]",
+                std::string(gSaveContext.ship.quest.data.archipelago.locations[randomizerCheck].playerName));
+    msg.AutoFormat();
+}
+
 void LoadCustomItemIcon(bool displayAsEnglish) {
     Player* player = GET_PLAYER(gPlayState);
     const char* customIcon = nullptr;
@@ -149,6 +171,10 @@ void BuildItemMessage(u16* textId, bool* loadFromMessageTable) {
         Rando::Traps::BuildIceTrapMessage(msg, player->getItemEntry);
     } else if (player->getItemEntry.getItemId == RG_TRIFORCE_PIECE) {
         BuildTriforcePieceMessage(msg);
+    } else if (player->getItemEntry.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
+               player->getItemEntry.getItemId == RG_ARCHIPELAGO_ITEM_JUNK ||
+               player->getItemEntry.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE) {
+        BuildArchipelagoItemMessage(player->getItemEntry.getItemId, RandomizerReturnCurrentlyQueuedItem(), msg);
     } else {
         BuildCustomItemMessage(player, msg);
     }

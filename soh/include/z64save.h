@@ -72,6 +72,7 @@ typedef enum { // Pre-existing IDs for save sections in base code
     SECTION_ID_ENTRANCES,
     SECTION_ID_SCENES,
     SECTION_ID_TRACKER_DATA,
+    SECTION_ID_ARCHIPELAGO,
     SECTION_ID_MAX
 } SaveFuncIDs;
 
@@ -212,9 +213,26 @@ typedef struct ShipBossRushSaveContextData {
     u8 options[BR_OPTIONS_MAX];
 } ShipBossRushSaveContextData;
 
-typedef union ShipQuestSpecificSaveContextData {
+typedef struct ArchipelagoLocationData {
+    char itemName[50];
+    char hintName[50];
+    char playerName[17];
+} ArchipelagoLocationData;
+
+typedef struct ShipArchipelagoSaveContextData {
+    u8 isArchipelago;
+    u32 lastReceivedItemIndex;
+    char roomHash[100];
+    char slotName[17];
+    char archiUri[50];
+    char roomPass[50];
+    ArchipelagoLocationData locations[RC_MAX];
+} ShipArchipelagoSaveContextData;
+
+typedef struct ShipQuestSpecificSaveContextData {
     ShipRandomizerSaveContextData randomizer;
     ShipBossRushSaveContextData bossRush;
+    ShipArchipelagoSaveContextData archipelago;
 } ShipQuestSpecificSaveContextData;
 
 typedef struct ShipQuestSaveContextData {
@@ -358,12 +376,14 @@ typedef enum {
     /* 01 */ QUEST_MASTER,
     /* 02 */ QUEST_RANDOMIZER,
     /* 03 */ QUEST_BOSSRUSH,
+    /* 04 */ QUEST_ARCHIPELAGO,
 } Quest;
 
 #define IS_VANILLA (gSaveContext.ship.quest.id == QUEST_NORMAL)
 #define IS_MASTER_QUEST (gSaveContext.ship.quest.id == QUEST_MASTER)
 #define IS_RANDO (gSaveContext.ship.quest.id == QUEST_RANDOMIZER)
 #define IS_BOSS_RUSH (gSaveContext.ship.quest.id == QUEST_BOSSRUSH)
+#define IS_ARCHIPELAGO (gSaveContext.ship.quest.data.archipelago.isArchipelago == 1)
 
 typedef enum {
     /* 0x00 */ BTN_ENABLED,
