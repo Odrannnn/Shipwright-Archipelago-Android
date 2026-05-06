@@ -64,7 +64,8 @@ class ArchipelagoClient {
     uint8_t GetConnectionStatus();
     void OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped);
     void SendDeathLink();
-    void SetDeathLinkTag();
+    void SendDamageLink(int16_t amount);
+    void SetTags();
     RandomizerGet GetIceTrapItem();
     std::string GetApItemName(int64_t ApItemId);
     std::string GetApItemHint(RandomizerCheck rc, RandomizerGet rg);
@@ -102,7 +103,8 @@ class ArchipelagoClient {
     std::unique_ptr<APClient> apClient;
     bool itemQueued;
     bool disconnecting;
-    bool isDeathLinkedDeath;
+    uint64_t lastDeathLink = 0;
+    uint64_t lastDamageLink = 0;
     int retries;
     std::string uri;
     std::string password;
