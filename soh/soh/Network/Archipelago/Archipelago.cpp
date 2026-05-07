@@ -94,6 +94,9 @@ bool ArchipelagoClient::StartClient() {
         if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DamageLink"), 0)) {
             tags.push_back("SharedDamage");
         }
+        if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
+            tags.push_back("TrapLink");
+        }
         apClient->ConnectSlot(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), password, 0b0101, tags,
                               { 0, 6, 3 });
     });
@@ -323,8 +326,9 @@ bool ArchipelagoClient::StartClient() {
             std::list<std::string> tags = data["tags"];
             bool deathLink = (std::find(tags.begin(), tags.end(), "DeathLink") != tags.end());
             bool damageLink = (std::find(tags.begin(), tags.end(), "SharedDamage") != tags.end());
+            bool trapLink = (std::find(tags.begin(), tags.end(), "TrapLink") != tags.end());
 
-            if ((deathLink || damageLink) && data["data"]["source"] != apClient->get_slot()) {
+            if ((deathLink || damageLink || trapLink) && data["data"]["source"] != apClient->get_slot()) {
                 if (GameInteractor::IsSaveLoaded()) {
                     if (deathLink) {
                         lastDeathLink = GetUnixTimestamp();
@@ -359,6 +363,16 @@ bool ArchipelagoClient::StartClient() {
                         std::string damageLinkMessage =
                             "[LOG] Received damage link from " + std::string(data["data"]["source"]);
                         ArchipelagoConsole_SendMessage(damageLinkMessage.c_str());
+                    } else if (trapLink) {
+                        lastTrapLink = GetUnixTimestamp();
+
+                        GameInteractor_ExecuteOnArchipelagoItemReceived(static_cast<int32_t>(RG_ICE_TRAP));
+
+                        std::string prefixText = std::string(data["data"]["source"]) + " got a trap.";
+                        Notification::Emit({ .prefix = prefixText });
+                        std::string trapLinkMessage =
+                            "[LOG] Received trap link from " + std::string(data["data"]["source"]);
+                        ArchipelagoConsole_SendMessage(trapLinkMessage.c_str());
                     }
                 }
             }
@@ -612,6 +626,10 @@ void ArchipelagoClient::QueueItem(const ApItem item) {
 
     if (OTRGlobals::Instance->gRandomizer->GetItemObtainabilityFromRandomizerGet(RG) != CAN_OBTAIN) {
         RG = RG_BLUE_RUPEE;
+    }
+
+    if (RG == RG_ICE_TRAP && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
+        SendTrapLink();
     }
 
     itemQueued = true;
@@ -1278,6 +1296,20 @@ void ArchipelagoClient::SendDamageLink(int16_t amount) {
 
             ArchipelagoConsole_SendMessage("[LOG] Took damage, sending damage link.");
         }
+    }
+}
+
+void ArchipelagoClient::SendTrapLink() {
+    uint64_t currentTime = GetUnixTimestamp();
+    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0) &&
+        (currentTime - lastTrapLink) > 1000) {
+
+        nlohmann::json data{ { "time", apClient->get_server_time() },
+                             { "source", apClient->get_slot() },
+                             { "trap_name", "Ice Trap" } };
+        apClient->Bounce(data, {}, {}, { "TrapLink" });
+
+        ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
     }
 }
 
