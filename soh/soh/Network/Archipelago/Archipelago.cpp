@@ -1324,6 +1324,9 @@ void ArchipelagoClient::SetTags() {
     if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DamageLink"), 0)) {
         tags.push_back("SharedDamage");
     }
+    if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
+        tags.push_back("TrapLink");
+    }
     apClient->ConnectUpdate(false, 1, true, tags);
 }
 
