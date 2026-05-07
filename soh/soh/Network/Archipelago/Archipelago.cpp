@@ -628,7 +628,7 @@ void ArchipelagoClient::QueueItem(const ApItem item) {
         RG = RG_BLUE_RUPEE;
     }
 
-    if (RG == RG_ICE_TRAP && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
+    if (RG == RG_ICE_TRAP) {
         SendTrapLink();
     }
 
@@ -1300,16 +1300,16 @@ void ArchipelagoClient::SendDamageLink(int16_t amount) {
 }
 
 void ArchipelagoClient::SendTrapLink() {
-    uint64_t currentTime = GetUnixTimestamp();
-    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0) &&
-        (currentTime - lastTrapLink) > 1000) {
+    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
+        uint64_t currentTime = GetUnixTimestamp();
+        if ((currentTime - lastTrapLink) > 1000) {
+            nlohmann::json data{ { "time", apClient->get_server_time() },
+                                 { "source", apClient->get_slot() },
+                                 { "trap_name", "Ice Trap" } };
+            apClient->Bounce(data, {}, {}, { "TrapLink" });
 
-        nlohmann::json data{ { "time", apClient->get_server_time() },
-                             { "source", apClient->get_slot() },
-                             { "trap_name", "Ice Trap" } };
-        apClient->Bounce(data, {}, {}, { "TrapLink" });
-
-        ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
+            ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
+        }
     }
 }
 
