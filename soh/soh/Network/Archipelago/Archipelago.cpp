@@ -364,12 +364,12 @@ bool ArchipelagoClient::StartClient() {
                             "[LOG] Received damage link from " + std::string(data["data"]["source"]);
                         ArchipelagoConsole_SendMessage(damageLinkMessage.c_str());
                     } else if (trapLink) {
-                        lastTrapLink = GetUnixTimestamp();
-
+                        trapLinkItem = false;
                         GameInteractor_ExecuteOnArchipelagoItemReceived(static_cast<int32_t>(RG_ICE_TRAP));
 
-                        std::string prefixText = std::string(data["data"]["source"]) + " got a trap.";
-                        Notification::Emit({ .prefix = prefixText });
+                        Notification::Emit(
+                            { .prefix = std::string(data["data"]["source"]), .message = " sent a trap." });
+
                         std::string trapLinkMessage =
                             "[LOG] Received trap link from " + std::string(data["data"]["source"]);
                         ArchipelagoConsole_SendMessage(trapLinkMessage.c_str());
@@ -626,10 +626,6 @@ void ArchipelagoClient::QueueItem(const ApItem item) {
 
     if (OTRGlobals::Instance->gRandomizer->GetItemObtainabilityFromRandomizerGet(RG) != CAN_OBTAIN) {
         RG = RG_BLUE_RUPEE;
-    }
-
-    if (RG == RG_ICE_TRAP) {
-        SendTrapLink();
     }
 
     itemQueued = true;
@@ -1301,15 +1297,12 @@ void ArchipelagoClient::SendDamageLink(int16_t amount) {
 
 void ArchipelagoClient::SendTrapLink() {
     if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
-        uint64_t currentTime = GetUnixTimestamp();
-        if ((currentTime - lastTrapLink) > 1000) {
-            nlohmann::json data{ { "time", apClient->get_server_time() },
-                                 { "source", apClient->get_slot() },
-                                 { "trap_name", "Ice Trap" } };
-            apClient->Bounce(data, {}, {}, { "TrapLink" });
+        nlohmann::json data{ { "time", apClient->get_server_time() },
+                             { "source", apClient->get_slot() },
+                             { "trap_name", "Ice Trap" } };
+        apClient->Bounce(data, {}, {}, { "TrapLink" });
 
-            ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
-        }
+        ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
     }
 }
 
@@ -1585,6 +1578,15 @@ void RegisterArchipelago() {
 
     COND_HOOK(GameInteractor::OnPlayerHealthChange, IS_ARCHIPELAGO,
               [](int16_t amount) { ArchipelagoClient::GetInstance().SendDamageLink(amount); });
+
+    COND_HOOK(GameInteractor::OnItemReceive, IS_ARCHIPELAGO, [](GetItemEntry itemEntry) {
+        // If item Received is an Ice Trap and not from a remote Trap Link, send a Trap Link
+        if (itemEntry.itemId == RG_ICE_TRAP && ArchipelagoClient::GetInstance().trapLinkItem) {
+            ArchipelagoClient::GetInstance().SendTrapLink();
+        } else {
+            ArchipelagoClient::GetInstance().trapLinkItem = true;
+        }
+    });
 
     COND_HOOK(GameInteractor::OnSceneInit, IS_ARCHIPELAGO,
               [](int16_t sceneNum) { ArchipelagoClient::GetInstance().OnSceneInit(sceneNum); });
