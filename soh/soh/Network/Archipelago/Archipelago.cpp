@@ -1302,8 +1302,8 @@ void ArchipelagoClient::SendTrapLink() {
         if ((currentTime - lastTrapLink) > 6000) {
 
             nlohmann::json data{ { "time", apClient->get_server_time() },
-                                { "source", apClient->get_slot() },
-                                { "trap_name", "Ice Trap" } };
+                                 { "source", apClient->get_slot() },
+                                 { "trap_name", "Ice Trap" } };
             apClient->Bounce(data, {}, {}, { "TrapLink" });
 
             ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
@@ -1588,7 +1588,7 @@ void RegisterArchipelago() {
         // If item Received is an Ice Trap, send a Trap Link
         if (itemEntry.itemId == RG_ICE_TRAP) {
             ArchipelagoClient::GetInstance().SendTrapLink();
-        } 
+        }
     });
 
     COND_HOOK(GameInteractor::OnSceneInit, IS_ARCHIPELAGO,
