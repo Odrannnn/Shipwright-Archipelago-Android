@@ -364,8 +364,9 @@ bool ArchipelagoClient::StartClient() {
                             "[LOG] Received damage link from " + std::string(data["data"]["source"]);
                         ArchipelagoConsole_SendMessage(damageLinkMessage.c_str());
                     } else if (trapLink) {
-                        trapLinkItem = false;
-                        GameInteractor_ExecuteOnArchipelagoItemReceived(static_cast<int32_t>(RG_ICE_TRAP));
+                        lastTrapLink = GetUnixTimestamp();
+
+                        gSaveContext.ship.pendingIceTrapCount++;
 
                         Notification::Emit(
                             { .prefix = std::string(data["data"]["source"]), .message = " sent a trap." });
@@ -1297,12 +1298,16 @@ void ArchipelagoClient::SendDamageLink(int16_t amount) {
 
 void ArchipelagoClient::SendTrapLink() {
     if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
-        nlohmann::json data{ { "time", apClient->get_server_time() },
-                             { "source", apClient->get_slot() },
-                             { "trap_name", "Ice Trap" } };
-        apClient->Bounce(data, {}, {}, { "TrapLink" });
+        uint64_t currentTime = GetUnixTimestamp();
+        if ((currentTime - lastTrapLink) > 6000) {
 
-        ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
+            nlohmann::json data{ { "time", apClient->get_server_time() },
+                                { "source", apClient->get_slot() },
+                                { "trap_name", "Ice Trap" } };
+            apClient->Bounce(data, {}, {}, { "TrapLink" });
+
+            ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
+        }
     }
 }
 
@@ -1580,12 +1585,10 @@ void RegisterArchipelago() {
               [](int16_t amount) { ArchipelagoClient::GetInstance().SendDamageLink(amount); });
 
     COND_HOOK(GameInteractor::OnItemReceive, IS_ARCHIPELAGO, [](GetItemEntry itemEntry) {
-        // If item Received is an Ice Trap and not from a remote Trap Link, send a Trap Link
-        if (itemEntry.itemId == RG_ICE_TRAP && ArchipelagoClient::GetInstance().trapLinkItem) {
+        // If item Received is an Ice Trap, send a Trap Link
+        if (itemEntry.itemId == RG_ICE_TRAP) {
             ArchipelagoClient::GetInstance().SendTrapLink();
-        } else {
-            ArchipelagoClient::GetInstance().trapLinkItem = true;
-        }
+        } 
     });
 
     COND_HOOK(GameInteractor::OnSceneInit, IS_ARCHIPELAGO,
