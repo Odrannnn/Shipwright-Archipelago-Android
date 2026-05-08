@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 #include <queue>
 #include <map>
+#include <atomic>
 #include "ArchipelagoTypes.h"
 
 // Forward declaration
@@ -106,7 +107,7 @@ class ArchipelagoClient {
     bool disconnecting;
     uint64_t lastDeathLink = 0;
     uint64_t lastDamageLink = 0;
-    uint64_t lastTrapLink = 0;
+    std::atomic<uint8_t> trapLinkCount;
     int retries;
     std::string uri;
     std::string password;
