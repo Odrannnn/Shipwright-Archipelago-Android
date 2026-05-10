@@ -104,7 +104,6 @@ class ArchipelagoClient {
     bool itemQueued;
     bool disconnecting;
     uint64_t lastDeathLink = 0;
-    uint64_t lastDamageLink = 0;
     int retries;
     std::string uri;
     std::string password;
