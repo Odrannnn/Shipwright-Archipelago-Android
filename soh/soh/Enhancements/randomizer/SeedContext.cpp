@@ -382,6 +382,17 @@ GetItemEntry Context::GetArchipelagoGIEntry() {
 
     Item& item = StaticData::RetrieveItem(itemId);
     GetItemEntry itemEntry = item.GetGIEntry_Copy();
+
+    if (itemEntry.modIndex == MOD_RANDOMIZER && itemEntry.getItemId == RG_ICE_TRAP) {
+        RandomizerGet iceTrapItem = ArchipelagoClient::GetInstance().GetIceTrapItem();
+        const auto fakeGiEntry = StaticData::RetrieveItem(iceTrapItem).GetGIEntry();
+        itemEntry.gid = fakeGiEntry->gid;
+        itemEntry.gi = fakeGiEntry->gi;
+        itemEntry.drawItemId = fakeGiEntry->drawItemId;
+        itemEntry.drawModIndex = fakeGiEntry->drawModIndex;
+        itemEntry.drawFunc = fakeGiEntry->drawFunc;
+    }
+
     mAPreceiveQueue.pop();
     return itemEntry;
 }
