@@ -73,7 +73,16 @@ void ArchipelagoSettingsWindow::DrawElement() {
     if (UIWidgets::CVarCheckbox(
             "Death Link", CVAR_REMOTE_ARCHIPELAGO("DeathLink"),
             UIWidgets::CheckboxOptions().Color(THEME_COLOR).Tooltip("You die, others die. Others die, you die!"))) {
-        apClient.SetDeathLinkTag();
+        apClient.SetTags();
+    }
+
+    if (UIWidgets::CVarCheckbox("Damage Link", CVAR_REMOTE_ARCHIPELAGO("DamageLink"),
+                                UIWidgets::CheckboxOptions()
+                                    .Color(THEME_COLOR)
+                                    .Tooltip("Share damage taken with other players that have this enabled. "
+                                             "Note: This is a new setting, there probably won't be that many games "
+                                             "that support this for now."))) {
+        apClient.SetTags();
     }
 
     UIWidgets::CVarCheckbox(

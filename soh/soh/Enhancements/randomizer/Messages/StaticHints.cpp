@@ -146,7 +146,7 @@ void BuildSkulltulaPeopleMessage(uint16_t* textId, bool* loadFromMessageTable) {
     }
     msg.InsertNumber(count);
     msg.Replace("[[color]]", item.GetColor());
-    msg.InsertNames({ itemName });
+    msg.InsertNames({ item.GetHint().GetHintMessage() });
     msg.AutoFormat();
     msg.LoadIntoFont();
     *loadFromMessageTable = false;
@@ -169,7 +169,7 @@ void Build100SkullsHintMessage(uint16_t* textId, bool* loadFromMessageTable) {
         itemName = ArchipelagoClient::GetInstance().GetApItemHint(RC_KAK_100_GOLD_SKULLTULA_REWARD, rg);
     }
     msg.Replace("[[color]]", item.GetColor());
-    msg.InsertNames({ itemName });
+    msg.InsertNames({ item.GetHint().GetHintMessage() });
     msg.AutoFormat();
     msg.LoadIntoFont();
     *loadFromMessageTable = false;

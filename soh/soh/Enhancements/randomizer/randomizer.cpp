@@ -3925,6 +3925,7 @@ extern "C" u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
                     Notification::Emit({
                         .message = "Game autosaved",
                     });
+                    // Save and warp are deferred until item queue drains
                     GameInteractor_SetTriforceHuntCreditsWarpActive(true);
                 }
             }
