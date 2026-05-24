@@ -39,7 +39,6 @@ extern PlayState* gPlayState;
 }
 
 ArchipelagoClient::ArchipelagoClient() {
-    gameWon = false;
     itemQueued = false;
     disconnecting = false;
     uri = "";
@@ -158,9 +157,7 @@ bool ArchipelagoClient::StartClient() {
             ResetQueue();
             SynchSentLocations();
             SynchReceivedLocations();
-            if (gPlayState != nullptr) {
-                ArchipelagoClient::SetDataStorage("scene", gPlayState->sceneNum);
-            }
+            ArchipelagoClient::SetDataStorage("scene", gPlayState->sceneNum);
         }
 
         const int team_number = apClient->get_team_number();
@@ -344,21 +341,25 @@ bool ArchipelagoClient::StartClient() {
                                                        ". Cause: " + std::string(data["data"]["cause"]);
                         ArchipelagoConsole_SendMessage(deathLinkMessage.c_str());
                     } else if (damageLink) {
-                        lastDamageLink = GetUnixTimestamp();
                         uint16_t receivedDamage = data["data"]["damage_points"];
 
-                        Player* player = GET_PLAYER(gPlayState);
-                        // 80 received points is one full heart aka 16 health.
-                        Health_ChangeBy(gPlayState, receivedDamage / -5);
+                        // Ignore incoming damage if it's less than a quarter heart.
+                        if (receivedDamage >= 20) {
+                            Player* player = GET_PLAYER(gPlayState);
+                            // 80 received points is one full heart aka 16 health.
+                            gSaveContext.health -= floor(receivedDamage / 5);
 
-                        if (!(GameInteractor::IsGameplayPaused() || player->stateFlags2 & PLAYER_STATE2_CRAWLING)) {
-                            // If received damage is 3 hearts or more, do a knockback. Otherwise just do a small hit
-                            // animation.
-                            if (receivedDamage >= 240) {
-                                GameInteractor::RawAction::KnockbackPlayer(1.0f);
-                            } else {
-                                func_80837C0C(gPlayState, player, 0, 0, 0, 0, 0);
-                                player->invincibilityTimer = 10;
+                            // Only use hit animations when the player is able to process it.
+                            if (!(GameInteractor::IsGameplayPaused() || player->stateFlags2 & PLAYER_STATE2_CRAWLING ||
+                                  gPlayState->sceneNum == SCENE_FISHING_POND)) {
+                                // If received damage is 3 hearts or more, do a knockback. Otherwise just do a small hit
+                                // animation.
+                                if (receivedDamage >= 240) {
+                                    GameInteractor::RawAction::KnockbackPlayer(1.0f);
+                                } else {
+                                    func_80837C0C(gPlayState, player, 0, 0, 0, 0, 0);
+                                    player->invincibilityTimer = 10;
+                                }
                             }
                         }
 
@@ -487,8 +488,6 @@ void ArchipelagoClient::GameLoaded() {
     SynchItems();
     SynchSentLocations();
     SynchReceivedLocations();
-
-    gameWon = false;
 }
 
 void ArchipelagoClient::StartLocationScouts() {
@@ -640,10 +639,7 @@ void ArchipelagoClient::SendGameWon() {
         return;
     }
 
-    if (!gameWon) {
-        apClient->StatusUpdate(APClient::ClientStatus::GOAL);
-        gameWon = true;
-    }
+    apClient->StatusUpdate(APClient::ClientStatus::GOAL);
 }
 
 void ArchipelagoClient::SendMessageToConsole(const std::string message) {
@@ -808,11 +804,9 @@ void ArchipelagoClient::ResetQueue() {
 }
 
 void ArchipelagoClient::OnSceneInit(uint16_t sceneNum) {
-    if (!ArchipelagoClient::IsConnected())
-        return;
-    if (gPlayState == nullptr)
-        return;
-    ArchipelagoClient::SetDataStorage("scene", sceneNum);
+    if (ArchipelagoClient::IsConnected() && GameInteractor::IsSaveLoaded(true)) {
+        ArchipelagoClient::SetDataStorage("scene", sceneNum);
+    }
 }
 
 void ArchipelagoClient::SetDataStorage(const std::string& key, const nlohmann::json& value) const {
@@ -1279,10 +1273,7 @@ void ArchipelagoClient::SendDeathLink() {
 }
 
 void ArchipelagoClient::SendDamageLink(int16_t amount) {
-    uint64_t currentTime = GetUnixTimestamp();
-    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DamageLink"), 0) &&
-        (currentTime - lastDamageLink) > 1000) {
-
+    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DamageLink"), 0)) {
         // Every 80 points is 16 health. Don't emit anything under a quarter heart damage or if the player is getting
         // healed.
         if (amount <= -4) {

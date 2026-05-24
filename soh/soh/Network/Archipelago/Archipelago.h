@@ -132,8 +132,6 @@ class ArchipelagoClient {
     static std::shared_ptr<ArchipelagoClient> instance;
     static bool initialized;
 
-    bool gameWon;
-
     nlohmann::json slotData;
     std::set<int64_t> locations;
     std::vector<ApItem> scoutedItems;

@@ -382,6 +382,17 @@ GetItemEntry Context::GetArchipelagoGIEntry() {
 
     Item& item = StaticData::RetrieveItem(itemId);
     GetItemEntry itemEntry = item.GetGIEntry_Copy();
+
+    if (itemEntry.modIndex == MOD_RANDOMIZER && itemEntry.getItemId == RG_ICE_TRAP) {
+        RandomizerGet iceTrapItem = ArchipelagoClient::GetInstance().GetIceTrapItem();
+        const auto fakeGiEntry = StaticData::RetrieveItem(iceTrapItem).GetGIEntry();
+        itemEntry.gid = fakeGiEntry->gid;
+        itemEntry.gi = fakeGiEntry->gi;
+        itemEntry.drawItemId = fakeGiEntry->drawItemId;
+        itemEntry.drawModIndex = fakeGiEntry->drawModIndex;
+        itemEntry.drawFunc = fakeGiEntry->drawFunc;
+    }
+
     mAPreceiveQueue.pop();
     return itemEntry;
 }
@@ -671,7 +682,7 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_CHICKENS_HINT].Set(slotData["chicken_hint"]);
     mOptions[RSK_MALON_HINT].Set(slotData["malon_hint"]);
     mOptions[RSK_HBA_HINT].Set(slotData["horseback_archery_hint"]);
-    mOptions[RSK_WARP_SONG_HINTS].Set(slotData["warp_song_hint"]);
+    mOptions[RSK_WARP_SONG_HINTS].Set(RO_GENERIC_OFF);    // Todo Implement when 
     mOptions[RSK_SCRUB_TEXT_HINT].Set(slotData["scrub_hints"]);
     mOptions[RSK_MERCHANT_TEXT_HINT].Set(slotData["merchant_hints"]);
     mOptions[RSK_FISHING_POLE_HINT].Set(slotData["fishing_pole_hint"]);
