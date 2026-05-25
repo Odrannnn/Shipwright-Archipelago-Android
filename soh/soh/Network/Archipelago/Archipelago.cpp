@@ -151,7 +151,6 @@ bool ArchipelagoClient::StartClient() {
 
             ResetQueue();
             SynchSentLocations();
-            SynchReceivedLocations();
             ArchipelagoClient::SetDataStorage("scene", gPlayState->sceneNum);
         }
 
