@@ -43,7 +43,6 @@ ArchipelagoClient::ArchipelagoClient() {
     disconnecting = false;
     uri = "";
     password = "";
-    std::atomic<uint8_t> trapLinkCount(0);
 }
 
 ArchipelagoClient& ArchipelagoClient::GetInstance() {
@@ -58,7 +57,6 @@ bool ArchipelagoClient::StartClient() {
 
     disconnecting = false;
     retries = 0;
-    trapLinkCount.store(0);
     uri = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), "localhost:38281");
     password = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), "");
 
@@ -367,7 +365,7 @@ bool ArchipelagoClient::StartClient() {
                             "[LOG] Received damage link from " + std::string(data["data"]["source"]);
                         ArchipelagoConsole_SendMessage(damageLinkMessage.c_str());
                     } else if (trapLink) {
-                        trapLinkCount.fetch_add(1);
+                        ++trapLinkCount;
 
                         gSaveContext.ship.pendingIceTrapCount++;
 
@@ -1291,8 +1289,8 @@ void ArchipelagoClient::SendDamageLink(int16_t amount) {
 
 void ArchipelagoClient::SendTrapLink() {
     if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
-        if (trapLinkCount.load() > 0) {
-            trapLinkCount.fetch_sub(1);
+        if (trapLinkCount > 0) {
+            --trapLinkCount;
         } else {
             nlohmann::json data{ { "time", apClient->get_server_time() },
                                  { "source", apClient->get_slot() },

@@ -107,7 +107,7 @@ class ArchipelagoClient {
     bool disconnecting;
     uint64_t lastDeathLink = 0;
     uint64_t lastDamageLink = 0;
-    std::atomic<uint8_t> trapLinkCount;
+    uint8_t trapLinkCount = 0;
     int retries;
     std::string uri;
     std::string password;
