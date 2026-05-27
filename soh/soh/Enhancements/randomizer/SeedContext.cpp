@@ -501,7 +501,7 @@ void Context::ParseArchipelagoOptions() {
     // load those in instead.
 
     nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
-    mOptions[RSK_LOGIC_RULES].Set(RO_LOGIC_GLITCHLESS);
+    mOptions[RSK_LOGIC_RULES].Set(slotData["no_logic"]);
     mOptions[RSK_FOREST].Set(slotData["closed_forest"]);
     mOptions[RSK_KAK_GATE].Set(slotData["kakariko_gate"]);
     mOptions[RSK_DOOR_OF_TIME].Set(slotData["door_of_time"]);
