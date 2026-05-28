@@ -151,7 +151,7 @@ bool NoFilter(RandomizerCheck loc) {
     return true;
 }
 
-const std::array<HintSetting, 4> hintSettingTable{{
+const std::array<HintSetting, 5> hintSettingTable{{
   // Useless hints
   {
     .alwaysCopies = 0,
@@ -207,6 +207,21 @@ const std::array<HintSetting, 4> hintSettingTable{{
       {"Overworld",  HINT_TYPE_ITEM,      7,  0, 1, FilterOverworldLocations},
       {"Dungeon",    HINT_TYPE_ITEM,      7,  0, 1, FilterDungeonLocations},
       {"Named Item", HINT_TYPE_ITEM_AREA, 5,  0, 1, FilterGoodItems},
+    },
+  },
+  // Archipelago
+  {
+    .alwaysCopies = 1,
+    .trialCopies = 0,
+    .junkWeight = 6,
+    .distTable = {
+      {"WotH",       HINT_TYPE_WOTH,      0, 0, 0, FilterWotHLocations},
+      {"Foolish",    HINT_TYPE_FOOLISH,   0, 0, 0, FilterFoolishLocations},
+      //{"Entrance",   HINT_TYPE_ENTRANCE,     10, 0, 1}, //not yet implemented
+      {"Song",       HINT_TYPE_ITEM,      2,  0, 1, FilterSongLocations},
+      {"Overworld",  HINT_TYPE_ITEM,      7,  0, 1, FilterOverworldLocations},
+      {"Dungeon",    HINT_TYPE_ITEM,      7,  0, 1, FilterDungeonLocations},
+      {"Named Item", HINT_TYPE_ITEM_AREA, 0,  0, 0, FilterGoodItems},
     },
   },
 }};
@@ -407,24 +422,30 @@ static void AddGossipStoneHintCopies(uint8_t copies, const HintType hintType, co
     }
 }
 
-static bool CreateHint(RandomizerCheck location, uint8_t copies, HintType type, std::string distribution) {
+static bool CreateHint(RandomizerCheck location, uint8_t copies, HintType type, std::string distribution, bool isArchipelago = false) {
     auto ctx = Rando::Context::GetInstance();
+    std::vector<RandomizerCheck> gossipStoneLocations;
+    RandomizerArea area;
 
-    // get a gossip stone accessible without the hinted item
-    std::vector<RandomizerCheck> gossipStoneLocations = GetAccessibleGossipStones(location);
-    if (gossipStoneLocations.empty()) {
-        SPDLOG_DEBUG("\tNO IN LOGIC GOSSIP STONE");
-        return false;
+    if (!isArchipelago) {
+        // get a gossip stone accessible without the hinted item
+        gossipStoneLocations = GetAccessibleGossipStones(location);
+        if (gossipStoneLocations.empty()) {
+            SPDLOG_DEBUG("\tNO IN LOGIC GOSSIP STONE");
+            return false;
+        }
+        area = ctx->GetItemLocation(location)->GetRandomArea();
+        // Set that hints are accesible
+        ctx->GetItemLocation(location)->SetHintAccesible();
+        if (type == HINT_TYPE_FOOLISH) {
+            SetAllInAreaAsHintAccesible(area, ctx->allLocations);
+        }
+    } else {
+        gossipStoneLocations = GetEmptyGossipStones(); 
+        area = RA_NONE;
     }
+    
     RandomizerCheck gossipStone = RandomElement(gossipStoneLocations);
-    RandomizerArea area = ctx->GetItemLocation(location)->GetRandomArea();
-
-    // Set that hints are accesible
-    ctx->GetItemLocation(location)->SetHintAccesible();
-    if (type == HINT_TYPE_FOOLISH) {
-        SetAllInAreaAsHintAccesible(area, ctx->allLocations);
-    }
-
     AddGossipStoneHintCopies(copies, type, distribution, {}, { location }, { area }, {}, gossipStone);
     return true;
 }
@@ -631,7 +652,7 @@ uint8_t PlaceHints(std::vector<uint8_t>& selectedHints, std::vector<HintDistribu
     return 0;
 }
 
-void CreateStoneHints() {
+void CreateStoneHints(bool isArchipelago = false) {
     auto ctx = Rando::Context::GetInstance();
     SPDLOG_DEBUG("NOW CREATING HINTS");
     const HintSetting& hintSetting = hintSettingTable[ctx->GetOption(RSK_HINT_DISTRIBUTION).Get()];
@@ -669,7 +690,7 @@ void CreateStoneHints() {
         }
 
         for (RandomizerCheck location : alwaysHintLocations) {
-            CreateHint(location, hintSetting.alwaysCopies, HINT_TYPE_ITEM, "Always");
+            CreateHint(location, hintSetting.alwaysCopies, HINT_TYPE_ITEM, "Always", isArchipelago);
         }
     }
 
@@ -692,8 +713,10 @@ void CreateStoneHints() {
 
     // Getting gossip stone locations temporarily sets one location to not be reachable.
     // Call the function one last time to get rid of false positives on locations not
-    // being reachable.
-    ReachabilitySearch({});
+    // being reachable. Archipelago bypasses anything logic related, so it skips this.
+    if (!isArchipelago) {
+        ReachabilitySearch({});
+    }
 }
 
 std::vector<RandomizerCheck> FindItemsAndMarkHinted(std::vector<RandomizerGet> items,
