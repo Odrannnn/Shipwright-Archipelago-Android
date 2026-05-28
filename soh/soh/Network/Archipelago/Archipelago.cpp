@@ -512,7 +512,7 @@ void ArchipelagoClient::SynchSentLocations() {
     for (const auto& loc : Rando::StaticData::GetLocationTable()) {
         const RandomizerCheck rc = loc.GetRandomizerCheck();
         if (Rando::Context::GetInstance()->GetItemLocation(rc)->HasObtained() &&
-            !(rc == RC_HC_MALON_EGG && RAND_GET_OPTION(RSK_SKIP_CHILD_ZELDA))) {
+            !((rc == RC_HC_MALON_EGG || rc == RC_HC_ZELDAS_LETTER) && RAND_GET_OPTION(RSK_SKIP_CHILD_ZELDA))) {
             const int64_t apLocation = apClient->get_location_id(loc.GetName());
             checkedLocations.emplace_back(apLocation);
         }
