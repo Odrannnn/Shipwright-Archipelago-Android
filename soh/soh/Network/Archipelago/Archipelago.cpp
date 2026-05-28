@@ -93,6 +93,9 @@ bool ArchipelagoClient::StartClient() {
         if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DamageLink"), 0)) {
             tags.push_back("SharedDamage");
         }
+        if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
+            tags.push_back("TrapLink");
+        }
         apClient->ConnectSlot(CVarGetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), ""), password, 0b0101, tags,
                               { 0, 6, 3 });
     });
@@ -319,8 +322,9 @@ bool ArchipelagoClient::StartClient() {
             std::list<std::string> tags = data["tags"];
             bool deathLink = (std::find(tags.begin(), tags.end(), "DeathLink") != tags.end());
             bool damageLink = (std::find(tags.begin(), tags.end(), "SharedDamage") != tags.end());
+            bool trapLink = (std::find(tags.begin(), tags.end(), "TrapLink") != tags.end());
 
-            if ((deathLink || damageLink) && data["data"]["source"] != apClient->get_slot()) {
+            if ((deathLink || damageLink || trapLink) && data["data"]["source"] != apClient->get_slot()) {
                 if (GameInteractor::IsSaveLoaded()) {
                     if (deathLink) {
                         lastDeathLink = GetUnixTimestamp();
@@ -354,11 +358,22 @@ bool ArchipelagoClient::StartClient() {
                                     player->invincibilityTimer = 10;
                                 }
                             }
-
-                            std::string damageLinkMessage =
-                                "[LOG] Received damage link from " + std::string(data["data"]["source"]);
-                            ArchipelagoConsole_SendMessage(damageLinkMessage.c_str());
                         }
+
+                        std::string damageLinkMessage =
+                            "[LOG] Received damage link from " + std::string(data["data"]["source"]);
+                        ArchipelagoConsole_SendMessage(damageLinkMessage.c_str());
+                    } else if (trapLink) {
+                        ++trapLinkCount;
+
+                        gSaveContext.ship.pendingIceTrapCount++;
+
+                        Notification::Emit(
+                            { .prefix = std::string(data["data"]["source"]), .message = " sent a trap." });
+
+                        std::string trapLinkMessage =
+                            "[LOG] Received trap link from " + std::string(data["data"]["source"]);
+                        ArchipelagoConsole_SendMessage(trapLinkMessage.c_str());
                     }
                 }
             }
@@ -1271,6 +1286,21 @@ void ArchipelagoClient::SendDamageLink(int16_t amount) {
     }
 }
 
+void ArchipelagoClient::SendTrapLink() {
+    if (apClient != nullptr && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
+        if (trapLinkCount > 0) {
+            --trapLinkCount;
+        } else {
+            nlohmann::json data{ { "time", apClient->get_server_time() },
+                                 { "source", apClient->get_slot() },
+                                 { "trap_name", "Ice Trap" } };
+            apClient->Bounce(data, {}, {}, { "TrapLink" });
+
+            ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
+        }
+    }
+}
+
 void ArchipelagoClient::SetTags() {
     if (!ArchipelagoClient::IsConnected()) {
         return;
@@ -1281,6 +1311,9 @@ void ArchipelagoClient::SetTags() {
     }
     if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("DamageLink"), 0)) {
         tags.push_back("SharedDamage");
+    }
+    if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("TrapLink"), 0)) {
+        tags.push_back("TrapLink");
     }
     apClient->ConnectUpdate(false, 1, true, tags);
 }
@@ -1540,6 +1573,13 @@ void RegisterArchipelago() {
 
     COND_HOOK(GameInteractor::OnPlayerHealthChange, IS_ARCHIPELAGO,
               [](int16_t amount) { ArchipelagoClient::GetInstance().SendDamageLink(amount); });
+
+    COND_HOOK(GameInteractor::OnItemReceive, IS_ARCHIPELAGO, [](GetItemEntry itemEntry) {
+        // If item Received is an Ice Trap, send a Trap Link
+        if (itemEntry.itemId == RG_ICE_TRAP) {
+            ArchipelagoClient::GetInstance().SendTrapLink();
+        }
+    });
 
     COND_HOOK(GameInteractor::OnSceneInit, IS_ARCHIPELAGO,
               [](int16_t sceneNum) { ArchipelagoClient::GetInstance().OnSceneInit(sceneNum); });

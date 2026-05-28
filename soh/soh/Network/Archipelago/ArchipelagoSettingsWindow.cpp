@@ -85,6 +85,13 @@ void ArchipelagoSettingsWindow::DrawElement() {
         apClient.SetTags();
     }
 
+    if (UIWidgets::CVarCheckbox("Trap Link", CVAR_REMOTE_ARCHIPELAGO("TrapLink"),
+                                UIWidgets::CheckboxOptions()
+                                    .Color(THEME_COLOR)
+                                    .Tooltip("Share traps with other players that have this enabled. "))) {
+        apClient.SetTags();
+    }
+
     UIWidgets::CVarCheckbox(
         "Limit Console Output", CVAR_REMOTE_ARCHIPELAGO("LimitConsoleToPlayer"),
         UIWidgets::CheckboxOptions()

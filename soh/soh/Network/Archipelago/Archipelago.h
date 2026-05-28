@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 #include <queue>
 #include <map>
+#include <atomic>
 #include "ArchipelagoTypes.h"
 
 // Forward declaration
@@ -65,6 +66,7 @@ class ArchipelagoClient {
     void OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSkipped);
     void SendDeathLink();
     void SendDamageLink(int16_t amount);
+    void SendTrapLink();
     void SetTags();
     RandomizerGet GetIceTrapItem();
     std::string GetApItemName(int64_t ApItemId);
@@ -104,6 +106,8 @@ class ArchipelagoClient {
     bool itemQueued;
     bool disconnecting;
     uint64_t lastDeathLink = 0;
+    uint64_t lastDamageLink = 0;
+    uint8_t trapLinkCount = 0;
     int retries;
     std::string uri;
     std::string password;
