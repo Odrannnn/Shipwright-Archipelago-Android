@@ -422,7 +422,8 @@ static void AddGossipStoneHintCopies(uint8_t copies, const HintType hintType, co
     }
 }
 
-static bool CreateHint(RandomizerCheck location, uint8_t copies, HintType type, std::string distribution, bool isArchipelago = false) {
+static bool CreateHint(RandomizerCheck location, uint8_t copies, HintType type, std::string distribution,
+                       bool isArchipelago = false) {
     auto ctx = Rando::Context::GetInstance();
     std::vector<RandomizerCheck> gossipStoneLocations;
     RandomizerArea area;
@@ -441,10 +442,10 @@ static bool CreateHint(RandomizerCheck location, uint8_t copies, HintType type, 
             SetAllInAreaAsHintAccesible(area, ctx->allLocations);
         }
     } else {
-        gossipStoneLocations = GetEmptyGossipStones(); 
+        gossipStoneLocations = GetEmptyGossipStones();
         area = RA_NONE;
     }
-    
+
     RandomizerCheck gossipStone = RandomElement(gossipStoneLocations);
     AddGossipStoneHintCopies(copies, type, distribution, {}, { location }, { area }, {}, gossipStone);
     return true;
