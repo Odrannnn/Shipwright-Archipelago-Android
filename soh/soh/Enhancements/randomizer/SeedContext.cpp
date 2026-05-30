@@ -657,7 +657,7 @@ void Context::ParseArchipelagoOptions() {
     mOptions[RSK_BASE_ICE_TRAPS].Set(0);
     mOptions[RSK_ADDITIONAL_ICE_TRAPS].Set(0);
     mOptions[RSK_ICE_TRAP_PERCENT].Set(0);
-    mOptions[RSK_GOSSIP_STONE_HINTS].Set(RO_GOSSIP_STONES_NONE);
+    mOptions[RSK_GOSSIP_STONE_HINTS].Set(slotData["gossip_stone_hints"]);
     mOptions[RSK_TOT_ALTAR_HINT].Set(slotData["tot_altar_hint"]);
     mOptions[RSK_GANONDORF_HINT].Set(slotData["ganondorf_hint"]);
     mOptions[RSK_SHEIK_LA_HINT].Set(slotData["sheik_la_hint"]);
@@ -693,7 +693,7 @@ void Context::ParseArchipelagoOptions() {
     } else if (slotData["hint_clarity"] == 2) {
         mOptions[RSK_HINT_CLARITY].Set(RO_HINT_CLARITY_CLEAR);
     }
-    mOptions[RSK_HINT_DISTRIBUTION].Set(0);
+    mOptions[RSK_HINT_DISTRIBUTION].Set(RO_HINT_DIST_ARCHIPELAGO);
     if (slotData["maps_and_compasses"] == 0) {
         mOptions[RSK_SHUFFLE_MAPANDCOMPASS].Set(RO_DUNGEON_ITEM_LOC_STARTWITH);
     } else if (slotData["maps_and_compasses"] == 1) {
@@ -930,6 +930,9 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
     const int Slot = ArchipelagoClient::GetInstance().GetSlot();
     nlohmann::json slotData = ArchipelagoClient::GetInstance().GetSlotData();
 
+    allLocations.clear();
+    overworldLocations.clear();
+
     // Zero out the location table first
     for (int rc = 1; rc < RC_MAX; rc++) {
         itemLocationTable[rc].SetPlacedItem(RG_NONE);
@@ -941,6 +944,10 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
 
     for (const ArchipelagoClient::ApItem& ap_item : scouted_items) {
         const RandomizerCheck rc = StaticData::locationNameToEnum[ap_item.locationName];
+
+        AddLocation(rc);
+        const auto ctx = Rando::Context::GetInstance();
+        ctx->GetItemLocation(rc)->SetAsHintable();
 
         if (Slot == ap_item.playerNumber) {
             // Our item
@@ -1028,6 +1035,7 @@ void Context::ParseArchipelagoHints() {
         AddHint(hintKey, hint);
     }
     CreateStaticHints();
+    CreateStoneHints(true);
 }
 
 void Context::WriteHintJson(nlohmann::ordered_json& spoilerFileJson) {
