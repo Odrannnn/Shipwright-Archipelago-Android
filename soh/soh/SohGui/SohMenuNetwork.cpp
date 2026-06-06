@@ -57,7 +57,7 @@ void SohMenu::AddMenuNetwork() {
         .CVar(CVAR_WINDOW("ArchipelagoHints"))
         .RaceDisable(false)
         .WindowName("Archipelago Hints")
-        .Options(WindowButtonOptions().Tooltip("Enables teh Archipelago Hint Window."));
+        .Options(WindowButtonOptions().Tooltip("Enables the Archipelago Hint Window."));
 
     // Sail
     path = { "Network", "Sail", SECTION_COLUMN_1 };

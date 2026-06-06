@@ -100,7 +100,7 @@ void ArchipelagoSettingsWindow::DrawElement() {
     UIWidgets::CVarCheckbox("Open Filler Hints", CVAR_REMOTE_ARCHIPELAGO("FillerHints"),
                             UIWidgets::CheckboxOptions()
                                 .Color(THEME_COLOR)
-                                .Tooltip("Automatically open up all hints even if they're not that usefull."));
+                                .Tooltip("Automatically open up all hints even if they're not that useful."));
 };
 
 void ArchipelagoSettingsWindow::InitElement() {
