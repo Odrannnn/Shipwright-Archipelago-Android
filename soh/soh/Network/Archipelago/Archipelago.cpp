@@ -327,7 +327,7 @@ bool ArchipelagoClient::StartClient() {
             bool trapLink = (std::find(tags.begin(), tags.end(), "TrapLink") != tags.end());
 
             if ((deathLink || damageLink || trapLink) && data["data"]["source"] != apClient->get_slot()) {
-                if (GameInteractor::IsSaveLoaded()) {
+                if (GameInteractor::IsSaveLoaded() && !GameInteractor::IsGameplayPaused()) {
                     if (deathLink) {
                         lastDeathLink = GetUnixTimestamp();
 
