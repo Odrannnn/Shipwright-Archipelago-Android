@@ -139,13 +139,13 @@ void BuildSkulltulaPeopleMessage(uint16_t* textId, bool* loadFromMessageTable) {
                                       /*french*/
                                       "Yeaaarrgh! Je suis maudit!^Détruit encore %y[[d]] Araignées de la Malédiction%w "
                                       "et j'aurai quelque chose à te donner! [[color]]([[1]])%w");
-    Text itemName = item.GetHint().GetHintMessage().GetForCurrentLanguage();
     RandomizerGet rg = item.GetRandomizerGet();
-    if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
-        itemName = ArchipelagoClient::GetInstance().GetApItemHint(rc, rg);
-    }
     msg.InsertNumber(count);
     msg.Replace("[[color]]", item.GetColor());
+    if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
+        const Text itemName = ArchipelagoClient::GetInstance().GetApItemHint(rc, rg);
+        msg.InsertNames({ itemName });
+    }
     msg.InsertNames({ item.GetHint().GetHintMessage() });
     msg.AutoFormat();
     msg.LoadIntoFont();
