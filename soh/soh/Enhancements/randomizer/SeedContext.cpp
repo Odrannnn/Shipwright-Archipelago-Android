@@ -551,11 +551,11 @@ void Context::ParseArchipelagoOptions() {
     }
 
     mOptions[RSK_MEDALLION_LOCKED_TRIALS].Set(slotData["medallion_locked_trials"]);
-    if (slotData["ocarina_of_time"] == 0) {
+    if (slotData["start_with_ocarina"] == 0) {
         mOptions[RSK_STARTING_OCARINA].Set(RO_STARTING_OCARINA_OFF);
-    } else if (slotData["ocarina_of_time"] == 1) {
+    } else if (slotData["start_with_ocarina"] == 1) {
         mOptions[RSK_STARTING_OCARINA].Set(RO_STARTING_OCARINA_FAIRY);
-    } else if (slotData["ocarina_of_time"] == 2) {
+    } else if (slotData["start_with_ocarina"] == 2) {
         mOptions[RSK_STARTING_OCARINA].Set(RO_STARTING_OCARINA_TIME);
     }
     mOptions[RSK_SHUFFLE_OCARINA].Set(slotData["shuffle_ocarinas"]);
