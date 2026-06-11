@@ -79,7 +79,7 @@ bool ArchipelagoClient::StartClient() {
 
             disconnecting = true;
 
-            if (GameInteractor::IsSaveLoaded) {
+            if (GameInteractor::IsSaveLoaded(true)) {
                 SohGui::ShowArchipelagoSettingsMenu();
             }
             return;
