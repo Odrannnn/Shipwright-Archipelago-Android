@@ -31,14 +31,48 @@ void ArchipelagoHintWindow::DrawElement() {
                                    ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollY;
 
     uint8_t isWindowOpen = CVarGetInteger("gOpenWindows.ArchipelagoHintWindow", 0);
+    static std::map<AP_Hint::HintStatus, const char*> showTag{
+        { AP_Hint::HintStatus::HINT_FOUND, CVAR_REMOTE_ARCHIPELAGO("ShowFoundHints") },
+        { AP_Hint::HintStatus::HINT_PRIORITY, CVAR_REMOTE_ARCHIPELAGO("ShowPriorityHints") },
+        { AP_Hint::HintStatus::HINT_NO_PRIORITY, CVAR_REMOTE_ARCHIPELAGO("ShowNoPriorityHints") },
+        { AP_Hint::HintStatus::HINT_AVOID, CVAR_REMOTE_ARCHIPELAGO("ShowAvoidHints") }
+    };
 
     ImGui::Dummy(ImVec2(0.0f, 3.0f));
+
+    if (ImGui::BeginTable("archipelago_hint_tags", static_cast<int>(showTag.size()) + 1,
+                          ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_Borders)) {
+        ImGui::TableNextColumn();
+        ImGui::Text("Status Filter ");
+
+        ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0.5, 0.5 });
+        for (auto [tag, cvar] : showTag) {
+            ImGui::TableNextColumn();
+            // todo, maybe create this as an element in UIWidgets
+            bool selected = CVarGetInteger(cvar, 1) == 1;
+            if (selected) {
+                ImGui::PushStyleColor(ImGuiCol_Text, { 0.0f, 0.0f, 0.0f, 1.0f });
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Text, AP_Text::colorVec[getStatusColor(tag)]);
+            }
+            ImGui::PushStyleColor(ImGuiCol_Header, AP_Text::colorVec[getStatusColor(tag)]);
+            if (ImGui::Selectable(AP_Hint::statusStrings[tag].c_str(), selected)) {
+                CVarSetInteger(cvar, selected ? 0 : 1);
+                Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
+                ShipInit::Init(cvar);
+            }
+            ImGui::PopStyleColor(2);
+            // ===
+        }
+        ImGui::PopStyleVar();
+        ImGui::EndTable();
+    }
 
     if (ImGui::BeginTable("archipelago_hint_table", 5, flags,
                           ImVec2(0.0f, isWindowOpen ? -hintInputHeight - 15.0f : 300.0f))) {
         // headers
         ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableSetupColumn("Receiving Player", 0, 0.0f, HintTableColumns::COL_RECIEVING);
+        ImGui::TableSetupColumn("Receiving Player", 0, 0.0f, HintTableColumns::COL_RECEIVING);
         ImGui::TableSetupColumn("Item", 0, 0.0f, HintTableColumns::COL_ITEM);
         ImGui::TableSetupColumn("Finding Player", 0, 0.0f, HintTableColumns::COL_FINDING);
         ImGui::TableSetupColumn("Location", 0, 0.0f, HintTableColumns::COL_LOCATION);
@@ -49,6 +83,11 @@ void ArchipelagoHintWindow::DrawElement() {
 
         // content
         for (const AP_Hint::Hint& hint : HintList) {
+            if (showTag.contains(hint.hint_status)) {
+                if (CVarGetInteger(showTag[hint.hint_status], 1) == 0) {
+                    continue;
+                }
+            }
             ImGui::PushID(static_cast<int>(hint.index));
             addName(hint.receiving_player_name, hint.we_receive);
             addItem(hint);
@@ -120,7 +159,7 @@ void ArchipelagoHintWindow::DrawElement() {
         const int hintCost = ArchipelagoClient::GetInstance().GetHintCost();
         const int hintPoints = ArchipelagoClient::GetInstance().GetHintPoints();
 
-        // Todo I'd like the points to be right alligned, but It looks like Omar is still working on that
+        // Todo I'd like the points to be right aligned, but It looks like Omar is still working on that
         ImGui::TableNextColumn();
         ImGui::Dummy(ImVec2(0.0f, 3.0f));
         ImGui::Text("Hint Cost:");
@@ -246,8 +285,8 @@ AP_Text::TextColor ArchipelagoHintWindow::getStatusColor(const AP_Hint::HintStat
     return AP_Text::TextColor::COLOR_ERROR;
 }
 
-// Sort the hintlist using the stl sort
-// multi column sorting method coppied from https://pthom.github.io/imgui_explorer/ Line: 5845, func
+// Sort the hint list using the stl sort
+// multi column sorting method copied from https://pthom.github.io/imgui_explorer/ Line: 5845, func
 // CompareWithSortSpecs
 void ArchipelagoHintWindow::sortHints(ImGuiTableSortSpecs* sort_specs) {
     if (sort_specs == NULL) {
@@ -267,14 +306,30 @@ void ArchipelagoHintWindow::sortHints(ImGuiTableSortSpecs* sort_specs) {
             const ImGuiTableColumnSortSpecs* spec = &sort_specs->Specs[i];
             int delta = 0;
             switch (spec->ColumnUserID) {
-                case COL_RECIEVING:
+                case COL_RECEIVING:
                     delta = lhs.receiving_player_name.compare(rhs.receiving_player_name);
+                    // sort our player to the top or bottom for easy sorting what's yours and what isn't
+                    if (delta != 0) {
+                        if (lhs.we_receive) {
+                            delta = 1;
+                        } else if (rhs.we_receive) {
+                            delta = -1;
+                        }
+                    }
                     break;
                 case COL_ITEM:
                     delta = lhs.item_name.compare(rhs.item_name);
                     break;
                 case COL_FINDING:
                     delta = lhs.finding_player_name.compare(rhs.finding_player_name);
+                    // sort our player to the top or bottom for easy sorting what's yours and what isn't
+                    if (delta != 0) {
+                        if (lhs.we_find) {
+                            delta = 1;
+                        } else if (rhs.we_find) {
+                            delta = -1;
+                        }
+                    }
                     break;
                 case COL_LOCATION:
                     delta = lhs.location_name.compare(rhs.location_name);
