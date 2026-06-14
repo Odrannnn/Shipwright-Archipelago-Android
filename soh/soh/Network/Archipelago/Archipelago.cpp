@@ -863,7 +863,7 @@ void ArchipelagoClient::OpenLocalHint(RandomizerCheck sohCheckId) {
     if (item.GetRandomizerGet() >= RG_BUY_DEKU_NUTS_5 && item.GetRandomizerGet() <= RG_BUY_RED_POTION_50) {
         return;
     }
-    
+
     // If there is no item on this check for some reason
     if (std::string_view(gSaveContext.ship.quest.data.archipelago.locations[sohCheckId].itemName).empty()) {
         return;
@@ -1513,7 +1513,8 @@ void LoadArchipelagoData() {
     SaveManager::Instance->LoadArray(
         "locations", ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations), [](size_t i) {
             SaveManager::Instance->LoadStruct("", [&i]() {
-                SaveManager::Instance->LoadData("itemFlags", gSaveContext.ship.quest.data.archipelago.locations[i].itemFlags);
+                SaveManager::Instance->LoadData("itemFlags",
+                                                gSaveContext.ship.quest.data.archipelago.locations[i].itemFlags);
                 SaveManager::Instance->LoadCharArray(
                     "itemName", gSaveContext.ship.quest.data.archipelago.locations[i].itemName,
                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations[i].itemName));
@@ -1557,7 +1558,8 @@ void SaveArchipelagoData(SaveContext* saveContext, int sectionID, bool fullSave)
     SaveManager::Instance->SaveArray(
         "locations", ARRAY_COUNT(saveContext->ship.quest.data.archipelago.locations), [&](size_t i) {
             SaveManager::Instance->SaveStruct("", [&]() {
-                SaveManager::Instance->SaveData("itemFlags", saveContext->ship.quest.data.archipelago.locations[i].itemFlags);
+                SaveManager::Instance->SaveData("itemFlags",
+                                                saveContext->ship.quest.data.archipelago.locations[i].itemFlags);
                 SaveManager::Instance->SaveData("itemName",
                                                 saveContext->ship.quest.data.archipelago.locations[i].itemName);
                 SaveManager::Instance->SaveData("hintName",
