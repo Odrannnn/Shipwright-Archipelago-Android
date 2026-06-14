@@ -2225,10 +2225,12 @@ void FileChoose_DrawWindowContents(GameState* thisx) {
                 Interface_DrawTextLine(this->state.gfxCtx,
                                        SohFileSelect_GetArchipelagoSettingText(ASM_LOADING_DATA, language), statusPos,
                                        175, 185, 185, 185, textAlpha, 0.8f, true);
+                break;
             case 5: // Data Loaded
                 Interface_DrawTextLine(this->state.gfxCtx,
                                        SohFileSelect_GetArchipelagoSettingText(ASM_DATA_LOADED, language), statusPos,
                                        175, 120, 255, 120, textAlpha, 0.8f, true);
+                break;
         }
 
         Gfx_SetupDL_39Opa(this->state.gfxCtx);
