@@ -859,15 +859,21 @@ void ArchipelagoClient::OpenLocalHint(RandomizerCheck sohCheckId) {
     }
 
     Rando::Item item = itemLoc->GetPlacedItem();
-    if (item.GetCategory() == ITEM_CATEGORY_JUNK && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("FillerHints"), 1) < 2) {
+    // Don't hint vanilla shop items, these aren't checks in archipelago
+    if (item.GetRandomizerGet() >= RG_BUY_DEKU_NUTS_5 && item.GetRandomizerGet() <= RG_BUY_RED_POTION_50) {
         return;
     }
-    if (item.GetCategory() == ITEM_CATEGORY_LESSER && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("FillerHints"), 1) < 1) {
+    
+    // If there is no item on this check for some reason
+    if (std::string_view(gSaveContext.ship.quest.data.archipelago.locations[sohCheckId].itemName).empty()) {
         return;
     }
 
-    // Don't hint vanilla shop items, these aren't checks in archipelago
-    if (item.GetRandomizerGet() >= RG_BUY_DEKU_NUTS_5 && item.GetRandomizerGet() <= RG_BUY_RED_POTION_50) {
+    const u32 itemFlags = gSaveContext.ship.quest.data.archipelago.locations[sohCheckId].itemFlags;
+    if (itemFlags == APClient::FLAG_NONE && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("FillerHints"), 1) < 2) {
+        return;
+    }
+    if ((itemFlags & APClient::FLAG_NEVER_EXCLUDE) && CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("FillerHints"), 1) < 1) {
         return;
     }
 
@@ -1461,6 +1467,7 @@ extern "C" void Archipelago_InitSaveFile() {
     for (uint32_t i = 0; i < scoutedItems.size(); i++) {
         RandomizerCheck rc = Rando::StaticData::locationNameToEnum[scoutedItems[i].locationName];
 
+        gSaveContext.ship.quest.data.archipelago.locations[rc].itemFlags = scoutedItems[i].flags;
         SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.locations[rc].itemName,
                                         scoutedItems[i].itemName,
                                         ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations[rc].itemName));
@@ -1506,6 +1513,7 @@ void LoadArchipelagoData() {
     SaveManager::Instance->LoadArray(
         "locations", ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations), [](size_t i) {
             SaveManager::Instance->LoadStruct("", [&i]() {
+                SaveManager::Instance->LoadData("itemFlags", gSaveContext.ship.quest.data.archipelago.locations[i].itemFlags);
                 SaveManager::Instance->LoadCharArray(
                     "itemName", gSaveContext.ship.quest.data.archipelago.locations[i].itemName,
                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations[i].itemName));
@@ -1549,6 +1557,7 @@ void SaveArchipelagoData(SaveContext* saveContext, int sectionID, bool fullSave)
     SaveManager::Instance->SaveArray(
         "locations", ARRAY_COUNT(saveContext->ship.quest.data.archipelago.locations), [&](size_t i) {
             SaveManager::Instance->SaveStruct("", [&]() {
+                SaveManager::Instance->SaveData("itemFlags", saveContext->ship.quest.data.archipelago.locations[i].itemFlags);
                 SaveManager::Instance->SaveData("itemName",
                                                 saveContext->ship.quest.data.archipelago.locations[i].itemName);
                 SaveManager::Instance->SaveData("hintName",
@@ -1591,6 +1600,7 @@ void InitArchipelagoData(bool isDebug) {
                                     ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.roomPass));
 
     for (uint32_t i = 0; i < ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations); i++) {
+        gSaveContext.ship.quest.data.archipelago.locations[i].itemFlags = 0;
         SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.locations[i].itemName, "",
                                         ARRAY_COUNT(gSaveContext.ship.quest.data.archipelago.locations[i].itemName));
         SohUtils::CopyStringToCharArray(gSaveContext.ship.quest.data.archipelago.locations[i].hintName, "",
