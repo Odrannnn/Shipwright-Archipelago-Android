@@ -102,7 +102,7 @@ class ArchipelagoClient {
     void OnShopSlotChangeHook(uint8_t cursorIndex);
 
     bool slotMatch(const std::string& slotName, const std::string& roomHash);
-    void newInitDataRecieved();
+    void newInitDataReceived();
 
     std::unique_ptr<APClient> apClient;
     bool itemQueued;

@@ -217,7 +217,7 @@ bool ArchipelagoClient::StartClient() {
         }
 
         locationsScouted = true;
-        newInitDataRecieved();
+        newInitDataReceived();
     }); // todo maybe move these functions to a lambda, since they don't have to be static anymore
 
     apClient->set_location_checked_handler([&](const std::list<int64_t> locations) {
@@ -239,8 +239,8 @@ bool ArchipelagoClient::StartClient() {
 
         // If we are supposed to limit console output, check if this data concerns this slot.
         if (CVarGetInteger(CVAR_REMOTE_ARCHIPELAGO("LimitConsoleToPlayer"), 0)) {
-            // (If the slot the message was sent from is not the server or this slot) or (the reciever is this slot)
-            // This requires checking if the arg.slot and arg.recieving pointers are nullptr before comparing them
+            // (If the slot the message was sent from is not the server or this slot) or (the receiver is this slot)
+            // This requires checking if the arg.slot and arg.receiving pointers are nullptr before comparing them
             if ((arg.slot != nullptr && (*arg.slot <= 0 || *arg.slot != client->get_player_number())) ||
                 (arg.receiving != nullptr && *arg.receiving != client->get_player_number())) {
                 return;
@@ -438,8 +438,8 @@ bool ArchipelagoClient::StopClient() {
 
 void ArchipelagoClient::RequestInitData() {
     // To create a save file we'll need the following data:
-    // Slot Data: recieved on connection, we already have this
-    // Data package: recieved on connection, we already have this
+    // Slot Data: received on connection, we already have this
+    // Data package: received on connection, we already have this
     // Location Scouts, Asynch request done here
     // Location and Item groups, Asynch request done here
 
@@ -463,7 +463,7 @@ void ArchipelagoClient::RequestInitData() {
 }
 
 // update the connection status if we have all data we need to initialize a save file
-void ArchipelagoClient::newInitDataRecieved() {
+void ArchipelagoClient::newInitDataReceived() {
     if (locationsScouted && hintsInitialized) {
         CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 5); // new save data fetched
     }
@@ -579,7 +579,7 @@ void ArchipelagoClient::InitForeignHints() {
     }
 
     hintsInitialized = true;
-    newInitDataRecieved();
+    newInitDataReceived();
 }
 
 void ArchipelagoClient::QueueExternalCheck(const int64_t apLocation) {
@@ -1330,7 +1330,7 @@ void ArchipelagoClient::SendTrapLink() {
                                  { "trap_name", "Ice Trap" } };
             apClient->Bounce(data, {}, {}, { "TrapLink" });
 
-            ArchipelagoConsole_SendMessage("[LOG] Recieved trap, sending trap link.");
+            ArchipelagoConsole_SendMessage("[LOG] Received trap, sending trap link.");
         }
     }
 }
