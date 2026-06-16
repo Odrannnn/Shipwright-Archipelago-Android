@@ -561,7 +561,7 @@ void ArchipelagoClient::InitForeignHints() {
         foreignHints[(RandomizerHint)h] = {};
     }
 
-    std::map<std::string, std::vector<std::array<int, 2>>> hintsData = slotData["static_hints"];
+    std::map<std::string, std::vector<std::array<int64_t, 2>>> hintsData = slotData["static_hints"];
     for (const auto& hintData : hintsData) {
         RandomizerHint hintKey = static_cast<RandomizerHint>(Rando::StaticData::hintNameToEnum[hintData.first]);
         std::vector<ApForeignHint> foreignLocations;
@@ -699,7 +699,7 @@ void ArchipelagoClient::UpdateHints(const std::vector<nlohmann::json>& hints_jso
         new_hint.finding_player_name = apClient->get_player_alias(finding_player_id);
         new_hint.location_name =
             apClient->get_location_name(hint_data["location"], apClient->get_player_game(finding_player_id));
-        new_hint.item_name = apClient->get_item_name(hint_data["item"], apClient->get_player_game(finding_player_id));
+        new_hint.item_name = apClient->get_item_name(hint_data["item"], apClient->get_player_game(receiving_player_id));
         new_hint.entrance_name = hint_data["entrance"];
         new_hint.item_flags = hint_data["item_flags"];
         new_hint.found = hint_data["found"];

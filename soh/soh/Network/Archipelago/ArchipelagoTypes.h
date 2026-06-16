@@ -76,7 +76,7 @@ struct Hint {
     AP_Hint::HintStatus hint_status;
     int item_flags;
     int finding_player_id;
-    int location_id;
+    int64_t location_id;
     bool found;
     bool we_find;
     bool we_receive;
