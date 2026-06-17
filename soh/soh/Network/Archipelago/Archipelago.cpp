@@ -541,6 +541,9 @@ void ArchipelagoClient::SynchSentLocations() {
         const RandomizerCheck rc = loc.GetRandomizerCheck();
         if (Rando::Context::GetInstance()->GetItemLocation(rc)->HasObtained()) {
             const int64_t apLocation = apClient->get_location_id(loc.GetName());
+            if (!apClient->get_missing_locations().contains(apLocation)) {
+                continue;
+            }
             checkedLocations.emplace_back(apLocation);
         }
     }
@@ -627,8 +630,11 @@ void ArchipelagoClient::CheckLocation(RandomizerCheck sohCheckId) {
         return;
     }
 
-    int64_t apItemId = apClient->get_location_id(std::string(apName));
-    apClient->LocationChecks({ apItemId });
+    int64_t apLocationId = apClient->get_location_id(std::string(apName));
+    if (!apClient->get_missing_locations().contains(apLocationId)) {
+        return;
+    }
+    apClient->LocationChecks({ apLocationId });
 }
 
 void ArchipelagoClient::OnItemReceived(const ApItem apItem) {
@@ -882,8 +888,8 @@ void ArchipelagoClient::OpenLocalHint(RandomizerCheck sohCheckId) {
         return;
     }
 
-    int64_t apItemId = apClient->get_location_id(std::string(apName));
-    apClient->CreateHints({ apItemId }, -1);
+    int64_t apLocationId = apClient->get_location_id(std::string(apName));
+    apClient->CreateHints({ apLocationId }, -1);
 }
 
 void ArchipelagoClient::OpenForeignHint(RandomizerHint randomizerHintId) {
