@@ -225,6 +225,10 @@ bool ArchipelagoClient::StartClient() {
             return;
         }
 
+        if (!GameInteractor::IsSaveLoaded(true)) {
+            return;
+        }
+
         for (const int64_t apLoc : locations) {
             QueueExternalCheck(apLoc);
         }
