@@ -109,8 +109,7 @@ bool ArchipelagoClient::StartClient() {
         ArchipelagoConsole_SendMessage("[LOG] Connected.");
         slotData = data;
 
-        ArchipelagoHintWindow_ChangeHintableItems(slotData["hintable_items"]);
-
+        // check if the client is the proper version and disconnect otherwise
         std::string clientVersionMajor = AP_Client_consts::AP_WORLD_VERSION_MAJOR;
         std::string clientVersionMinor = AP_Client_consts::AP_WORLD_VERSION_MINOR;
 
@@ -136,6 +135,14 @@ bool ArchipelagoClient::StartClient() {
                 ".x instead.\nPlease use the SoH AP client matching the APWorld's version.\nAutomatically "
                 "disconnecting...";
             ArchipelagoConsole_SendMessage(errorMessage.c_str());
+            return;
+        }
+
+        try {
+            ArchipelagoHintWindow_ChangeHintableItems(slotData["hintable_items"]);
+        } catch (std::exception e) {
+            disconnecting = true;
+            ArchipelagoConsole_SendMessage("[ERROR] Unable to load hintable items, disconnecting...");
             return;
         }
 
@@ -568,7 +575,15 @@ void ArchipelagoClient::InitForeignHints() {
         foreignHints[(RandomizerHint)h] = {};
     }
 
-    std::map<std::string, std::vector<std::array<int64_t, 2>>> hintsData = slotData["static_hints"];
+    std::map<std::string, std::vector<std::array<int64_t, 2>>> hintsData;
+    try {
+        hintsData = slotData["static_hints"];
+    } catch (std::exception e) {
+        disconnecting = true;
+        ArchipelagoConsole_SendMessage("[ERROR] Unable to parse foreign hints, disconnecting...");
+        return;
+    }
+
     for (const auto& hintData : hintsData) {
         RandomizerHint hintKey = static_cast<RandomizerHint>(Rando::StaticData::hintNameToEnum[hintData.first]);
         std::vector<ApForeignHint> foreignLocations;
