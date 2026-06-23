@@ -142,11 +142,11 @@ void BuildSkulltulaPeopleMessage(uint16_t* textId, bool* loadFromMessageTable) {
     RandomizerGet rg = item.GetRandomizerGet();
     msg.InsertNumber(count);
     msg.Replace("[[color]]", item.GetColor());
-    if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
-        const Text itemName = ArchipelagoClient::GetInstance().GetApItemHint(rc, rg);
-        msg.InsertNames({ itemName });
-    }
-    msg.InsertNames({ item.GetHint().GetHintMessage() });
+    std::string itemName = item.GetHint().GetHintMessage().GetForCurrentLanguage();
+    if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSION || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
+        itemName = ArchipelagoClient::GetInstance().GetApItemHint(rc, rg);
+    } 
+    msg.InsertNames({ itemName });
     msg.AutoFormat();
     msg.LoadIntoFont();
     *loadFromMessageTable = false;
@@ -164,12 +164,12 @@ void Build100SkullsHintMessage(uint16_t* textId, bool* loadFromMessageTable) {
     Rando::Item& item =
         Rando::StaticData::RetrieveItem(RAND_GET_ITEM_LOC(RC_KAK_100_GOLD_SKULLTULA_REWARD)->GetPlacedRandomizerGet());
     RandomizerGet rg = item.GetRandomizerGet();
-    Text itemName = item.GetHint().GetHintMessage().GetForCurrentLanguage();
-    if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
+    std::string itemName = item.GetHint().GetHintMessage().GetForCurrentLanguage();
+    if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSION || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
         itemName = ArchipelagoClient::GetInstance().GetApItemHint(RC_KAK_100_GOLD_SKULLTULA_REWARD, rg);
     }
     msg.Replace("[[color]]", item.GetColor());
-    msg.InsertNames({ item.GetHint().GetHintMessage() });
+    msg.InsertNames({ itemName });
     msg.AutoFormat();
     msg.LoadIntoFont();
     *loadFromMessageTable = false;

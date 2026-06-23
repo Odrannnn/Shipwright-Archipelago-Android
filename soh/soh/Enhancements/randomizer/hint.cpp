@@ -528,7 +528,7 @@ const HintText Hint::GetItemHintText(uint8_t slot, bool mysterious) const {
     } else if (targetRG == RG_ICE_TRAP) { // RANDOTODO store in item hint instead of item
         return HintText(CustomMessage({ ctx->overrides[hintedCheck].GetTrickName() }));
     } else if (targetRG == RG_ARCHIPELAGO_ITEM_JUNK || targetRG == RG_ARCHIPELAGO_ITEM_USEFUL ||
-               targetRG == RG_ARCHIPELAGO_ITEM_PROGRESSIVE) {
+               targetRG == RG_ARCHIPELAGO_ITEM_PROGRESSION) {
         RandomizerCheck rc = ctx->GetItemLocation(hintedCheck)->GetRandomizerCheck();
         std::string apItemText = ArchipelagoClient::GetInstance().GetApItemHint(rc, targetRG);
         return HintText(CustomMessage({ Text(apItemText) }));

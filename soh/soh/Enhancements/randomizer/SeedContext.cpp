@@ -985,7 +985,7 @@ void Context::ParseArchipelagoItemsLocations(const std::vector<ArchipelagoClient
             // Other player item
             // If progressive or trap bit flag is set, make item progressive.
             if (ap_item.flags & (1 << 0) || ap_item.flags & (1 << 2)) {
-                itemLocationTable[rc].SetPlacedItem(RG_ARCHIPELAGO_ITEM_PROGRESSIVE);
+                itemLocationTable[rc].SetPlacedItem(RG_ARCHIPELAGO_ITEM_PROGRESSION);
                 // If useful bit flag is on, make item useful.
             } else if (ap_item.flags & (1 << 1)) {
                 itemLocationTable[rc].SetPlacedItem(RG_ARCHIPELAGO_ITEM_USEFUL);

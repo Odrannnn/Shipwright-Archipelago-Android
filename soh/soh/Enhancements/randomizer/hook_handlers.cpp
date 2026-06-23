@@ -1322,7 +1322,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                     std::string message;
                     std::string itemName;
 
-                    if (!(item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE ||
+                    if (!(item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSION ||
                           item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
                           item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
 

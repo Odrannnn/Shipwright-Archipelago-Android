@@ -1295,12 +1295,12 @@ void ArchipelagoClient::OnItemGiven(uint32_t rc, GetItemEntry gi, uint8_t isGiSk
         ArchipelagoClient::GetInstance().CheckLocation((RandomizerCheck)rc);
 
         if (isGiSkipped && gi.modIndex == MOD_RANDOMIZER &&
-            (gi.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSIVE || gi.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
+            (gi.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSION || gi.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
              gi.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
 
             const char* itemIcon = "";
             switch (gi.getItemId) {
-                case RG_ARCHIPELAGO_ITEM_PROGRESSIVE:
+                case RG_ARCHIPELAGO_ITEM_PROGRESSION:
                     itemIcon = "Archipelago Progressive Icon";
                     break;
                 case RG_ARCHIPELAGO_ITEM_USEFUL:
@@ -1437,7 +1437,7 @@ std::string ArchipelagoClient::GetApItemHint(RandomizerCheck rc, RandomizerGet r
             case RandomizerGet::RG_ARCHIPELAGO_ITEM_USEFUL:
                 item_hint = "Item";
                 break;
-            case RandomizerGet::RG_ARCHIPELAGO_ITEM_PROGRESSIVE:
+            case RandomizerGet::RG_ARCHIPELAGO_ITEM_PROGRESSION:
                 item_hint = "Progress Item";
                 break;
             default:

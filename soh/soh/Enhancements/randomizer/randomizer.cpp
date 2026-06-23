@@ -3647,7 +3647,7 @@ extern "C" u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
 
     // If it's an archipelago item, don't give anything
     if (item == RG_ARCHIPELAGO_ITEM_USEFUL || item == RG_ARCHIPELAGO_ITEM_JUNK ||
-        item == RG_ARCHIPELAGO_ITEM_PROGRESSIVE) {
+        item == RG_ARCHIPELAGO_ITEM_PROGRESSION) {
         return Return_Item_Entry(giEntry, RG_NONE);
     }
 
