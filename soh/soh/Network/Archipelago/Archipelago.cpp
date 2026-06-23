@@ -1650,8 +1650,7 @@ void SaveArchipelagoData(SaveContext* saveContext, int sectionID, bool fullSave)
                     SaveManager::Instance->SaveData("LocationName",
                                                     ArchipelagoClient::SanitizeName(hints[i].locationName));
                     SaveManager::Instance->SaveData("PlayerId", hints[i].playerId);
-                    SaveManager::Instance->SaveData("PlayerName",
-                                                    ArchipelagoClient::SanitizeName(hints[i].playerName));
+                    SaveManager::Instance->SaveData("PlayerName", ArchipelagoClient::SanitizeName(hints[i].playerName));
                 });
             });
         });

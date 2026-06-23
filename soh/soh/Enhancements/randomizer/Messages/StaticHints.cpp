@@ -145,7 +145,7 @@ void BuildSkulltulaPeopleMessage(uint16_t* textId, bool* loadFromMessageTable) {
     std::string itemName = item.GetHint().GetHintMessage().GetForCurrentLanguage();
     if (rg == RG_ARCHIPELAGO_ITEM_PROGRESSION || rg == RG_ARCHIPELAGO_ITEM_USEFUL || rg == RG_ARCHIPELAGO_ITEM_JUNK) {
         itemName = ArchipelagoClient::GetInstance().GetApItemHint(rc, rg);
-    } 
+    }
     msg.InsertNames({ itemName });
     msg.AutoFormat();
     msg.LoadIntoFont();
