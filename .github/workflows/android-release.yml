@@ -15,7 +15,46 @@ env:
   RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
 
 jobs:
+  assets:
+    runs-on: ubuntu-24.04
+    container:
+      image: djvdw7f2ro/android-builder-soh:v1.0.4
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          submodules: recursive
+
+      - name: Fetch annotated tag
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+          git fetch origin "+refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+
+      - name: Install host build dependencies
+        run: |
+          apt-get update
+          apt-get install -y $(cat .github/workflows/apt-deps.txt)
+
+      - name: Generate soh.o2r
+        run: |
+          cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-linux --target GenerateSohOtr --parallel
+
+      - name: Upload soh.o2r
+        uses: actions/upload-artifact@v4
+        with:
+          name: soh-o2r
+          path: soh/soh.o2r
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
   build:
+    needs: assets
     runs-on: ubuntu-24.04
     container:
       image: djvdw7f2ro/android-builder-soh:v1.0.4
@@ -41,17 +80,14 @@ jobs:
           echo "sdk.dir=${ANDROID_SDK_ROOT}" > Android/local.properties
           echo "ndk.dir=${ANDROID_NDK_HOME}" >> Android/local.properties
 
-      - name: Install host build dependencies
-        run: |
-          apt-get update
-          apt-get install -y $(cat .github/workflows/apt-deps.txt)
+      - name: Download soh.o2r
+        uses: actions/download-artifact@v4
+        with:
+          name: soh-o2r
+          path: Android/app/src/main/assets
 
-      - name: Generate soh.o2r
-        run: |
-          cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-linux --target GenerateSohOtr --parallel
-          cp soh/soh.o2r Android/app/src/main/assets/soh.o2r
-          rm -rf build-linux
+      - name: Show available disk space
+        run: df -h /
 
       - name: Build release APK
         env:

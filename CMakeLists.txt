@@ -7,6 +7,14 @@ set(CMAKE_C_STANDARD 23 CACHE STRING "The C standard to use")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
 project(Ship VERSION 9.2.3 LANGUAGES C CXX)
+
+# Android Gradle maps non-debuggable builds to RelWithDebInfo. The resulting
+# native debug information is stripped from the APK anyway, but retaining it in
+# every intermediate object can exhaust the disk on hosted release builders.
+if(ANDROID AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    add_compile_options(-g0)
+endif()
+
 include(CMake/soh-cvars.cmake)
 include(CMake/lus-cvars.cmake)
 set(SPDLOG_LEVEL_TRACE 0)
