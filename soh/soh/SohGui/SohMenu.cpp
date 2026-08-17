@@ -4,6 +4,59 @@
 #include <ship/utils/StringHelper.h>
 #include <spdlog/fmt/fmt.h>
 
+#ifdef __ANDROID__
+#include <atomic>
+#include <jni.h>
+
+namespace {
+std::atomic<bool> sAndroidMenuVisible{ false };
+std::atomic<float> sAndroidMenuTouchX{ 0.0f };
+std::atomic<float> sAndroidMenuTouchY{ 0.0f };
+std::atomic<bool> sAndroidMenuTouchMoved{ false };
+std::atomic<bool> sAndroidMenuTouchPressed{ false };
+std::atomic<bool> sAndroidMenuTouchReleased{ false };
+
+void InjectAndroidMenuTouch() {
+    const bool moved = sAndroidMenuTouchMoved.exchange(false, std::memory_order_relaxed);
+    const bool pressed = sAndroidMenuTouchPressed.exchange(false, std::memory_order_relaxed);
+    const bool released = sAndroidMenuTouchReleased.exchange(false, std::memory_order_relaxed);
+    if (!moved && !pressed && !released) {
+        return;
+    }
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMousePosEvent(sAndroidMenuTouchX.load(std::memory_order_relaxed),
+                        sAndroidMenuTouchY.load(std::memory_order_relaxed));
+    if (pressed) {
+        io.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
+    }
+    if (released) {
+        io.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
+    }
+}
+} // namespace
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_dishii_soh_MainActivity_nativeDispatchMenuTouch(JNIEnv* env, jobject obj, jfloat x, jfloat y, jint action) {
+    if (!sAndroidMenuVisible.load(std::memory_order_relaxed)) {
+        return JNI_FALSE;
+    }
+
+    sAndroidMenuTouchX.store(x, std::memory_order_relaxed);
+    sAndroidMenuTouchY.store(y, std::memory_order_relaxed);
+    sAndroidMenuTouchMoved.store(true, std::memory_order_relaxed);
+
+    // MotionEvent: ACTION_DOWN=0, ACTION_UP=1, ACTION_MOVE=2, ACTION_CANCEL=3.
+    if (action == 0) {
+        sAndroidMenuTouchPressed.store(true, std::memory_order_relaxed);
+    } else if (action == 1 || action == 3) {
+        sAndroidMenuTouchReleased.store(true, std::memory_order_relaxed);
+    }
+
+    return JNI_TRUE;
+}
+#endif
+
 extern "C" {
 extern PlayState* gPlayState;
 }
@@ -170,6 +223,17 @@ void SohMenu::UpdateElement() {
 }
 
 void SohMenu::Draw() {
+#ifdef __ANDROID__
+    const bool visible = IsVisible();
+    sAndroidMenuVisible.store(visible, std::memory_order_relaxed);
+    if (visible) {
+        InjectAndroidMenuTouch();
+    } else {
+        sAndroidMenuTouchMoved.store(false, std::memory_order_relaxed);
+        sAndroidMenuTouchPressed.store(false, std::memory_order_relaxed);
+        sAndroidMenuTouchReleased.store(false, std::memory_order_relaxed);
+    }
+#endif
     Ship::Menu::Draw();
 }
 

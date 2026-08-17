@@ -2,6 +2,7 @@
 package com.dishii.soh;
 import org.libsdl.app.SDLActivity;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -54,6 +55,8 @@ public class MainActivity extends SDLActivity{
     private volatile boolean mIsAiming = false;
     private static final int COPY_BUFFER_SIZE = 65536;
     private static final int RUMBLE_MAX_DURATION_MS = 5000;
+    private boolean setupStarted = false;
+    private AlertDialog storagePermissionDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,10 +72,9 @@ public class MainActivity extends SDLActivity{
 
         // Check if storage permissions are granted
         if (hasStoragePermission()) {
-            doVersionCheck();
-            checkAndSetupFiles();
+            beginSetup();
         } else {
-            requestStoragePermission();
+            showStoragePermissionDialog();
         }
 
         setupControllerOverlay();
@@ -173,16 +175,68 @@ public class MainActivity extends SDLActivity{
     private static final int STORAGE_PERMISSION_REQUEST_CODE = 2296;
     private static final int FILE_PICKER_REQUEST_CODE = 0;
 
+    private void beginSetup() {
+        if (setupStarted) {
+            return;
+        }
+
+        setupStarted = true;
+        doVersionCheck();
+        checkAndSetupFiles();
+    }
+
+    private void showStoragePermissionDialog() {
+        if (hasStoragePermission()) {
+            beginSetup();
+            return;
+        }
+
+        if (isFinishing() || (storagePermissionDialog != null && storagePermissionDialog.isShowing())) {
+            return;
+        }
+
+        String message;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            message = "Ship of Harkinian stores its game data in the shared SOH folder. " +
+                    "On the next screen, enable ‘Allow access to manage all files’ for Ship of Harkinian, " +
+                    "then return to the app.";
+        } else {
+            message = "Ship of Harkinian stores its game data in the shared SOH folder. " +
+                    "Please allow storage access when Android asks.";
+        }
+
+        storagePermissionDialog = new AlertDialog.Builder(this)
+                .setTitle("Storage access required")
+                .setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton("Open Settings", (dialog, which) -> requestStoragePermission())
+                .setNegativeButton("Exit", (dialog, which) -> finish())
+                .create();
+        storagePermissionDialog.setOnDismissListener(dialog -> storagePermissionDialog = null);
+        storagePermissionDialog.show();
+    }
+
     private void requestStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // Android 11+ → MANAGE_EXTERNAL_STORAGE
             if (!Environment.isExternalStorageManager()) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, STORAGE_PERMISSION_REQUEST_CODE);
+                Intent appSettingsIntent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                appSettingsIntent.setData(Uri.parse("package:" + getPackageName()));
+
+                try {
+                    startActivityForResult(appSettingsIntent, STORAGE_PERMISSION_REQUEST_CODE);
+                } catch (ActivityNotFoundException | SecurityException appSettingsUnavailable) {
+                    try {
+                        Intent allFilesSettingsIntent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                        startActivityForResult(allFilesSettingsIntent, STORAGE_PERMISSION_REQUEST_CODE);
+                    } catch (ActivityNotFoundException | SecurityException allFilesSettingsUnavailable) {
+                        Toast.makeText(this, "Android could not open the storage access settings.", Toast.LENGTH_LONG).show();
+                        showStoragePermissionDialog();
+                    }
+                }
             } else {
                 // Already granted
-                checkAndSetupFiles();
+                beginSetup();
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android 6–10 → request READ/WRITE at runtime
@@ -194,7 +248,20 @@ public class MainActivity extends SDLActivity{
                     STORAGE_PERMISSION_REQUEST_CODE);
         } else {
             // Below Android 6 → permissions granted at install time
-            checkAndSetupFiles();
+            beginSetup();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
+            if (hasStoragePermission()) {
+                beginSetup();
+            } else {
+                showStoragePermissionDialog();
+            }
         }
     }
 
@@ -394,13 +461,10 @@ public class MainActivity extends SDLActivity{
             }
 
         } else if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
-            // Handle MANAGE_EXTERNAL_STORAGE result
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                if (Environment.isExternalStorageManager()) {
-                    checkAndSetupFiles();
-                } else {
-                    Toast.makeText(this, "Storage permission is required to access files.", Toast.LENGTH_LONG).show();
-                }
+            if (hasStoragePermission()) {
+                beginSetup();
+            } else {
+                showStoragePermissionDialog();
             }
         }
     }
@@ -451,6 +515,20 @@ public class MainActivity extends SDLActivity{
     public native void nativeGamepadBackPressed();
     // Injects a directional menu nav key: dir 0=up 1=down 2=left 3=right.
     public native void nativeMenuNavKey(int dir, boolean pressed);
+    // Routes overlay touches to ImGui while the native menu is visible.
+    private native boolean nativeDispatchMenuTouch(float x, float y, int action);
+
+    private boolean dispatchMenuTouch(MotionEvent event) {
+        if (overlayView == null) {
+            return false;
+        }
+
+        int[] overlayLocation = new int[2];
+        overlayView.getLocationOnScreen(overlayLocation);
+        float x = event.getRawX() - overlayLocation[0];
+        float y = event.getRawY() - overlayLocation[1];
+        return nativeDispatchMenuTouch(x, y, event.getActionMasked());
+    }
 
     public void SetFirstPersonAimingActive(boolean active) {
         mIsAiming = active;
@@ -587,7 +665,10 @@ public class MainActivity extends SDLActivity{
             overlayView.setOnTouchListener(null);
         } else {
             EnableTouchArea();
-            overlayView.setOnTouchListener((view, e) -> true);
+            overlayView.setOnTouchListener((view, event) -> {
+                dispatchMenuTouch(event);
+                return true;
+            });
         }
         boolean toggleVisible = preferences.getBoolean("toggleButtonVisible", true); // Default to visible
         button.setVisibility(toggleVisible ? View.VISIBLE : View.GONE);
@@ -596,7 +677,10 @@ public class MainActivity extends SDLActivity{
             if (currentlyHidden) {
                 uiGroup.setVisibility(View.VISIBLE);
                 EnableTouchArea();
-                overlayView.setOnTouchListener((view, e) -> true);
+                overlayView.setOnTouchListener((view, event) -> {
+                    dispatchMenuTouch(event);
+                    return true;
+                });
             } else {
                 uiGroup.setVisibility(View.INVISIBLE);
                 DisableTouchArea();
@@ -614,6 +698,10 @@ public class MainActivity extends SDLActivity{
         button.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if (dispatchMenuTouch(event)) {
+                    return true;
+                }
+
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         setButton(buttonNum, true);
@@ -639,6 +727,10 @@ public class MainActivity extends SDLActivity{
         button.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if (dispatchMenuTouch(event)) {
+                    return true;
+                }
+
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         setButton(dpadButton, true);
@@ -686,6 +778,10 @@ public class MainActivity extends SDLActivity{
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if (dispatchMenuTouch(event)) {
+                    return true;
+                }
+
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         // Start tracking the finger's position
@@ -750,6 +846,10 @@ public class MainActivity extends SDLActivity{
             joystickLayout.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
+                    if (dispatchMenuTouch(event)) {
+                        return true;
+                    }
+
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
                         case MotionEvent.ACTION_MOVE:
