@@ -113,6 +113,7 @@ SaveManager::SaveManager() {
     coreSectionIDsByName["entrances"] = SECTION_ID_ENTRANCES;
     coreSectionIDsByName["scenes"] = SECTION_ID_SCENES;
     coreSectionIDsByName["trackerData"] = SECTION_ID_TRACKER_DATA;
+    coreSectionIDsByName["archipelagoData"] = SECTION_ID_ARCHIPELAGO;
     AddLoadFunction("base", 1, LoadBaseVersion1);
     AddLoadFunction("base", 2, LoadBaseVersion2);
     AddLoadFunction("base", 3, LoadBaseVersion3);
@@ -145,6 +146,7 @@ SaveManager::SaveManager() {
         }
 
         info.randoSave = 0;
+        info.archiSave = 0;
         info.requiresMasterQuest = 0;
         info.requiresOriginal = 0;
 
@@ -152,6 +154,9 @@ SaveManager::SaveManager() {
         info.buildVersionMinor = 0;
         info.buildVersionPatch = 0;
         memset(&info.buildVersion, 0, sizeof(info.buildVersion));
+
+        memset(&info.archiUri, 0, sizeof(info.archiUri));
+        memset(&info.slotName, 0, sizeof(info.slotName));
     }
 }
 
@@ -528,6 +533,7 @@ void SaveManager::StartupCheckAndInitMeta(int fileNum) {
         }
     }
     bool isRando = metaSaveBlock["fileType"] == FILE_TYPE_SAVE_RANDO;
+    bool isArchi = metaSaveBlock["fileType"] == FILE_TYPE_SAVE_ARCHI;
 
     fileMetaInfo[fileNum].valid = true;
     nlohmann::json& baseBlock = metaSaveBlock["sections"]["base"]["data"];
@@ -557,7 +563,8 @@ void SaveManager::StartupCheckAndInitMeta(int fileNum) {
     fileMetaInfo[fileNum].requiresMasterQuest = baseBlock["isMasterQuest"];
 
     fileMetaInfo[fileNum].randoSave = isRando;
-    if (isRando) {
+    fileMetaInfo[fileNum].archiSave = isArchi;
+    if (isRando || isArchi) {
         nlohmann::json& randoBlock = metaSaveBlock["sections"]["randomizer"]["data"];
 
         for (int i = 0; i < ARRAY_COUNT(fileMetaInfo[fileNum].seedHash); i++) {
@@ -571,6 +578,16 @@ void SaveManager::StartupCheckAndInitMeta(int fileNum) {
         // If the file is not marked as Master Quest, it could still theoretically be a rando save with all 12 MQ
         // dungeons, in which case we don't actually require a vanilla OTR.
         fileMetaInfo[fileNum].requiresOriginal = randoBlock["masterQuestDungeonCount"] < 12;
+    }
+
+    if (isArchi) {
+        nlohmann::json& archiBlock = metaSaveBlock["sections"]["archipelagoData"]["data"];
+        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiRoomSeed, archiBlock["roomHash"],
+                                        ARRAY_COUNT(fileMetaInfo[fileNum].archiRoomSeed));
+        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].slotName, archiBlock["slotName"],
+                                        ARRAY_COUNT(fileMetaInfo[fileNum].slotName));
+        SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiUri, archiBlock["archiUri"],
+                                        ARRAY_COUNT(fileMetaInfo[fileNum].archiUri));
     }
 
     fileMetaInfo[fileNum].buildVersionMajor = metaSaveBlock["sections"]["sohStats"]["data"]["buildVersionMajor"];
@@ -619,7 +636,8 @@ void SaveManager::InitMeta(int fileNum) {
         fileMetaInfo[fileNum].seedHash[i] = randoContext->hashIconIndexes[i];
     }
 
-    fileMetaInfo[fileNum].randoSave = IS_RANDO;
+    fileMetaInfo[fileNum].randoSave = IS_RANDO && !IS_ARCHIPELAGO;
+    fileMetaInfo[fileNum].archiSave = IS_ARCHIPELAGO;
     // If the file is marked as a Master Quest file or if we're randomized and have at least one master quest dungeon,
     // we need the mq otr.
     fileMetaInfo[fileNum].requiresMasterQuest =
@@ -634,6 +652,14 @@ void SaveManager::InitMeta(int fileNum) {
     fileMetaInfo[fileNum].buildVersionPatch = gSaveContext.ship.stats.buildVersionPatch;
     SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].buildVersion, gSaveContext.ship.stats.buildVersion,
                                     ARRAY_COUNT(fileMetaInfo[fileNum].buildVersion));
+
+    SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiUri, gSaveContext.ship.quest.data.archipelago.archiUri,
+                                    ARRAY_COUNT(fileMetaInfo[fileNum].archiUri));
+    SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].slotName, gSaveContext.ship.quest.data.archipelago.slotName,
+                                    ARRAY_COUNT(fileMetaInfo[fileNum].slotName));
+    SohUtils::CopyStringToCharArray(fileMetaInfo[fileNum].archiRoomSeed,
+                                    gSaveContext.ship.quest.data.archipelago.roomHash,
+                                    ARRAY_COUNT(fileMetaInfo[fileNum].archiRoomSeed));
 }
 
 void SaveManager::InitFile(bool isDebug) {
@@ -1132,7 +1158,9 @@ void SaveManager::SaveFileThreaded(int fileNum, SaveContext* saveContext, int se
     SPDLOG_INFO("Save File - fileNum: {}", fileNum);
     // Needed for first time save, hasn't changed in forever anyway
     saveBlock["version"] = 1;
-    if (IS_RANDO) {
+    if (IS_ARCHIPELAGO) {
+        saveBlock["fileType"] = FILE_TYPE_SAVE_ARCHI;
+    } else if (IS_RANDO) {
         saveBlock["fileType"] = FILE_TYPE_SAVE_RANDO;
     } else {
         saveBlock["fileType"] = FILE_TYPE_SAVE_VANILLA;
@@ -1265,6 +1293,10 @@ void SaveManager::LoadFile(int fileNum) {
         }
         if (saveBlock.contains("fileType") && saveBlock["fileType"] == FILE_TYPE_SAVE_RANDO) {
             gSaveContext.ship.quest.id = QUEST_RANDOMIZER;
+        }
+        if (saveBlock.contains("fileType") && saveBlock["fileType"] == FILE_TYPE_SAVE_ARCHI) {
+            gSaveContext.ship.quest.id = QUEST_RANDOMIZER;
+            gSaveContext.ship.quest.data.archipelago.isArchipelago = 1;
         }
         switch (saveBlock["version"].get<int>()) {
             case 1:
@@ -2417,6 +2449,7 @@ void SaveManager::CopyZeldaFile(int from, int to) {
     fileMetaInfo[to].defense = fileMetaInfo[from].defense;
     fileMetaInfo[to].health = fileMetaInfo[from].health;
     fileMetaInfo[to].randoSave = fileMetaInfo[from].randoSave;
+    fileMetaInfo[to].archiSave = fileMetaInfo[from].archiSave;
     fileMetaInfo[to].requiresMasterQuest = fileMetaInfo[from].requiresMasterQuest;
     fileMetaInfo[to].requiresOriginal = fileMetaInfo[from].requiresOriginal;
     fileMetaInfo[to].buildVersionMajor = fileMetaInfo[from].buildVersionMajor;
@@ -2433,6 +2466,7 @@ void SaveManager::DeleteZeldaFile(int fileNum) {
     }
     fileMetaInfo[fileNum].valid = false;
     fileMetaInfo[fileNum].randoSave = false;
+    fileMetaInfo[fileNum].archiSave = false;
     fileMetaInfo[fileNum].requiresMasterQuest = false;
     fileMetaInfo[fileNum].requiresOriginal = false;
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnDeleteFile>(fileNum);

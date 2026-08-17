@@ -28,6 +28,37 @@ void SohMenu::AddMenuNetwork() {
     return;
 #endif
 
+    // Archipelago
+    path = { "Network", "Archipelago", SECTION_COLUMN_1 };
+    AddSidebarEntry(path.sectionName, path.sidebarName, 2);
+    AddWidget(path, "Popout Archipelago Settings Window", WIDGET_WINDOW_BUTTON)
+        .CVar(CVAR_WINDOW("ArchipelagoSettings"))
+        .RaceDisable(false)
+        .WindowName("Archipelago Settings")
+        .Options(WindowButtonOptions().Tooltip("Enables the Archipelago Settings Window."));
+
+    path.column = SECTION_COLUMN_2;
+
+    AddWidget(path, "Popout Archipelago Console Window", WIDGET_WINDOW_BUTTON)
+        .CVar(CVAR_WINDOW("ArchipelagoConsole"))
+        .RaceDisable(false)
+        .WindowName("Archipelago Console")
+        .Options(WindowButtonOptions().Tooltip("Enables the Archipelago Console Window."));
+
+    SohGui::mSohMenu->AddWidget(path, "APConsoleHintDivider", WIDGET_CUSTOM)
+        .CustomFunction([](WidgetInfo& info) {
+            ImGui::Dummy(ImVec2(0.0f, 15.0f));
+            ImGui::Separator();
+            ImGui::Dummy(ImVec2(0.0f, 15.0f));
+        })
+        .HideInSearch(true);
+
+    AddWidget(path, "Popout Archipelago Hint Window", WIDGET_WINDOW_BUTTON)
+        .CVar(CVAR_WINDOW("ArchipelagoHints"))
+        .RaceDisable(false)
+        .WindowName("Archipelago Hints")
+        .Options(WindowButtonOptions().Tooltip("Enables the Archipelago Hint Window."));
+
 #ifndef __ANDROID__
     // Sail
     path = { "Network", "Sail", SECTION_COLUMN_1 };

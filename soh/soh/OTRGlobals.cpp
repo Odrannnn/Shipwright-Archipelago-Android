@@ -44,6 +44,7 @@
 #include <ship/utils/StringHelper.h>
 #include "Enhancements/custom-message/CustomMessageManager.h"
 #include "util.h"
+#include "soh/Enhancements/randomizer/hook_handlers.h"
 
 #if not defined(__SWITCH__) && not defined(__WIIU__)
 #include "Extractor/Extract.h"
@@ -2632,6 +2633,7 @@ bool SoH_HandleConfigDrop(char* filePath) {
             ->ClearBindings();
 
         Rando::Settings::GetInstance()->UpdateAllOptions();
+        SohGui::MarkRandomizerMenusDirty();
         gui->SaveConsoleVariablesNextFrame();
         ShipInit::Init("*");
 
@@ -2652,6 +2654,16 @@ bool SoH_HandleConfigDrop(char* filePath) {
     return false;
 }
 
+extern "C" void ParseArchipelago() {
+    OTRGlobals::Instance->gRandoContext->ParseArchipelago();
+}
+
+extern "C" bool checkArchipelagoSlotInfo(const char* slotName, const char* roomHash) {
+    const std::string slot = std::string(slotName);
+    const std::string room = std::string(roomHash);
+    return ArchipelagoClient::GetInstance().slotMatch(slot, room);
+}
+
 extern "C" void CheckTracker_RecalculateAvailableChecks() {
     CheckTracker::RecalculateAvailableChecks();
 }
@@ -2663,4 +2675,8 @@ extern "C" uint32_t Ship_GetInterpolationFPS() {
 // Number of interpolated frames
 extern "C" uint32_t Ship_GetInterpolationFrameCount() {
     return ceil((float)Ship_GetInterpolationFPS() / 20.0f);
+}
+
+extern "C" void Archipelago_ShowArchipelagoMenu() {
+    SohGui::ShowArchipelagoSettingsMenu();
 }

@@ -556,10 +556,11 @@ typedef enum {
 
     // #### `result`
     // ```c
-    // true
+    // (this->heldItemAction == PLAYER_IA_HOOKSHOT) ||
+    // (this->heldItemAction == PLAYER_IA_LONGSHOT)
     // ```
     // #### `args`
-    // - None
+    // - '*Player'
     VB_DRAW_ADDITIONAL_RETICLES,
 
     // #### `result`
@@ -2594,6 +2595,7 @@ typedef enum {
     // ```
     // #### `args`
     // - `*FileChooseContext`
+    // - `s16`
     VB_FILE_SELECT_DRAW_DEATHS,
 
     // #### `result`
@@ -2602,6 +2604,7 @@ typedef enum {
     // ```
     // #### `args`
     // - `*FileChooseContext`
+    // - `s16`
     VB_FILE_SELECT_DRAW_HEARTS,
 
     // #### `result`
@@ -2620,6 +2623,7 @@ typedef enum {
     // ```
     // #### `args`
     // - `*FileChooseContext`
+    // - `s16`
     VB_FILE_SELECT_DRAW_FILE_INFO_BOX,
 
     // #### `result`

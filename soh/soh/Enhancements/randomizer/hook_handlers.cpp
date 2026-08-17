@@ -13,6 +13,7 @@
 #include "soh/SaveManager.h"
 #include "soh/ShipInit.hpp"
 #include "soh/ObjectExtension/ObjectExtension.h"
+#include "soh/Network/Archipelago/ArchipelagoConsoleWindow.h"
 #include "item_category_adj.h"
 
 extern "C" {
@@ -229,6 +230,11 @@ static std::queue<RandomizerCheck> randomizerQueuedChecks;
 static RandomizerCheck randomizerQueuedCheck = RC_UNKNOWN_CHECK;
 static GetItemEntry randomizerQueuedItemEntry = GET_ITEM_NONE;
 
+void ArchipelagoOnReceiveItem(const int32_t item) {
+    randomizerQueuedChecks.push(RC_ARCHIPELAGO_RECEIVED_ITEM);
+    Rando::Context::GetInstance()->AddReceivedArchipelagoItem(static_cast<RandomizerGet>(item));
+}
+
 void RandomizerOnFlagSetHandler(int16_t flagType, int16_t flag) {
     // Consume adult trade items
     if (RAND_GET_OPTION(RSK_SHUFFLE_ADULT_TRADE) && flagType == FLAG_RANDOMIZER_INF) {
@@ -269,11 +275,12 @@ void RandomizerOnFlagSetHandler(int16_t flagType, int16_t flag) {
         return;
     }
     auto loc = Rando::Context::GetInstance()->GetItemLocation(rc);
-    if (loc == nullptr || loc->HasObtained() || loc->GetPlacedRandomizerGet() == RG_NONE) {
-        Rando::Context::GetInstance()->GetItemLocation(rc)->SetCheckStatus(RCSHOW_COLLECTED);
-        return;
+    if (rc != RC_HF_OCARINA_OF_TIME_ITEM) {
+        if (loc == nullptr || loc->HasObtained() || loc->GetPlacedRandomizerGet() == RG_NONE) {
+            Rando::Context::GetInstance()->GetItemLocation(rc)->SetCheckStatus(RCSHOW_COLLECTED);
+            return;
+        }
     }
-
     SPDLOG_INFO("Queuing RC: {}", static_cast<uint32_t>(rc));
     randomizerQueuedChecks.push(rc);
 }
@@ -347,6 +354,75 @@ void RandomizerOnSceneFlagSetHandler(int16_t sceneNum, int16_t flagType, int16_t
     randomizerQueuedChecks.push(rc);
 }
 
+void RandomizerOnExternalCheckHandler(uint32_t randomizerCheck) {
+    RandomizerCheck rc = static_cast<RandomizerCheck>(randomizerCheck);
+    Rando::Location* loc = Rando::StaticData::GetLocation(rc);
+    s32 flagID = loc->GetCollectionCheck().flag;
+    SceneID scene = loc->GetScene();
+
+    bool inSameArea = false;
+    if (gPlayState != nullptr) {
+        inSameArea = scene == gPlayState->sceneNum;
+    }
+
+    // Receiving the OoT or Iron Boots chest and Master sword locations without preventing the locations locked behind
+    // them. OoT locks Song of Time, Iron boots chest locks the song from Sheik in Ice Cavern. Master Sword locks Gift
+    // From Raru. We also skip the bow chest in Forest Temple as the chest would spawn while the Stalfos fight still
+    // happens, leading to a double chest spawn.
+    if (rc == RC_HF_OCARINA_OF_TIME_ITEM || rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST || rc == RC_FOREST_TEMPLE_BOW_CHEST ||
+        rc == RC_TOT_MASTER_SWORD) {
+        randomizerQueuedChecks.push(rc);
+        return;
+    }
+
+    std::string logMessage = "";
+
+    switch (loc->GetCollectionCheck().type) {
+        case SPOILER_CHK_CHEST:
+            if (inSameArea) {
+                Flags_SetTreasure(gPlayState, flagID);
+            } else {
+                gSaveContext.sceneFlags[scene].chest |= 1 << flagID;
+                randomizerQueuedChecks.push(rc);
+            }
+            break;
+        case SPOILER_CHK_COLLECTABLE:
+            if (inSameArea) {
+                Flags_SetCollectible(gPlayState, flagID);
+            } else {
+                gSaveContext.sceneFlags[scene].collect |= 1 << flagID;
+                randomizerQueuedChecks.push(rc);
+            }
+            break;
+        case SPOILER_CHK_RANDOMIZER_INF:
+            Flags_SetRandomizerInf(static_cast<RandomizerInf>(flagID));
+            break;
+        case SPOILER_CHK_EVENT_CHK_INF:
+            Flags_SetEventChkInf(flagID);
+            break;
+        case SPOILER_CHK_ITEM_GET_INF:
+            Flags_SetItemGetInf(flagID);
+            break;
+        case SPOILER_CHK_INF_TABLE:
+            Flags_SetInfTable(flagID);
+            break;
+        case SPOILER_CHK_GOLD_SKULLTULA:
+            randomizerQueuedChecks.push(rc);
+            // Below doesn't work, temporarily disabled until a solution is found
+            // SET_GS_FLAGS((flagID & 0x1F00) >> 8, flagID & 0xFF);
+            break;
+        case SPOILER_CHK_GRAVEDIGGER: // This enum is used nowhere in code, so i'll leave it as nothing for now
+        case SPOILER_CHK_NONE:
+            // Do nothing
+            break;
+    }
+
+    if (rc == RC_MARKET_10_BIG_POES) {
+        Flags_SetInfTable(INFTABLE_SPOKE_TO_POE_COLLECTOR_IN_RUINED_MARKET);
+        HIGH_SCORE(HS_POE_POINTS) = 1000;
+    }
+}
+
 static Vec3f spawnPos = { 0.0f, -999.0f, 0.0f };
 
 void RandomizerOnPlayerUpdateForRCQueueHandler() {
@@ -365,13 +441,32 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
         return;
     }
 
+    GetItemEntry getItemEntry;
     RandomizerCheck rc = randomizerQueuedChecks.front();
     auto loc = Rando::Context::GetInstance()->GetItemLocation(rc);
-    RandomizerGet vanillaRandomizerGet = Rando::StaticData::GetLocation(rc)->GetVanillaItem();
-    GetItemID vanillaItem = (GetItemID)Rando::StaticData::RetrieveItem(vanillaRandomizerGet).GetItemID();
-    GetItemEntry getItemEntry =
-        Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)vanillaRandomizerGet);
+    uint8_t isGiSkipped = 0;
+
+    if (rc == RC_ARCHIPELAGO_RECEIVED_ITEM) {
+        getItemEntry = Rando::Context::GetInstance()->GetArchipelagoGIEntry();
+    } else {
+        RandomizerGet vanillaRandomizerGet = Rando::StaticData::GetLocation(rc)->GetVanillaItem();
+        GetItemID vanillaItem = (GetItemID)Rando::StaticData::RetrieveItem(vanillaRandomizerGet).GetItemID();
+        getItemEntry = Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)vanillaRandomizerGet);
+    }
     GetItemCategory getItemCategory = Randomizer_AdjustItemCategory(getItemEntry);
+
+    // When Ocarina or Iron Boots chest has been received externally before, and then picked up in the game itself,
+    // it'll be skipped and not give the song properly because the RC is already checked off. So instead we handle
+    // it here and send out the check locked behind them manually.
+    if (loc->HasObtained()) {
+        if (rc == RC_HF_OCARINA_OF_TIME_ITEM) {
+            RandomizerOnExternalCheckHandler(RC_SONG_FROM_OCARINA_OF_TIME);
+        } else if (rc == RC_ICE_CAVERN_IRON_BOOTS_CHEST) {
+            RandomizerOnExternalCheckHandler(RC_SHEIK_IN_ICE_CAVERN);
+        } else if (rc == RC_TOT_MASTER_SWORD) {
+            RandomizerOnExternalCheckHandler(RC_GIFT_FROM_RAURU);
+        }
+    }
 
     if (loc->HasObtained()) {
         SPDLOG_INFO("RC {} already obtained, skipping", static_cast<uint32_t>(rc));
@@ -381,10 +476,13 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
         randomizerQueuedItemEntry = getItemEntry;
         SPDLOG_INFO("Queuing Item mod {} item {} from RC {}", getItemEntry.modIndex, getItemEntry.itemId,
                     static_cast<uint32_t>(rc));
+
         if (
             // Skipping ItemGet animation incompatible with checks that require closing a text box to finish
-            rc != RC_HF_OCARINA_OF_TIME_ITEM && rc != RC_SPIRIT_TEMPLE_SILVER_GAUNTLETS_CHEST &&
-            rc != RC_MARKET_BOMBCHU_BOWLING_FIRST_PRIZE && rc != RC_MARKET_BOMBCHU_BOWLING_SECOND_PRIZE &&
+            !(rc == RC_HF_OCARINA_OF_TIME_ITEM && gPlayState->sceneNum == SCENE_HYRULE_FIELD) &&
+            !(rc == RC_SPIRIT_TEMPLE_SILVER_GAUNTLETS_CHEST && gPlayState->sceneNum == SCENE_DESERT_COLOSSUS) &&
+            !(rc == RC_MARKET_BOMBCHU_BOWLING_FIRST_PRIZE && gPlayState->sceneNum == SCENE_BOMBCHU_BOWLING_ALLEY) &&
+            !(rc == RC_MARKET_BOMBCHU_BOWLING_SECOND_PRIZE && gPlayState->sceneNum == SCENE_BOMBCHU_BOWLING_ALLEY) &&
             // Always show ItemGet animation for ice traps
             !(getItemEntry.modIndex == MOD_RANDOMIZER && getItemEntry.getItemId == RG_ICE_TRAP) &&
             // Always show ItemGet animation outside of randomizer to keep behaviour consistent in vanilla
@@ -398,8 +496,12 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
                   (getItemCategory == ITEM_CATEGORY_JUNK || getItemCategory == ITEM_CATEGORY_SKULLTULA_TOKEN ||
                    getItemCategory == ITEM_CATEGORY_HEALTH || getItemCategory == ITEM_CATEGORY_LESSER))))) {
             Item_DropCollectible(gPlayState, &spawnPos, static_cast<int16_t>(ITEM00_SOH_GIVE_ITEM_ENTRY | 0x8000));
+
+            isGiSkipped = 1;
         }
     }
+
+    GameInteractor_ExecuteOnRandomizerItemGivenHooks((uint32_t)rc, getItemEntry, isGiSkipped);
 
     randomizerQueuedChecks.pop();
 }
@@ -434,6 +536,7 @@ void RandomizerOnItemReceiveHandler(GetItemEntry receivedItemEntry) {
         randomizerQueuedItemEntry.itemId == receivedItemEntry.itemId) {
         SPDLOG_INFO("Item received mod {} item {} from RC {}", receivedItemEntry.modIndex, receivedItemEntry.itemId,
                     static_cast<uint32_t>(randomizerQueuedCheck));
+
         loc->SetCheckStatus(RCSHOW_COLLECTED);
         CheckTracker::SpoilAreaFromCheck(randomizerQueuedCheck);
         CheckTracker::RecalculateAllAreaTotals();
@@ -554,6 +657,10 @@ void EnExItem_WaitForObjectRandomized(EnExItem* enExItem, PlayState* play) {
 }
 
 void EnItem00_DrawRandomizedItem(EnItem00* enItem00, PlayState* play) {
+    // Don't draw overhead items in cutscenes so they don't overlap during GI animations.
+    if (enItem00->actor.params == ITEM00_SOH_GIVE_ITEM_ENTRY && GameInteractor::IsGameplayPaused()) {
+        return;
+    }
     f32 mtxScale = CVarGetFloat(CVAR_RANDOMIZER_ENHANCEMENT("TimeSavers.SkipGetItemAnimationScale"), 10.0f);
     Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
     GetItemEntry randoItem = enItem00->itemEntry;
@@ -902,6 +1009,8 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
     va_list args;
     va_copy(args, originalArgs);
 
+    u8 test;
+
     switch (id) {
         case VB_CLIMB:
             if (RAND_GET_OPTION(RSK_SHUFFLE_CLIMB) && !Flags_GetRandomizerInf(RAND_INF_CAN_CLIMB)) {
@@ -1213,32 +1322,37 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                     std::string message;
                     std::string itemName;
 
-                    switch (gSaveContext.language) {
-                        case LANGUAGE_FRA:
-                            message = "Vous obtenez: ";
-                            itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
-                                           .GetName()
-                                           .french;
-                            break;
-                        case LANGUAGE_GER:
-                            message = "Du erhältst: ";
-                            itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
-                                           .GetName()
-                                           .german;
-                            break;
-                        case LANGUAGE_ENG:
-                        default:
-                            message = "You found ";
-                            itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
-                                           .GetName()
-                                           .english;
-                            break;
-                    }
+                    if (!(item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_PROGRESSION ||
+                          item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_USEFUL ||
+                          item00->itemEntry.getItemId == RG_ARCHIPELAGO_ITEM_JUNK)) {
 
-                    Notification::Emit({
-                        .message = message,
-                        .suffix = itemName,
-                    });
+                        switch (gSaveContext.language) {
+                            case LANGUAGE_FRA:
+                                message = "Vous obtenez: ";
+                                itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
+                                               .GetName()
+                                               .french;
+                                break;
+                            case LANGUAGE_GER:
+                                message = "Du erhältst: ";
+                                itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
+                                               .GetName()
+                                               .german;
+                                break;
+                            case LANGUAGE_ENG:
+                            default:
+                                message = "You found ";
+                                itemName = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId)
+                                               .GetName()
+                                               .english;
+                                break;
+                        }
+
+                        Notification::Emit({
+                            .message = message,
+                            .suffix = itemName,
+                        });
+                    }
                 }
 
                 // This is typically called when you close the text box after getting an item, in case a previous
@@ -2616,7 +2730,16 @@ void RandomizerOnPlayerUpdateHandler() {
                 gSaveContext.respawn[RESPAWN_MODE_DOWN].yaw = respawn->second.yaw;
             }
 
-            Play_TriggerVoidOut(gPlayState);
+            if (gPlayState->sceneNum == SCENE_GROTTOS) {
+                // RESPAWN_MODE_DOWN isn't refreshed on grotto entry, reload grotto instead
+                gPlayState->nextEntranceIndex = gSaveContext.entranceIndex;
+                gPlayState->transitionTrigger = TRANS_TRIGGER_START;
+                gPlayState->transitionType = TRANS_TYPE_FADE_BLACK;
+                gSaveContext.nextTransitionType = TRANS_TYPE_FADE_BLACK;
+                gSaveContext.respawnFlag = 0;
+            } else {
+                Play_TriggerVoidOut(gPlayState);
+            }
         }
     }
 
@@ -2629,8 +2752,14 @@ void RandomizerOnPlayerUpdateHandler() {
     }
 
     if (!GameInteractor::IsGameplayPaused() && RAND_GET_OPTION(RSK_TRIFORCE_HUNT).IsNot(RO_TRIFORCE_HUNT_OFF)) {
-        // Warp to credits
-        if (GameInteractor::State::TriforceHuntCreditsWarpActive) {
+        // Warp to credits once item queue has drained to avoid losing queued items
+        if (GameInteractor::State::TriforceHuntCreditsWarpActive && randomizerQueuedChecks.empty() &&
+            randomizerQueuedCheck == RC_UNKNOWN_CHECK) {
+            gSaveContext.ship.stats.itemTimestamp[TIMESTAMP_TRIFORCE_COMPLETED] =
+                static_cast<u32>(GAMEPLAYSTAT_TOTAL_TIME);
+            gSaveContext.ship.stats.gameComplete = 1;
+            Play_PerformSave(gPlayState);
+            Notification::Emit({ .message = "Game autosaved" });
             gPlayState->nextEntranceIndex = ENTR_CHAMBER_OF_THE_SAGES_0;
             gSaveContext.nextCutsceneIndex = 0xFFF2;
             gPlayState->transitionTrigger = TRANS_TRIGGER_START;
@@ -2709,6 +2838,10 @@ void RandomizerOnCuccoOrChickenHatch() {
     }
 }
 
+uint32_t RandomizerReturnCurrentlyQueuedItem() {
+    return (uint32_t)randomizerQueuedCheck;
+}
+
 static void RandomizerRegisterHooks() {
     static uint32_t onFlagSetHook = 0;
     static uint32_t onSceneFlagSetHook = 0;
@@ -2738,6 +2871,9 @@ static void RandomizerRegisterHooks() {
 
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnLoadGame>([](int32_t fileNum) {
         ShipInit::Init("IS_RANDO");
+
+        // Add condition around this to only fire when loading into an Archipelago save file
+        ShipInit::Init("IS_ARCHIPELAGO");
 
         randomizerQueuedChecks = std::queue<RandomizerCheck>();
         randomizerQueuedCheck = RC_UNKNOWN_CHECK;
@@ -2829,6 +2965,9 @@ static void RandomizerRegisterHooks() {
             RandomizerOnKaleidoscopeUpdateHandler);
         onCuccoOrChickenHatchHook = GameInteractor::Instance->RegisterGameHook<GameInteractor::OnCuccoOrChickenHatch>(
             RandomizerOnCuccoOrChickenHatch);
+
+        COND_HOOK(GameInteractor::OnArchipelagoItemReceived, IS_ARCHIPELAGO, ArchipelagoOnReceiveItem);
+        COND_HOOK(GameInteractor::OnRandomizerExternalCheck, IS_ARCHIPELAGO, RandomizerOnExternalCheckHandler)
 
         if (RAND_GET_OPTION(RSK_FISHSANITY).IsNot(RO_FISHSANITY_OFF)) {
             OTRGlobals::Instance->gRandoContext->GetFishsanity()->InitializeFromSave();

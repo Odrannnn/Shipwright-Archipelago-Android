@@ -109,6 +109,7 @@ public class MainActivity extends SDLActivity{
         File ootO2rFile = new File(targetRootFolder, "oot.o2r");
         File ootMqO2rFile = new File(targetRootFolder, "oot-mq.o2r");
         File assetsFolder = new File(targetRootFolder, "assets");
+        File networkingFolder = new File(targetRootFolder, "networking");
 
         deleteIfExists(sohFile);
         deleteIfExists(ootFile);
@@ -117,6 +118,7 @@ public class MainActivity extends SDLActivity{
         deleteIfExists(ootO2rFile);
         deleteIfExists(ootMqO2rFile);
         deleteRecursiveIfExists(assetsFolder);
+        deleteRecursiveIfExists(networkingFolder);
     }
 
     private void deleteIfExists(File file) {
@@ -222,9 +224,10 @@ public class MainActivity extends SDLActivity{
                     })
                     .show();
         } else {
-            // No setup needed; but always ensure soh.o2r is present from APK assets
-            if (!sohOtrFile.exists()) {
-                Executors.newSingleThreadExecutor().execute(() -> {
+            // The native entry point waits on setupLatch. Always refresh the bundled
+            // CA store first so secure Archipelago connections work after upgrades.
+            Executors.newSingleThreadExecutor().execute(() -> {
+                if (!sohOtrFile.exists()) {
                     try {
                         try (InputStream in = getAssets().open("soh.o2r");
                              OutputStream out = new FileOutputStream(sohOtrFile)) {
@@ -237,11 +240,31 @@ public class MainActivity extends SDLActivity{
                     } catch (IOException e) {
                         // not bundled, nothing to do
                     }
-                    setupLatch.countDown();
-                });
-            } else {
+                }
+                copyArchipelagoCertificate(targetRootFolder);
                 setupLatch.countDown();
+            });
+        }
+    }
+
+    private void copyArchipelagoCertificate(File targetRootFolder) {
+        File targetNetworkingDir = new File(targetRootFolder, "networking");
+        if (!targetNetworkingDir.exists() && !targetNetworkingDir.mkdirs()) {
+            Log.e("setupFiles", "Failed to create networking folder");
+            return;
+        }
+
+        File targetCertificate = new File(targetNetworkingDir, "cacert.pem");
+        try (InputStream in = getAssets().open("networking/cacert.pem");
+             OutputStream out = new FileOutputStream(targetCertificate, false)) {
+            byte[] buffer = new byte[COPY_BUFFER_SIZE];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
             }
+            Log.i("setupFiles", "Archipelago CA certificate store copied");
+        } catch (IOException e) {
+            Log.e("setupFiles", "Failed to copy Archipelago CA certificate store", e);
         }
     }
 
@@ -325,6 +348,8 @@ public class MainActivity extends SDLActivity{
         } catch (IOException e) {
             // soh.o2r not bundled in APK assets or copy failed; user must provide their own
         }
+
+        copyArchipelagoCertificate(targetRootFolder);
 
         setupLatch.countDown();
     }

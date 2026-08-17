@@ -178,6 +178,7 @@ std::unordered_map<uint32_t, RandomizerHintTextKey> StaticData::areaNames = {
     { RA_ICE_CAVERN, RHT_ICE_CAVERN },
     { RA_GERUDO_TRAINING_GROUND, RHT_GERUDO_TRAINING_GROUND },
     { RA_GANONS_CASTLE, RHT_GANONS_CASTLE },
+    { RA_ARCHIPELAGO_FOREIGN, RHT_ARCHIPELAGO_FOREIGN }
 };
 
 std::unordered_map<uint32_t, RandomizerHintTextKey> StaticData::trialData = {
@@ -537,4 +538,5 @@ std::vector<RandomizerGet> StaticData::overworldKeys = {
     RG_HYLIA_LAB_KEY,
     RG_FISHING_HOLE_KEY,
 };
+
 } // namespace Rando

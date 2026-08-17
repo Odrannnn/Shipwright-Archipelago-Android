@@ -35,7 +35,15 @@ Download and install the APK from the [Releases](https://github.com/please-be-ni
 
 Use the *Back/Select/-* button on your controller to open the **Enhancements menu**. Use touch controls or a controller to navigate menus.
 
-### 4. Play!
+### 4. Set up Archipelago (optional)
+
+1. Install `oot_soh.apworld` from the [Soh_1.4.2 Archipelago release](https://github.com/HarbourMasters/Archipelago-SoH/releases/tag/Soh_1.4.2) on the computer running Archipelago, then generate and host your multiworld.
+2. In the Enhancements menu, open **Network > Archipelago > Archipelago Settings** and enter the server address, slot name, and optional password.
+3. Connect, return to file select, choose the Archipelago option for a new file, and select **Connect and Start Archipelago**.
+
+When the server is on another device on your local network, use that device's LAN address and port. `localhost` on Android means the Android device itself.
+
+### 5. Play!
 
 Congratulations, you are now sailing with the Ship of Harkinian! Have fun!
 

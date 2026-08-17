@@ -150,6 +150,7 @@ uint8_t Randomizer_IsSpoilerLoaded();
 void Randomizer_SetSpoilerLoaded(bool spoilerLoaded);
 uint8_t Randomizer_GenerateRandomizer();
 void Randomizer_ShowRandomizerMenu();
+void Archipelago_ShowArchipelagoMenu();
 GetItemEntry ItemTable_Retrieve(int16_t getItemID);
 GetItemEntry ItemTable_RetrieveEntry(s16 modIndex, s16 getItemID);
 void EntranceTracker_SetCurrentGrottoID(s16 entranceIndex);
@@ -163,6 +164,8 @@ void CheckTracker_RecalculateAvailableChecks();
 
 GetItemID RetrieveGetItemIDFromItemID(ItemID itemID);
 RandomizerGet RetrieveRandomizerGetFromItemID(ItemID itemID);
+void ParseArchipelago();
+bool checkArchipelagoSlotInfo(const char* slotName, const char* roomHash);
 void Messagebox_ShowErrorBox(char* title, char* body);
 
 uint32_t Ship_GetInterpolationFPS();

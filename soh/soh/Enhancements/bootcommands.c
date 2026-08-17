@@ -11,6 +11,10 @@ void BootCommands_Init() {
     CVarClear(CVAR_GENERAL("OnFileSelectNameEntry")); // Clear when soh is killed on the file name entry page
     CVarClear(CVAR_GENERAL("BetterDebugWarpScreenMQMode"));
     CVarClear(CVAR_GENERAL("BetterDebugWarpScreenMQModeScene"));
+
+    CVarClear(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus")); // Clear on boot to reset connection status
+    CVarClear(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"));
+
 #if defined(__SWITCH__) || defined(__WIIU__) || defined(__ANDROID__)
     CVarRegisterInteger(CVAR_IMGUI_CONTROLLER_NAV, 1); // always enable controller nav on switch/wii u/android
 #endif

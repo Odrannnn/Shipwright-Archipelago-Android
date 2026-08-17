@@ -35,6 +35,9 @@ void BuildMerchantMessage(CustomMessage& msg, RandomizerCheck rc, bool mysteriou
         rgid = RAND_GET_OVERRIDE(rc).LooksLike();
         itemName = CustomMessage(RAND_GET_OVERRIDE(rc).GetTrickName());
         color = "%g";
+    } else if (rgid == RG_ARCHIPELAGO_ITEM_PROGRESSION || rgid == RG_ARCHIPELAGO_ITEM_USEFUL ||
+               rgid == RG_ARCHIPELAGO_ITEM_JUNK) {
+        itemName = ArchipelagoClient::GetInstance().GetApItemHint(rc, rgid);
     } else {
         const Rando::Item& item = Rando::StaticData::RetrieveItem(rgid);
         if (Rando::StaticData::GetLocation(rc)->IsShop()) {
@@ -110,6 +113,8 @@ void BuildCarpetGuyMessage(uint16_t* textId, bool* loadFromMessageTable) {
         BuildMerchantMessage(msg, RC_WASTELAND_BOMBCHU_SALESMAN,
                              !RAND_GET_OPTION(RSK_MERCHANT_TEXT_HINT) ||
                                  CVarGetInteger(CVAR_RANDOMIZER_ENHANCEMENT("MysteriousShuffle"), 0));
+    } else {
+        return;
     }
     msg.AutoFormat();
     msg.LoadIntoFont();
