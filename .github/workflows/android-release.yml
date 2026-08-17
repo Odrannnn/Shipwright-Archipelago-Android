@@ -4,6 +4,15 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Annotated v* tag to build and publish
+        required: true
+        type: string
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
 
 jobs:
   build:
@@ -19,12 +28,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_TAG }}
           submodules: recursive
 
       - name: Fetch annotated tag
         run: |
           git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-          git fetch origin "+refs/tags/${{ github.ref_name }}:refs/tags/${{ github.ref_name }}"
+          git fetch origin "+refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
 
       - name: Write local.properties
         run: |
@@ -45,31 +55,31 @@ jobs:
 
       - name: Build release APK
         env:
-          GIT_TAG: ${{ github.ref_name }}
+          GIT_TAG: ${{ env.RELEASE_TAG }}
         run: cd Android && ./gradlew assembleRelease
 
       - name: Rename APK
         run: |
           APK=$(find Android/app/build/outputs/apk/release -name 'soh_release_*.apk' | head -1)
-          mv "$APK" "soh-${{ github.ref_name }}.apk"
+          mv "$APK" "soh-${RELEASE_TAG}.apk"
 
       - name: Compute SHA256
         id: sha256
         run: |
-          HASH=$(sha256sum "soh-${{ github.ref_name }}.apk" | awk '{print $1}')
+          HASH=$(sha256sum "soh-${RELEASE_TAG}.apk" | awk '{print $1}')
           echo "hash=${HASH}" >> "$GITHUB_OUTPUT"
 
       - name: Attest build provenance
         if: github.event.repository.visibility == 'public'
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: soh-${{ github.ref_name }}.apk
+          subject-path: soh-${{ env.RELEASE_TAG }}.apk
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="${{ github.ref_name }}"
+          TAG="${RELEASE_TAG}"
           OBJ_TYPE=$(git tag -l --format='%(objecttype)' "${TAG}")
           if [ "${OBJ_TYPE}" != "tag" ]; then
             echo "ERROR: '${TAG}' is a lightweight tag. Push an annotated tag to trigger a release."
