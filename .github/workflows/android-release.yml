@@ -41,6 +41,7 @@ jobs:
           cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build build-linux --target GenerateSohOtr --parallel
           cp soh/soh.o2r Android/app/src/main/assets/soh.o2r
+          rm -rf build-linux
 
       - name: Build release APK
         env:
@@ -59,6 +60,7 @@ jobs:
           echo "hash=${HASH}" >> "$GITHUB_OUTPUT"
 
       - name: Attest build provenance
+        if: github.event.repository.visibility == 'public'
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: soh-${{ github.ref_name }}.apk
@@ -81,7 +83,9 @@ jobs:
 
           printf '%s\n\n' "${ANNOTATION_BODY}" > /tmp/release-notes.md
           printf 'SHA256: %s\n' "${{ steps.sha256.outputs.hash }}" >> /tmp/release-notes.md
-          printf 'Verify: `gh attestation verify soh-%s.apk --owner please-be-nice`\n' "${TAG}" >> /tmp/release-notes.md
+          if [ "${{ github.event.repository.visibility }}" = "public" ]; then
+            printf 'Verify: `gh attestation verify soh-%s.apk --owner Odrannnn`\n' "${TAG}" >> /tmp/release-notes.md
+          fi
           printf 'Build: %s/%s/actions/runs/%s\n' "${{ github.server_url }}" "${{ github.repository }}" "${{ github.run_id }}" >> /tmp/release-notes.md
 
           gh release create "${TAG}" \

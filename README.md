@@ -1,7 +1,12 @@
 ![Ship of Harkinian](docs/shiptitle.darkmode.png#gh-dark-mode-only)
 ![Ship of Harkinian](docs/shiptitle.lightmode.png#gh-light-mode-only)
 
-A port of Ship of Harkinian for Android.
+An Android port of Ship of Harkinian with Archipelago multiworld support.
+
+This project combines the Android work from
+[Shipwright-android](https://github.com/please-be-nice/Shipwright-android) with the
+[Archipelago-SoH fork](https://github.com/HarbourMasters/Archipelago-SoH) and its
+[Harkipellago client](https://github.com/jeromkiller/Shipwright_archipellago).
 
 ## Website
 
@@ -21,7 +26,7 @@ The Ship does not include any copyrighted assets. You are required to provide a 
 You can verify you have dumped a supported copy of the game by using the compatibility checker at https://ship.equipment/. If you'd prefer to manually validate your ROM dump, you can cross-reference its `sha1` hash with the hashes [here](docs/supportedHashes.json).
 
 ### 2. Install the APK
-Download and install the APK from the [Releases](https://github.com/please-be-nice/Shipwright-android/releases) page.
+Download and install the APK from the [Releases](https://github.com/Odrannnn/Shipwright-Archipelago-Android/releases) page.
 
 ### 3. Set up the game
 
@@ -101,8 +106,8 @@ Building requires [Docker](https://docs.docker.com/get-docker/) (or any OCI-comp
 1. Clone the repository and submodules:
 
     ```bash
-    git clone https://github.com/please-be-nice/Shipwright-android.git
-    cd Shipwright-android
+    git clone --recurse-submodules https://github.com/Odrannnn/Shipwright-Archipelago-Android.git
+    cd Shipwright-Archipelago-Android
     git submodule update --init --recursive
     ```
 
