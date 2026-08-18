@@ -12,10 +12,13 @@ import android.os.Environment;
 
 import android.provider.Settings;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CountDownLatch;
 
 import android.Manifest;
@@ -292,25 +295,94 @@ public class MainActivity extends SDLActivity{
                     .show();
         } else {
             // The native entry point waits on setupLatch. Always refresh the bundled
-            // CA store first so secure Archipelago connections work after upgrades.
+            // port archive and CA store before starting so upgrades cannot retain an
+            // older soh.o2r that is missing Archipelago-only resources.
             Executors.newSingleThreadExecutor().execute(() -> {
-                if (!sohOtrFile.exists()) {
-                    try {
-                        try (InputStream in = getAssets().open("soh.o2r");
-                             OutputStream out = new FileOutputStream(sohOtrFile)) {
-                            byte[] buffer = new byte[COPY_BUFFER_SIZE];
-                            int read;
-                            while ((read = in.read(buffer)) != -1) {
-                                out.write(buffer, 0, read);
-                            }
-                        }
-                    } catch (IOException e) {
-                        // not bundled, nothing to do
-                    }
+                if (!ensureBundledSohO2r(targetRootFolder)) {
+                    runOnUiThread(() -> Toast.makeText(this, "Failed to update soh.o2r", Toast.LENGTH_LONG).show());
                 }
                 copyArchipelagoCertificate(targetRootFolder);
                 setupLatch.countDown();
             });
+        }
+    }
+
+    private byte[] sha256(InputStream input) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[COPY_BUFFER_SIZE];
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                digest.update(buffer, 0, read);
+            }
+            return digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException("SHA-256 is unavailable", e);
+        }
+    }
+
+    private boolean ensureBundledSohO2r(File targetRootFolder) {
+        File target = new File(targetRootFolder, "soh.o2r");
+        File temporary = new File(targetRootFolder, "soh.o2r.update");
+        File backup = new File(targetRootFolder, "soh.o2r.backup");
+
+        try {
+            byte[] bundledHash;
+            try (InputStream bundled = getAssets().open("soh.o2r")) {
+                bundledHash = sha256(bundled);
+            }
+
+            if (target.isFile()) {
+                try (InputStream installed = new FileInputStream(target)) {
+                    if (MessageDigest.isEqual(bundledHash, sha256(installed))) {
+                        Log.i("setupFiles", "Bundled soh.o2r is already current");
+                        return true;
+                    }
+                } catch (IOException e) {
+                    Log.w("setupFiles", "Existing soh.o2r could not be verified; replacing it", e);
+                }
+            }
+
+            if (temporary.exists() && !temporary.delete()) {
+                throw new IOException("Could not remove an incomplete soh.o2r update");
+            }
+            try (InputStream bundled = getAssets().open("soh.o2r");
+                 OutputStream output = new FileOutputStream(temporary, false)) {
+                byte[] buffer = new byte[COPY_BUFFER_SIZE];
+                int read;
+                while ((read = bundled.read(buffer)) != -1) {
+                    output.write(buffer, 0, read);
+                }
+            }
+            try (InputStream updated = new FileInputStream(temporary)) {
+                if (!MessageDigest.isEqual(bundledHash, sha256(updated))) {
+                    throw new IOException("The copied soh.o2r failed verification");
+                }
+            }
+
+            if (backup.exists() && !backup.delete()) {
+                throw new IOException("Could not remove an old soh.o2r backup");
+            }
+            if (target.exists() && !target.renameTo(backup)) {
+                throw new IOException("Could not back up the existing soh.o2r");
+            }
+            if (!temporary.renameTo(target)) {
+                if (backup.exists() && !backup.renameTo(target)) {
+                    Log.e("setupFiles", "Failed to restore soh.o2r after update failure");
+                }
+                throw new IOException("Could not install the bundled soh.o2r");
+            }
+            if (backup.exists() && !backup.delete()) {
+                Log.w("setupFiles", "Could not remove the old soh.o2r backup");
+            }
+            Log.i("setupFiles", "Bundled soh.o2r refreshed");
+            return true;
+        } catch (IOException e) {
+            if (temporary.exists() && !temporary.delete()) {
+                Log.w("setupFiles", "Could not remove the incomplete soh.o2r update");
+            }
+            Log.e("setupFiles", "Failed to refresh the bundled soh.o2r", e);
+            return false;
         }
     }
 
@@ -400,20 +472,8 @@ public class MainActivity extends SDLActivity{
             runOnUiThread(() -> Toast.makeText(this, "Error copying assets", Toast.LENGTH_LONG).show());
         }
 
-        // Copy soh.o2r from internal assets if bundled (optional)
-        try (InputStream assetIn = getAssets().open("soh.o2r")) {
-            File targetOtrFile = new File(targetRootFolder, "soh.o2r");
-            targetOtrFile.delete();
-            try (OutputStream out = new FileOutputStream(targetOtrFile)) {
-                byte[] buffer = new byte[COPY_BUFFER_SIZE];
-                int read;
-                while ((read = assetIn.read(buffer)) != -1) {
-                    out.write(buffer, 0, read);
-                }
-            }
-            runOnUiThread(() -> Toast.makeText(this, "soh.o2r copied", Toast.LENGTH_SHORT).show());
-        } catch (IOException e) {
-            // soh.o2r not bundled in APK assets or copy failed; user must provide their own
+        if (!ensureBundledSohO2r(targetRootFolder)) {
+            runOnUiThread(() -> Toast.makeText(this, "Failed to update soh.o2r", Toast.LENGTH_LONG).show());
         }
 
         copyArchipelagoCertificate(targetRootFolder);
