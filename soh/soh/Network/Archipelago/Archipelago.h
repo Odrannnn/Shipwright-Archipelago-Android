@@ -6,6 +6,8 @@
 #include <nlohmann/json.hpp>
 #include <queue>
 #include <map>
+#include <set>
+#include <mutex>
 #include <atomic>
 #include "ArchipelagoTypes.h"
 
@@ -54,6 +56,7 @@ class ArchipelagoClient {
 
     bool StartClient();
     bool StopClient();
+    bool QueueConnectionRequest(const std::string& address, const std::string& slot, const std::string& password);
 
     void RequestInitData();
     void GameLoaded();
@@ -140,6 +143,9 @@ class ArchipelagoClient {
     void operator=(const ArchipelagoClient&) = delete;
 
     bool isRightSaveLoaded() const;
+    void ApplyPendingConnectionRequest();
+    void QueueOrDeferExternalCheck(int64_t apLocation);
+    void FlushPendingExternalChecks();
     std::string get_random_group_from_item(const std::string& item_name, unsigned int item_flags,
                                            const std::string& game);
     std::string get_random_group_from_location(const std::string& item_name, const std::string& game);
@@ -151,6 +157,12 @@ class ArchipelagoClient {
 
     nlohmann::json slotData;
     std::set<int64_t> locations;
+    std::set<int64_t> pendingExternalChecks;
+    std::mutex connectionRequestMutex;
+    bool connectionRequestPending = false;
+    std::string pendingConnectionAddress;
+    std::string pendingConnectionSlot;
+    std::string pendingConnectionPassword;
     std::vector<ApItem> scoutedItems;
     std::queue<ApItem> receiveQueue;
     ApHintFetchData fetchingGroups;

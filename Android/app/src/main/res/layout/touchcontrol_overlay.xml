@@ -44,6 +44,26 @@
 
     </FrameLayout>
 
+    <!-- Right Joystick -->
+    <FrameLayout
+        android:id="@+id/right_joystick"
+        android:layout_width="130dp"
+        android:layout_height="130dp"
+        android:layout_marginEnd="150dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/ic_stick"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/right_joystick_knob"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center"
+            android:background="@drawable/ic_button" />
+    </FrameLayout>
+
 
     <ImageView
         android:id="@+id/imageView"

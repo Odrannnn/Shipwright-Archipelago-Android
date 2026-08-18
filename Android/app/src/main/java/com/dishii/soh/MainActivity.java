@@ -53,6 +53,11 @@ import android.os.VibrationEffect;
 //This class is the main SDLActivity and just sets up a bunch of default files
 public class MainActivity extends SDLActivity{
 
+    public static final String ACTION_CONNECT_ARCHIPELAGO = "com.dishii.soh.action.CONNECT_ARCHIPELAGO";
+    public static final String EXTRA_ARCHIPELAGO_ADDRESS = "archipelago_address";
+    public static final String EXTRA_ARCHIPELAGO_SLOT = "archipelago_slot";
+    public static final String EXTRA_ARCHIPELAGO_PASSWORD = "archipelago_password";
+
     SharedPreferences preferences;
     private static final CountDownLatch setupLatch = new CountDownLatch(1);
     private volatile boolean mIsAiming = false;
@@ -82,8 +87,58 @@ public class MainActivity extends SDLActivity{
 
         setupControllerOverlay();
         attachController();
+        handleArchipelagoConnectIntent(getIntent());
 
         Log.i("SoH", "onCreate complete");
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleArchipelagoConnectIntent(intent);
+    }
+
+    private void handleArchipelagoConnectIntent(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+
+        String address = null;
+        String slot = null;
+        String password = null;
+        boolean isArchipelagoIntent = ACTION_CONNECT_ARCHIPELAGO.equals(intent.getAction());
+
+        Uri data = intent.getData();
+        boolean isArchipelagoLink = Intent.ACTION_VIEW.equals(intent.getAction()) && data != null &&
+                "soh".equalsIgnoreCase(data.getScheme()) &&
+                "archipelago".equalsIgnoreCase(data.getHost()) &&
+                "/connect".equals(data.getPath());
+
+        if (isArchipelagoLink) {
+            address = data.getQueryParameter("address");
+            slot = data.getQueryParameter("slot");
+            password = data.getQueryParameter("password");
+        } else if (isArchipelagoIntent) {
+            address = intent.getStringExtra(EXTRA_ARCHIPELAGO_ADDRESS);
+            slot = intent.getStringExtra(EXTRA_ARCHIPELAGO_SLOT);
+            password = intent.getStringExtra(EXTRA_ARCHIPELAGO_PASSWORD);
+        } else {
+            return;
+        }
+
+        address = address == null ? "" : address.trim();
+        slot = slot == null ? "" : slot.trim();
+        password = password == null ? "" : password;
+
+        if (address.isEmpty() || slot.isEmpty()) {
+            Toast.makeText(this, "Archipelago address and slot name are required.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (!nativeQueueArchipelagoConnection(address, slot, password)) {
+            Toast.makeText(this, "Invalid Archipelago connection data.", Toast.LENGTH_LONG).show();
+        }
     }
 
     public static void waitForSetupFromNative() {
@@ -486,6 +541,7 @@ public class MainActivity extends SDLActivity{
 
     private native void nativeHandleSelectedFile(String filePath);
     private native void nativeDialogResult(int result);
+    private native boolean nativeQueueArchipelagoConnection(String address, String slot, String password);
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -577,6 +633,8 @@ public class MainActivity extends SDLActivity{
     public native void nativeMenuNavKey(int dir, boolean pressed);
     // Routes overlay touches to ImGui while the native menu is visible.
     private native boolean nativeDispatchMenuTouch(float x, float y, int action);
+    // True while the Input Editor is waiting for a physical controller input.
+    private native boolean nativeIsInputMappingCaptureActive();
 
     private boolean dispatchMenuTouch(MotionEvent event) {
         if (overlayView == null) {
@@ -621,8 +679,8 @@ public class MainActivity extends SDLActivity{
     private Button buttonDpadUp, buttonDpadDown, buttonDpadLeft, buttonDpadRight;
     private Button buttonLB, buttonRB, buttonZ, buttonStart, buttonBack;
     private Button buttonToggle;
-    private FrameLayout leftJoystick;
-    private ImageView leftJoystickKnob;
+    private FrameLayout leftJoystick, rightJoystick;
+    private ImageView leftJoystickKnob, rightJoystickKnob;
     private View overlayView;
 
     // Function to set up the controller overlay (inflate layout and initialize buttons)
@@ -666,6 +724,8 @@ public class MainActivity extends SDLActivity{
         // Initialize joysticks and joystick knobs from the inflated layout
         leftJoystick = overlayView.findViewById(R.id.left_joystick);
         leftJoystickKnob = overlayView.findViewById(R.id.left_joystick_knob);
+        rightJoystick = overlayView.findViewById(R.id.right_joystick);
+        rightJoystickKnob = overlayView.findViewById(R.id.right_joystick_knob);
 
         FrameLayout rightScreenArea = overlayView.findViewById(R.id.right_screen_area);
 
@@ -694,6 +754,7 @@ public class MainActivity extends SDLActivity{
 
 
         setupJoystick(leftJoystick, leftJoystickKnob, true);
+        setupJoystick(rightJoystick, rightJoystickKnob, false);
 
         setupLookAround(rightScreenArea);
 
@@ -756,58 +817,84 @@ public class MainActivity extends SDLActivity{
         int navDir = (buttonNum == ControllerButtons.BUTTON_A) ? 4
                    : (buttonNum == ControllerButtons.BUTTON_B) ? 5 : -1;
         button.setOnTouchListener(new View.OnTouchListener() {
+            private boolean mappingCaptureGesture = false;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (dispatchMenuTouch(event)) {
+                int action = event.getActionMasked();
+                if (action == MotionEvent.ACTION_DOWN) {
+                    mappingCaptureGesture = nativeIsInputMappingCaptureActive();
+                }
+
+                if (!mappingCaptureGesture && dispatchMenuTouch(event)) {
                     return true;
                 }
 
-                switch (event.getAction()) {
+                switch (action) {
                     case MotionEvent.ACTION_DOWN:
                         setButton(buttonNum, true);
-                        if (navDir >= 0) nativeMenuNavKey(navDir, true);
+                        if (navDir >= 0 && !mappingCaptureGesture) nativeMenuNavKey(navDir, true);
                         button.setPressed(true);
                         return true;
                     case MotionEvent.ACTION_UP:
                         setButton(buttonNum, false);
-                        if (navDir >= 0) nativeMenuNavKey(navDir, false);
+                        if (navDir >= 0 && !mappingCaptureGesture) nativeMenuNavKey(navDir, false);
                         button.setPressed(false);
+                        mappingCaptureGesture = false;
                         return true;
                     case MotionEvent.ACTION_CANCEL:
                         setButton(buttonNum, false);
-                        if (navDir >= 0) nativeMenuNavKey(navDir, false);
+                        if (navDir >= 0 && !mappingCaptureGesture) nativeMenuNavKey(navDir, false);
+                        button.setPressed(false);
+                        mappingCaptureGesture = false;
                         return true;
                 }
-                return false;
+                return mappingCaptureGesture;
             }
         });
     }
 
     private void setupCButtons(Button button, int dpadButton) {
         button.setOnTouchListener(new View.OnTouchListener() {
+            private boolean mappingCaptureGesture = false;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (dispatchMenuTouch(event)) {
+                int action = event.getActionMasked();
+                if (action == MotionEvent.ACTION_DOWN) {
+                    mappingCaptureGesture = nativeIsInputMappingCaptureActive();
+                }
+
+                if (!mappingCaptureGesture && dispatchMenuTouch(event)) {
                     return true;
                 }
 
-                switch (event.getAction()) {
+                switch (action) {
                     case MotionEvent.ACTION_DOWN:
                         setButton(dpadButton, true);
-                        nativeMenuNavKey(dpadButton - ControllerButtons.BUTTON_DPAD_UP, true);
+                        if (!mappingCaptureGesture) {
+                            nativeMenuNavKey(dpadButton - ControllerButtons.BUTTON_DPAD_UP, true);
+                        }
                         button.setPressed(true);
                         return true;
                     case MotionEvent.ACTION_UP:
                         setButton(dpadButton, false);
-                        nativeMenuNavKey(dpadButton - ControllerButtons.BUTTON_DPAD_UP, false);
+                        if (!mappingCaptureGesture) {
+                            nativeMenuNavKey(dpadButton - ControllerButtons.BUTTON_DPAD_UP, false);
+                        }
                         button.setPressed(false);
+                        mappingCaptureGesture = false;
                         return true;
                     case MotionEvent.ACTION_CANCEL:
                         setButton(dpadButton, false);
-                        nativeMenuNavKey(dpadButton - ControllerButtons.BUTTON_DPAD_UP, false);
+                        if (!mappingCaptureGesture) {
+                            nativeMenuNavKey(dpadButton - ControllerButtons.BUTTON_DPAD_UP, false);
+                        }
+                        button.setPressed(false);
+                        mappingCaptureGesture = false;
                         return true;
                 }
-                return false;
+                return mappingCaptureGesture;
             }
         });
     }
@@ -904,13 +991,20 @@ public class MainActivity extends SDLActivity{
             final float joystickCenterY = joystickLayout.getHeight() / 2f;
 
             joystickLayout.setOnTouchListener(new View.OnTouchListener() {
+                private boolean mappingCaptureGesture = false;
+
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    if (dispatchMenuTouch(event)) {
+                    int action = event.getActionMasked();
+                    if (action == MotionEvent.ACTION_DOWN) {
+                        mappingCaptureGesture = nativeIsInputMappingCaptureActive();
+                    }
+
+                    if (!mappingCaptureGesture && dispatchMenuTouch(event)) {
                         return true;
                     }
 
-                    switch (event.getAction()) {
+                    switch (action) {
                         case MotionEvent.ACTION_DOWN:
                         case MotionEvent.ACTION_MOVE:
                             // Calculate the joystick movement and move the knob
@@ -947,6 +1041,7 @@ public class MainActivity extends SDLActivity{
                             // Reset joystick values to 0 when released or canceled
                             setAxis(isLeft ? ControllerButtons.AXIS_LX : ControllerButtons.AXIS_RX, (short) 0); // X-axis
                             setAxis(isLeft ? ControllerButtons.AXIS_LY : ControllerButtons.AXIS_RY, (short) 0); // Y-axis
+                            mappingCaptureGesture = false;
                             break;
                     }
                     return true;

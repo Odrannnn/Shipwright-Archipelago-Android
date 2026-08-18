@@ -48,6 +48,11 @@ Use the *Back/Select/-* button on your controller to open the **Enhancements men
 
 When the server is on another device on your local network, use that device's LAN address and port. `localhost` on Android means the Android device itself.
 
+Android launchers and companion apps can also supply the server, slot, and
+optional password through an intent or `soh://` deep link. See the
+[Android connection intent documentation](soh/soh/Network/Archipelago/README.md#android-connection-intents)
+for the supported action, extras, URI format, and password-safety guidance.
+
 ### 5. Play!
 
 Congratulations, you are now sailing with the Ship of Harkinian! Have fun!

@@ -11,9 +11,14 @@
 
 #include <fstream>
 #include <filesystem>
+#include <exception>
 #include <iostream>
 #include <string>
 #include <utility>
+
+#ifdef __ANDROID__
+#include <jni.h>
+#endif
 
 #include "soh/Network/Archipelago/ArchipelagoConsoleWindow.h"
 #include "soh/Network/Archipelago/ArchipelagoHintWindow.h"
@@ -74,6 +79,7 @@ bool ArchipelagoClient::StartClient() {
     password = CVarGetString(CVAR_REMOTE_ARCHIPELAGO("Password"), "");
     locationsScouted = false;
     hintsInitialized = false;
+    pendingExternalChecks.clear();
 
     uuid = ap_get_uuid(Ship::Context::GetPathRelativeToAppDirectory("ap-client-uuid"));
     const std::string cert = Ship::Context::LocateFileAcrossAppDirs("networking/cacert.pem");
@@ -248,8 +254,12 @@ bool ArchipelagoClient::StartClient() {
         }
 
         for (const int64_t apLoc : locations) {
-            QueueExternalCheck(apLoc);
+            QueueOrDeferExternalCheck(apLoc);
         }
+    });
+
+    apClient->set_data_package_changed_handler([&](const nlohmann::json&) {
+        FlushPendingExternalChecks();
     });
 
     apClient->set_print_json_handler([&](const APClient::PrintJSONArgs& arg) {
@@ -458,6 +468,46 @@ bool ArchipelagoClient::StopClient() {
     return true;
 }
 
+bool ArchipelagoClient::QueueConnectionRequest(const std::string& address, const std::string& slot,
+                                               const std::string& password) {
+    if (address.empty() || address.size() > AP_Client_consts::MAX_ADDRESS_LENGTH || slot.empty() ||
+        slot.size() > AP_Client_consts::MAX_PLAYER_NAME_LENGHT ||
+        password.size() > AP_Client_consts::MAX_PASSWORD_LENGTH) {
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(connectionRequestMutex);
+    pendingConnectionAddress = address;
+    pendingConnectionSlot = slot;
+    pendingConnectionPassword = password;
+    connectionRequestPending = true;
+    return true;
+}
+
+void ArchipelagoClient::ApplyPendingConnectionRequest() {
+    std::string address;
+    std::string slot;
+    std::string password;
+    {
+        std::lock_guard<std::mutex> lock(connectionRequestMutex);
+        if (!connectionRequestPending) {
+            return;
+        }
+
+        address = std::move(pendingConnectionAddress);
+        slot = std::move(pendingConnectionSlot);
+        password = std::move(pendingConnectionPassword);
+        connectionRequestPending = false;
+    }
+
+    CVarSetString(CVAR_REMOTE_ARCHIPELAGO("ServerAddress"), address.c_str());
+    CVarSetString(CVAR_REMOTE_ARCHIPELAGO("SlotName"), slot.c_str());
+    CVarSetString(CVAR_REMOTE_ARCHIPELAGO("Password"), password.c_str());
+    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
+    ArchipelagoConsole_SendMessage("[LOG] Connecting using Android intent.");
+    StartClient();
+}
+
 void ArchipelagoClient::RequestInitData() {
     // To create a save file we'll need the following data:
     // Slot Data: received on connection, we already have this
@@ -575,7 +625,7 @@ void ArchipelagoClient::SynchSentLocations() {
 void ArchipelagoClient::SynchReceivedLocations() {
     // Open checks that have been found previously but went unsaved
     for (const int64_t apLoc : apClient->get_checked_locations()) {
-        QueueExternalCheck(apLoc);
+        QueueOrDeferExternalCheck(apLoc);
     }
 }
 
@@ -619,12 +669,16 @@ void ArchipelagoClient::InitForeignHints() {
 
 void ArchipelagoClient::QueueExternalCheck(const int64_t apLocation) {
     const std::string checkName = apClient->get_location_name(apLocation, AP_Client_consts::AP_GAME_NAME);
-    const uint32_t RC = static_cast<uint32_t>(Rando::StaticData::locationNameToEnum[checkName]);
+    const auto check = Rando::StaticData::locationNameToEnum.find(checkName);
 
-    if (RC == RC_UNKNOWN_CHECK) {
-        ArchipelagoConsole_SendMessage("[ERROR] Attempting to queue an unknown location (RC_UNKOWN_CHECK), skipping.");
+    if (check == Rando::StaticData::locationNameToEnum.end() || check->second == RC_UNKNOWN_CHECK) {
+        const std::string message = "[ERROR] Server sent an unmapped location (" + std::to_string(apLocation) +
+                                    ": " + checkName + "), skipping.";
+        ArchipelagoConsole_SendMessage("%s", message.c_str());
         return;
     }
+
+    const uint32_t RC = static_cast<uint32_t>(check->second);
 
     // Don't queue checks we already have
     if (Rando::Context::GetInstance()->GetItemLocation(RC)->HasObtained()) {
@@ -632,6 +686,33 @@ void ArchipelagoClient::QueueExternalCheck(const int64_t apLocation) {
     }
 
     GameInteractor_ExecuteOnRandomizerExternalCheck(RC);
+}
+
+void ArchipelagoClient::QueueOrDeferExternalCheck(const int64_t apLocation) {
+    if (apClient == nullptr) {
+        return;
+    }
+
+    if (!apClient->is_data_package_valid()) {
+        pendingExternalChecks.insert(apLocation);
+        return;
+    }
+
+    pendingExternalChecks.erase(apLocation);
+    QueueExternalCheck(apLocation);
+}
+
+void ArchipelagoClient::FlushPendingExternalChecks() {
+    if (apClient == nullptr || disconnecting || !apClient->is_data_package_valid() ||
+        !GameInteractor::IsSaveLoaded(true)) {
+        return;
+    }
+
+    const std::set<int64_t> checks = std::move(pendingExternalChecks);
+    pendingExternalChecks.clear();
+    for (const int64_t apLocation : checks) {
+        QueueExternalCheck(apLocation);
+    }
 }
 
 bool ArchipelagoClient::IsConnected() const {
@@ -868,6 +949,8 @@ std::string ArchipelagoClient::SanitizeName(const std::string& name) {
 }
 
 void ArchipelagoClient::Poll() {
+    ApplyPendingConnectionRequest();
+
     if (apClient == nullptr) {
         return;
     }
@@ -876,6 +959,7 @@ void ArchipelagoClient::Poll() {
         apClient->reset();
         apClient = nullptr;
         ResetQueue();
+        pendingExternalChecks.clear();
         disconnecting = false;
         CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 0); // disconnected
         CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0);
@@ -892,7 +976,19 @@ void ArchipelagoClient::Poll() {
         QueueItem(item);
     }
 
-    apClient->poll();
+    try {
+        apClient->poll();
+    } catch (const std::exception& exception) {
+        const std::string message =
+            "[ERROR] Archipelago connection interrupted (" + std::string(exception.what()) + "), reconnecting...";
+        ArchipelagoConsole_SendMessage("%s", message.c_str());
+        apClient->reset();
+        ResetQueue();
+        pendingExternalChecks.clear();
+        retries = 0;
+        CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatus"), 1); // Connecting
+        CVarSetInteger(CVAR_REMOTE_ARCHIPELAGO("ConnectionStatusInGame"), 0);
+    }
 }
 
 void ArchipelagoClient::ResetQueue() {
@@ -1558,6 +1654,32 @@ extern "C" void Archipelago_InitSaveFile() {
 extern "C" void Archipelago_InitConnection() {
     ArchipelagoClient::GetInstance().StartClient();
 }
+
+#ifdef __ANDROID__
+namespace {
+std::string JStringToString(JNIEnv* env, jstring value) {
+    if (value == nullptr) {
+        return "";
+    }
+
+    const char* characters = env->GetStringUTFChars(value, nullptr);
+    if (characters == nullptr) {
+        return "";
+    }
+
+    std::string result(characters);
+    env->ReleaseStringUTFChars(value, characters);
+    return result;
+}
+} // namespace
+
+extern "C" JNIEXPORT jboolean JNICALL Java_com_dishii_soh_MainActivity_nativeQueueArchipelagoConnection(
+    JNIEnv* env, jobject, jstring address, jstring slot, jstring password) {
+    const bool accepted = ArchipelagoClient::GetInstance().QueueConnectionRequest(
+        JStringToString(env, address), JStringToString(env, slot), JStringToString(env, password));
+    return accepted ? JNI_TRUE : JNI_FALSE;
+}
+#endif
 
 extern "C" void Archipelago_RequestInitData() {
     ArchipelagoClient::GetInstance().RequestInitData();

@@ -18,6 +18,32 @@ generating a game.
 The settings, console, and hints windows are all available from the Archipelago
 section of the Network menu.
 
+## Android connection intents
+
+Android can launch the app and immediately connect it to an Archipelago server.
+The explicit intent action is `com.dishii.soh.action.CONNECT_ARCHIPELAGO` and it
+accepts the string extras `archipelago_address`, `archipelago_slot`, and the
+optional `archipelago_password`:
+
+```sh
+adb shell am start -n com.dishii.soh/.MainActivity \
+  -a com.dishii.soh.action.CONNECT_ARCHIPELAGO \
+  --es archipelago_address archipelago.gg:38281 \
+  --es archipelago_slot Player1
+```
+
+The equivalent deep-link format is:
+
+```text
+soh://archipelago/connect?address=archipelago.gg%3A38281&slot=Player1
+```
+
+Add `password` to the deep link or `archipelago_password` to the explicit intent
+when the room requires one. Prefer the explicit intent extra for passwords,
+because URI parameters can be retained in browser history or system logs. New
+intents replace any pending request; if the client is already active, it safely
+reconnects using the supplied details.
+
 ## TLS certificates
 
 Archipelago passes curl's Mozilla-derived CA bundle to `apclientpp` instead of
