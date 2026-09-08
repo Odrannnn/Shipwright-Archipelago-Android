@@ -1,0 +1,109 @@
+name: Sign p8 with permanent release key
+
+on:
+  push:
+    branches:
+      - 'signing/v9.2.3-ap1.4.2-p8'
+  workflow_dispatch:
+
+concurrency:
+  group: permanent-signing-p8
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v9.2.3-ap1.4.2-p8
+      ORIGINAL_SHA256: a2318f49062255afd298a164713c3c40e12e11c69258d5b1aef38a27c588e738
+      ANDROID_HOME: ${{ github.workspace }}/.android-sdk
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/.android-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and pin the existing p8 APK
+        run: |
+          set -euo pipefail
+          mkdir -p original signed
+          gh release download "${RELEASE_TAG}" --pattern "soh-${RELEASE_TAG}.apk" --dir original
+          printf '%s  %s\n' "${ORIGINAL_SHA256}" "original/soh-${RELEASE_TAG}.apk" | sha256sum -c -
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+      - name: Install signing tools
+        run: sdkmanager 'build-tools;35.0.0'
+      - name: Sign the existing APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${ANDROID_KEYSTORE_BASE64:?Missing permanent release keystore}"
+          : "${ANDROID_KEYSTORE_PASSWORD:?Missing keystore password}"
+          : "${ANDROID_KEY_ALIAS:?Missing key alias}"
+          : "${ANDROID_KEY_PASSWORD:?Missing key password}"
+          umask 077
+          printf '%s' "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > "${RUNNER_TEMP}/soh-release.keystore"
+          "${ANDROID_HOME}/build-tools/35.0.0/apksigner" sign \
+            --ks "${RUNNER_TEMP}/soh-release.keystore" \
+            --ks-key-alias "${ANDROID_KEY_ALIAS}" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEY_PASSWORD \
+            --out "signed/soh-${RELEASE_TAG}.apk" "original/soh-${RELEASE_TAG}.apk"
+      - name: Verify certificate and unchanged APK payload
+        run: |
+          set -euo pipefail
+          python3 Android/scripts/verify-release-signature.py "signed/soh-${RELEASE_TAG}.apk"
+          python3 - <<'PY'
+          import os, zipfile
+          name = 'soh-' + os.environ['RELEASE_TAG'] + '.apk'
+          with zipfile.ZipFile('original/' + name) as original, zipfile.ZipFile('signed/' + name) as signed:
+              def names(archive):
+                  entries = archive.namelist()
+                  if len(entries) != len(set(entries)):
+                      raise SystemExit('Duplicate ZIP entries detected')
+                  return {n for n in entries if not n.startswith('META-INF/')}
+              payload = names(original)
+              if payload != names(signed):
+                  raise SystemExit('APK payload entry list changed')
+              for entry in payload:
+                  if original.read(entry) != signed.read(entry):
+                      raise SystemExit('APK payload changed: ' + entry)
+          print('All APK entries outside signing metadata are byte-for-byte unchanged')
+          PY
+      - name: Replace p8 release APK and document signing transition
+        run: |
+          set -euo pipefail
+          # Recheck the live asset immediately before replacing it.
+          mkdir -p recheck
+          gh release download "${RELEASE_TAG}" --pattern "soh-${RELEASE_TAG}.apk" --dir recheck
+          printf '%s  %s\n' "${ORIGINAL_SHA256}" "recheck/soh-${RELEASE_TAG}.apk" | sha256sum -c -
+          SHA256=$(sha256sum "signed/soh-${RELEASE_TAG}.apk" | cut -d' ' -f1)
+          cat > "${RUNNER_TEMP}/release-notes.md" <<EOF
+          Fixes the first-launch storage permission dialog reopening immediately after Open Settings. Permission is checked when returning from Settings, with a usable retry if Settings cannot open.
+
+          This APK now uses the permanent release signing key. Its application code, manifest, native libraries, and assets are unchanged from the original p8 APK. Future releases will reuse this signing identity.
+
+          **Installation:** previous APKs signed with temporary debug keys cannot be updated in place. Back up your saves before the one-time uninstall/reinstall. This signing change does not recover compatibility with old signing keys.
+
+          APK SHA256: ${SHA256}
+
+          Signing certificate SHA256: 8032fd2a79885883916a0de46e3fb8e64b21db502b96c482ee0b55fba85a0464
+
+          The previous build-provenance attestation covers the original APK, not these re-signed bytes. Original APK SHA256: ${ORIGINAL_SHA256}
+
+          Signing run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          EOF
+          gh release upload "${RELEASE_TAG}" "signed/soh-${RELEASE_TAG}.apk" --clobber
+          gh release edit "${RELEASE_TAG}" --notes-file "${RUNNER_TEMP}/release-notes.md"
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "${RUNNER_TEMP}/soh-release.keystore"
