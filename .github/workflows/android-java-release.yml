@@ -15,6 +15,8 @@ jobs:
       attestations: write
     env:
       GH_TOKEN: ${{ github.token }}
+      ANDROID_HOME: ${{ runner.temp }}/android-sdk
+      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
       RELEASE_TAG: v9.2.3-ap1.4.2-p8
       BASE_TAG: v9.2.3-ap1.4.2-p7
       BASE_SHA256: 7c39b237ebd98c5771847088b91337383893bd73fb7b9cf784de0240becce386
@@ -110,6 +112,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: ''
       - name: Install Android platform
         run: sdkmanager 'platforms;android-31' 'build-tools;35.0.0'
       - name: Compile Java and package APK with unchanged native libraries
