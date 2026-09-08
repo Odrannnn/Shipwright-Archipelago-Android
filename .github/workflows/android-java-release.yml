@@ -62,12 +62,20 @@ jobs:
           def git(*args):
               return subprocess.check_output(['git', *args], text=True)
           allowed = {'Android/app/src/main/java/com/dishii/soh/MainActivity.java',
-                     'Android/app/build.gradle'}
+                     'Android/app/build.gradle',
+                     'Android/gradle/wrapper/gradle-wrapper.jar',
+                     'Android/gradle/wrapper/gradle-wrapper.properties'}
           changed = git('diff', '--name-only', base, 'HEAD').splitlines()
           unexpected = [p for p in changed if p not in allowed and not
                         p.startswith(('.github/workflows/', 'Android/scripts/'))]
           if unexpected:
               raise SystemExit('Full build required; other inputs changed: ' + ', '.join(unexpected))
+          path = 'Android/gradle/wrapper/gradle-wrapper.properties'
+          old, new = git('show', base + ':' + path), open(path).read()
+          def wrapper_config(text):
+              return [line for line in text.splitlines() if line.strip() and not line.startswith('distributionSha256Sum=')]
+          if wrapper_config(old) != wrapper_config(new):
+              raise SystemExit('Full build required; Gradle distribution changed')
           path = 'Android/app/src/main/java/com/dishii/soh/MainActivity.java'
           old, new = git('show', base + ':' + path), open(path).read()
           if re.findall(r'[^\n]*\bnative\b[^\n]*;', old) != re.findall(r'[^\n]*\bnative\b[^\n]*;', new):
