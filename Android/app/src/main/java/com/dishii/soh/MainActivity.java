@@ -64,6 +64,7 @@ public class MainActivity extends SDLActivity{
     private static final int COPY_BUFFER_SIZE = 65536;
     private static final int RUMBLE_MAX_DURATION_MS = 5000;
     private boolean setupStarted = false;
+    private boolean awaitingStorageSettings = false;
     private AlertDialog storagePermissionDialog;
 
     @Override
@@ -267,10 +268,20 @@ public class MainActivity extends SDLActivity{
                 .setTitle("Storage access required")
                 .setMessage(message)
                 .setCancelable(false)
-                .setPositiveButton("Open Settings", (dialog, which) -> requestStoragePermission())
+                .setPositiveButton("Open Settings", (dialog, which) -> {
+                    // Clear the old dialog before launching, so a failed settings
+                    // intent can immediately display a usable retry dialog.
+                    dialog.dismiss();
+                    storagePermissionDialog = null;
+                    requestStoragePermission();
+                })
                 .setNegativeButton("Exit", (dialog, which) -> finish())
                 .create();
-        storagePermissionDialog.setOnDismissListener(dialog -> storagePermissionDialog = null);
+        storagePermissionDialog.setOnDismissListener(dialog -> {
+            if (storagePermissionDialog == dialog) {
+                storagePermissionDialog = null;
+            }
+        });
         storagePermissionDialog.show();
     }
 
@@ -282,12 +293,16 @@ public class MainActivity extends SDLActivity{
                 appSettingsIntent.setData(Uri.parse("package:" + getPackageName()));
 
                 try {
-                    startActivityForResult(appSettingsIntent, STORAGE_PERMISSION_REQUEST_CODE);
+                    awaitingStorageSettings = true;
+                    startActivity(appSettingsIntent);
                 } catch (ActivityNotFoundException | SecurityException appSettingsUnavailable) {
+                    Log.w("SoH", "App-specific storage settings unavailable", appSettingsUnavailable);
                     try {
                         Intent allFilesSettingsIntent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                        startActivityForResult(allFilesSettingsIntent, STORAGE_PERMISSION_REQUEST_CODE);
+                        startActivity(allFilesSettingsIntent);
                     } catch (ActivityNotFoundException | SecurityException allFilesSettingsUnavailable) {
+                        awaitingStorageSettings = false;
+                        Log.e("SoH", "All-files storage settings unavailable", allFilesSettingsUnavailable);
                         Toast.makeText(this, "Android could not open the storage access settings.", Toast.LENGTH_LONG).show();
                         showStoragePermissionDialog();
                     }
@@ -307,6 +322,23 @@ public class MainActivity extends SDLActivity{
         } else {
             // Below Android 6 → permissions granted at install time
             beginSetup();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Settings can run in a separate task (this activity is singleInstance).
+        // An activity result may be cancelled before the user grants access;
+        // check the actual permission when the user returns instead.
+        if (awaitingStorageSettings) {
+            awaitingStorageSettings = false;
+            if (hasStoragePermission()) {
+                beginSetup();
+            } else {
+                showStoragePermissionDialog();
+            }
         }
     }
 
@@ -576,12 +608,6 @@ public class MainActivity extends SDLActivity{
                 nativeHandleSelectedFile(null);
             }
 
-        } else if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
-            if (hasStoragePermission()) {
-                beginSetup();
-            } else {
-                showStoragePermissionDialog();
-            }
         }
     }
 
