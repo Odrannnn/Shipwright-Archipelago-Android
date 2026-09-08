@@ -64,7 +64,8 @@ jobs:
           def git(*args):
               return subprocess.check_output(['git', *args], text=True)
           allowed = {'Android/app/src/main/java/com/dishii/soh/MainActivity.java',
-                     'Android/app/build.gradle',
+                     'Android/app/build.gradle', 'Android/release-signing.gradle',
+                     'Android/RELEASE-SIGNING.md', '.gitignore',
                      'Android/gradle/wrapper/gradle-wrapper.jar',
                      'Android/gradle/wrapper/gradle-wrapper.properties'}
           changed = git('diff', '--name-only', base, 'HEAD').splitlines()
@@ -92,6 +93,8 @@ jobs:
                       jniLibs.keepDebugSymbols += ['**/*.so']
                   }
               }""", 'ndkVersion "26.0.10792818"')
+          new = new.replace("apply from: '../release-signing.gradle'", '')
+          new = new.replace('// Configured below from the permanent release keystore.', 'signingConfig signingConfigs.debug')
           def normalize(text):
               text = re.sub(r'^\s*version(?:Code|Name)\s+.*$', '', text, flags=re.M)
               return re.sub(r'\s+', '', text)
@@ -117,9 +120,23 @@ jobs:
           packages: ''
       - name: Install Android platform
         run: sdkmanager 'platforms;android-31' 'build-tools;35.0.0'
+      - name: Load permanent release signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -eu
+          : "${ANDROID_KEYSTORE_BASE64:?Missing permanent release keystore secret}"
+          umask 077
+          printf '%s' "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > "${RUNNER_TEMP}/soh-release.keystore"
+          test -s "${RUNNER_TEMP}/soh-release.keystore"
+
       - name: Compile Java and package APK with unchanged native libraries
         env:
           GIT_TAG: ${{ env.RELEASE_TAG }}
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/soh-release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           printf 'sdk.dir=%s\n' "${ANDROID_HOME}" > Android/local.properties
           cd Android
@@ -139,7 +156,7 @@ jobs:
                           raise SystemExit('Reused payload differs: ' + name)
           print('All reused libraries and assets are byte-for-byte identical')
           PY
-          "${ANDROID_HOME}/build-tools/35.0.0/apksigner" verify "soh-${RELEASE_TAG}.apk"
+          python3 Android/scripts/verify-release-signature.py "soh-${RELEASE_TAG}.apk"
           "${ANDROID_HOME}/build-tools/35.0.0/aapt" dump badging "soh-${RELEASE_TAG}.apk" > /tmp/apk-badging.txt
           "${ANDROID_HOME}/build-tools/35.0.0/aapt" dump permissions "soh-${RELEASE_TAG}.apk" > /tmp/apk-permissions.txt
           grep -F "package: name='com.dishii.soh' versionCode='19' versionName='9.2.3-ap1.4.2-p8'" /tmp/apk-badging.txt
@@ -180,3 +197,7 @@ jobs:
           printf '\nSHA256: %s\n' "$(sha256sum "soh-${RELEASE_TAG}.apk" | cut -d' ' -f1)" >> /tmp/release-notes.md
           printf 'Build: %s/%s/actions/runs/%s\n' "${GITHUB_SERVER_URL}" "${GITHUB_REPOSITORY}" "${GITHUB_RUN_ID}" >> /tmp/release-notes.md
           gh release create "${RELEASE_TAG}" "soh-${RELEASE_TAG}.apk" --verify-tag --title "${RELEASE_TAG}" --notes-file /tmp/release-notes.md
+
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "${RUNNER_TEMP}/soh-release.keystore"

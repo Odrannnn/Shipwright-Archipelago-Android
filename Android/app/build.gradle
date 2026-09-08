@@ -43,7 +43,7 @@ android {
             minifyEnabled false
             debuggable false
             jniDebuggable false
-            signingConfig signingConfigs.debug
+            // Configured below from the permanent release keystore.
             externalNativeBuild {
                 cmake {
                     arguments "-DSDL_SHARED=ON", "-DANDROID_STL=c++_static", "-DHAVE_LD_VERSION_SCRIPT=OFF",'-DUSE_OPENGLES=ON', "-DBUILD_REMOTE_CONTROL=1"
@@ -99,6 +99,8 @@ android {
         }
     }
 }
+
+apply from: '../release-signing.gradle'
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')

@@ -143,15 +143,32 @@ jobs:
       - name: Show available disk space
         run: df -h /
 
+      - name: Load permanent release signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -eu
+          : "${ANDROID_KEYSTORE_BASE64:?Missing permanent release keystore secret}"
+          umask 077
+          printf '%s' "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > "${RUNNER_TEMP}/soh-release.keystore"
+          test -s "${RUNNER_TEMP}/soh-release.keystore"
+
       - name: Build release APK
         env:
           GIT_TAG: ${{ env.RELEASE_TAG }}
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/soh-release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: cd Android && ./gradlew assembleRelease
 
       - name: Rename APK
         run: |
           APK=$(find Android/app/build/outputs/apk/release -name 'soh_release_*.apk' | head -1)
           mv "$APK" "soh-${RELEASE_TAG}.apk"
+
+      - name: Verify permanent release signature
+        run: python3 Android/scripts/verify-release-signature.py "soh-${RELEASE_TAG}.apk"
 
       - name: Compute SHA256
         id: sha256
@@ -192,3 +209,7 @@ jobs:
             "soh-${TAG}.apk" \
             --title "${TAG}" \
             --notes-file /tmp/release-notes.md
+
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "${RUNNER_TEMP}/soh-release.keystore"

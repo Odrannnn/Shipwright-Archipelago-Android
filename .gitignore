@@ -461,3 +461,8 @@ soh/properties.h
 /clang-format.exe
 *.o2r
 local.properties
+
+# Private Android signing material
+*.keystore
+*.jks
+*.p12

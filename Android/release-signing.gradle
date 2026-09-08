@@ -1,0 +1,27 @@
+// Release builds must never silently use a generated debug key.
+if (plugins.hasPlugin('com.android.application')) {
+    def signingEnvironment = [
+        'ANDROID_KEYSTORE_PATH', 'ANDROID_KEYSTORE_PASSWORD',
+        'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD'
+    ]
+    def missing = signingEnvironment.findAll { !System.getenv(it) }
+    android.signingConfigs.create('permanentRelease') {
+        if (missing.isEmpty()) {
+            storeFile file(System.getenv('ANDROID_KEYSTORE_PATH'))
+            storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            keyAlias System.getenv('ANDROID_KEY_ALIAS')
+            keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+        }
+    }
+    android.buildTypes.release.signingConfig = android.signingConfigs.permanentRelease
+    gradle.taskGraph.whenReady { graph ->
+        if (graph.allTasks.any { it.project == project && it.name.toLowerCase().contains('release') }) {
+            if (!missing.isEmpty()) {
+                throw new GradleException('Release signing requires: ' + missing.join(', '))
+            }
+            if (!android.signingConfigs.permanentRelease.storeFile.isFile()) {
+                throw new GradleException('ANDROID_KEYSTORE_PATH does not point to a keystore file')
+            }
+        }
+    }
+}
