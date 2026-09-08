@@ -87,6 +87,12 @@
         <meta-data android:name="SDL_ENV.SDL_IOS_ORIENTATIONS" android:value="LandscapeLeft LandscapeRight"/>
 
      
+        <activity android:name=".SeedImportActivity"
+            android:exported="false"
+            android:launchMode="standard"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="landscape" />
+
         <activity android:name="MainActivity"
             android:label="@string/app_name"
             android:alwaysRetainTaskState="true"

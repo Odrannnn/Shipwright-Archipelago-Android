@@ -6,6 +6,12 @@
 #include "soh/OTRGlobals.h"
 #include "soh/SohGui/SohGui.hpp"
 
+#ifdef __ANDROID__
+#include <SDL.h>
+#include <SDL_system.h>
+#include <jni.h>
+#endif
+
 extern "C" {
 #include "variables.h"
 }
@@ -28,6 +34,28 @@ static char seedString[MAX_SEED_STRING_SIZE];
 static std::set<RandomizerCheck> excludedLocations;
 static std::set<RandomizerTrick> enabledTricks;
 static std::set<RandomizerTrick> enabledGlitches;
+
+#ifdef __ANDROID__
+static void OpenSeedJsonPicker() {
+    auto* env = static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
+    auto activity = static_cast<jobject>(SDL_AndroidGetActivity());
+    if (env == nullptr || activity == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot open seed picker: Android activity unavailable");
+        return;
+    }
+    jclass activityClass = env->GetObjectClass(activity);
+    jmethodID openPicker = env->GetMethodID(activityClass, "openSeedJsonPicker", "()V");
+    if (openPicker != nullptr) {
+        env->CallVoidMethod(activity, openPicker);
+    }
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not open Android seed JSON picker");
+    }
+    env->DeleteLocalRef(activityClass);
+    env->DeleteLocalRef(activity);
+}
+#endif
 
 void SaveEnabledTricks() {
     std::string enabledTrickString = "";
@@ -591,6 +619,20 @@ void SohMenu::AddMenuRandomizer() {
         .Options(ButtonOptions()
                      .Size(ImVec2(250.f, 0.f))
                      .DisabledTooltip("Must be on File Select to generate a randomizer seed."));
+#ifdef __ANDROID__
+    AddWidget(path, "Import Seed JSON", WIDGET_BUTTON)
+        .Callback([](WidgetInfo& info) { OpenSeedJsonPicker(); })
+        .PreFunc([](WidgetInfo& info) {
+            info.options->disabled = gSaveContext.gameMode != GAMEMODE_FILE_SELECT ||
+                                     GameInteractor::IsSaveLoaded() ||
+                                     CVarGetInteger(CVAR_GENERAL("RandoGenerating"), 0) ||
+                                     CVarGetInteger(CVAR_GENERAL("OnFileSelectNameEntry"), 0);
+        })
+        .Options(ButtonOptions()
+                     .Size(ImVec2(250.f, 0.f))
+                     .Tooltip("Choose a Ship of Harkinian randomizer seed JSON from Android storage.")
+                     .DisabledTooltip("Return to File Select and finish seed generation before importing a seed."));
+#endif
     AddWidget(path, "Randomize All Settings", WIDGET_BUTTON)
         .Callback([](WidgetInfo& info) { Rando::Settings::GetInstance()->RandomizeAllSettings(); })
         .PreFunc([](WidgetInfo& info) {

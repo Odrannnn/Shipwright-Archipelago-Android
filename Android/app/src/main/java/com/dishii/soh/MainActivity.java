@@ -58,6 +58,9 @@ public class MainActivity extends SDLActivity{
     public static final String EXTRA_ARCHIPELAGO_SLOT = "archipelago_slot";
     public static final String EXTRA_ARCHIPELAGO_PASSWORD = "archipelago_password";
 
+    static final String ACTION_IMPORT_SEED = "com.dishii.soh.action.IMPORT_SEED";
+    static final String EXTRA_SEED_PATH = "imported_seed_path";
+
     SharedPreferences preferences;
     private static final CountDownLatch setupLatch = new CountDownLatch(1);
     private volatile boolean mIsAiming = false;
@@ -89,6 +92,7 @@ public class MainActivity extends SDLActivity{
         setupControllerOverlay();
         attachController();
         handleArchipelagoConnectIntent(getIntent());
+        handleImportedSeedIntent(getIntent());
 
         Log.i("SoH", "onCreate complete");
     }
@@ -98,6 +102,28 @@ public class MainActivity extends SDLActivity{
         super.onNewIntent(intent);
         setIntent(intent);
         handleArchipelagoConnectIntent(intent);
+        handleImportedSeedIntent(intent);
+    }
+
+    public void openSeedJsonPicker() {
+        runOnUiThread(() -> startActivity(new Intent(this, SeedImportActivity.class)));
+    }
+
+    private void handleImportedSeedIntent(Intent intent) {
+        if (intent == null || !ACTION_IMPORT_SEED.equals(intent.getAction())) return;
+        String path = intent.getStringExtra(EXTRA_SEED_PATH);
+        intent.removeExtra(EXTRA_SEED_PATH);
+        if (path == null) return;
+        try {
+            File seed = new File(path).getCanonicalFile();
+            File directory = new File(Environment.getExternalStorageDirectory(), "SOH/Randomizer").getCanonicalFile();
+            if (!directory.equals(seed.getParentFile()) || !seed.getName().startsWith("imported-seed-") ||
+                    !seed.getName().endsWith(".json") || !seed.isFile() || seed.length() > SeedJsonImporter.MAX_BYTES) return;
+            SDLActivity.onNativeDropFile(seed.getAbsolutePath());
+            Toast.makeText(this, "Seed JSON saved; loading requested.", Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Toast.makeText(this, "Could not open imported seed JSON.", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void handleArchipelagoConnectIntent(Intent intent) {
