@@ -8,7 +8,13 @@ else {
 }
 
 android {
-    ndkVersion "26.0.10792818"
+    if (!project.hasProperty('EXCLUDE_NATIVE_LIBS')) {
+        ndkVersion "26.0.10792818"
+    } else {
+        packagingOptions {
+            jniLibs.keepDebugSymbols += ['**/*.so']
+        }
+    }
     namespace 'com.dishii.soh'
     compileSdkVersion 31
     buildFeatures {
@@ -48,8 +54,10 @@ android {
         }
     }
     applicationVariants.all { variant ->
-        tasks["merge${variant.name.capitalize()}Assets"]
-            .dependsOn("externalNativeBuild${variant.name.capitalize()}")
+        if (!project.hasProperty('EXCLUDE_NATIVE_LIBS')) {
+            tasks["merge${variant.name.capitalize()}Assets"]
+                .dependsOn("externalNativeBuild${variant.name.capitalize()}")
+        }
         variant.outputs.all { output ->
             def projectName = rootProject.name
             def buildType = variant.buildType.name

@@ -1,0 +1,169 @@
+name: Android Java-only Release
+
+on:
+  push:
+    branches:
+      - 'rebuild/v9.2.3-ap1.4.2-p8'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: write
+      id-token: write
+      attestations: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v9.2.3-ap1.4.2-p8
+      BASE_TAG: v9.2.3-ap1.4.2-p7
+      BASE_SHA256: 7c39b237ebd98c5771847088b91337383893bd73fb7b9cf784de0240becce386
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cancel superseded full build and check release is unpublished
+        run: |
+          python3 - <<'PY'
+          import json, os, time, urllib.request, urllib.error
+          root = 'https://api.github.com/repos/' + os.environ['GITHUB_REPOSITORY']
+          def api(path, method='GET'):
+              request = urllib.request.Request(root + path, method=method,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                           'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(request) as response:
+                  body = response.read()
+                  return json.loads(body) if body else None
+          try:
+              api('/releases/tags/' + os.environ['RELEASE_TAG'])
+          except urllib.error.HTTPError as error:
+              if error.code != 404:
+                  raise
+          else:
+              raise SystemExit('Release already published; refusing to replace it')
+          run_path = '/actions/runs/34259368547'
+          if api(run_path)['status'] != 'completed':
+              api(run_path + '/cancel', 'POST')
+              for attempt in range(60):
+                  if api(run_path)['status'] == 'completed':
+                      break
+                  time.sleep(5)
+              else:
+                  raise SystemExit('Superseded build did not stop')
+          print('Full build stopped; release is unpublished')
+          PY
+
+      - name: Verify native and asset sources are unchanged
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess
+          base = os.environ['BASE_TAG']
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True)
+          allowed = {'Android/app/src/main/java/com/dishii/soh/MainActivity.java',
+                     'Android/app/build.gradle'}
+          changed = git('diff', '--name-only', base, 'HEAD').splitlines()
+          unexpected = [p for p in changed if p not in allowed and not
+                        p.startswith(('.github/workflows/', 'Android/scripts/'))]
+          if unexpected:
+              raise SystemExit('Full build required; other inputs changed: ' + ', '.join(unexpected))
+          path = 'Android/app/src/main/java/com/dishii/soh/MainActivity.java'
+          old, new = git('show', base + ':' + path), open(path).read()
+          if re.findall(r'[^\n]*\bnative\b[^\n]*;', old) != re.findall(r'[^\n]*\bnative\b[^\n]*;', new):
+              raise SystemExit('Full build required; JNI declarations changed')
+          path = 'Android/app/build.gradle'
+          old, new = git('show', base + ':' + path), open(path).read()
+          new = re.sub(r"if \(!project.hasProperty\('EXCLUDE_NATIVE_LIBS'\)\) \{\s*(tasks\[\"merge.*?\.dependsOn\([^\n]+\))\s*\}", r'\1', new, count=1, flags=re.S)
+          new = new.replace("""if (!project.hasProperty('EXCLUDE_NATIVE_LIBS')) {
+                  ndkVersion "26.0.10792818"
+              } else {
+                  packagingOptions {
+                      jniLibs.keepDebugSymbols += ['**/*.so']
+                  }
+              }""", 'ndkVersion "26.0.10792818"')
+          def normalize(text):
+              text = re.sub(r'^\s*version(?:Code|Name)\s+.*$', '', text, flags=re.M)
+              return re.sub(r'\s+', '', text)
+          if normalize(old) != normalize(new):
+              raise SystemExit('Full build required; unexpected Gradle configuration changes')
+          print('Native sources, dependencies, assets and JNI declarations match ' + base)
+          PY
+
+      - name: Download and verify reusable APK
+        run: |
+          mkdir -p prebuilt
+          gh release download "${BASE_TAG}" --pattern "soh-${BASE_TAG}.apk" --dir prebuilt
+          printf '%s  %s\n' "${BASE_SHA256}" "prebuilt/soh-${BASE_TAG}.apk" | sha256sum -c -
+          python3 Android/scripts/prepare-prebuilt-release.py "prebuilt/soh-${BASE_TAG}.apk" Android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Android platform
+        run: sdkmanager 'platforms;android-31' 'build-tools;35.0.0'
+      - name: Compile Java and package APK with unchanged native libraries
+        env:
+          GIT_TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          printf 'sdk.dir=%s\n' "${ANDROID_HOME}" > Android/local.properties
+          cd Android
+          ./gradlew --no-daemon -PEXCLUDE_NATIVE_LIBS assembleRelease
+
+      - name: Verify and name APK
+        run: |
+          APK=$(find Android/app/build/outputs/apk/release -name 'soh_release_*.apk' -print -quit)
+          test -n "${APK}"
+          cp "${APK}" "soh-${RELEASE_TAG}.apk"
+          python3 - <<'PY'
+          import os, zipfile
+          with zipfile.ZipFile('prebuilt/soh-' + os.environ['BASE_TAG'] + '.apk') as base, zipfile.ZipFile('soh-' + os.environ['RELEASE_TAG'] + '.apk') as built:
+              for name in base.namelist():
+                  if name.startswith(('lib/', 'assets/')) and not name.endswith('/'):
+                      if base.read(name) != built.read(name):
+                          raise SystemExit('Reused payload differs: ' + name)
+          print('All reused libraries and assets are byte-for-byte identical')
+          PY
+          "${ANDROID_HOME}/build-tools/35.0.0/apksigner" verify "soh-${RELEASE_TAG}.apk"
+          "${ANDROID_HOME}/build-tools/35.0.0/aapt" dump badging "soh-${RELEASE_TAG}.apk" > /tmp/apk-badging.txt
+          "${ANDROID_HOME}/build-tools/35.0.0/aapt" dump permissions "soh-${RELEASE_TAG}.apk" > /tmp/apk-permissions.txt
+          grep -F "package: name='com.dishii.soh' versionCode='19' versionName='9.2.3-ap1.4.2-p8'" /tmp/apk-badging.txt
+          grep -F 'android.permission.MANAGE_EXTERNAL_STORAGE' /tmp/apk-permissions.txt
+
+      - name: Update unpublished annotated release tag
+        run: |
+          python3 - <<'PY'
+          import os, urllib.request, urllib.error
+          url = 'https://api.github.com/repos/' + os.environ['GITHUB_REPOSITORY'] + '/releases/tags/' + os.environ['RELEASE_TAG']
+          request = urllib.request.Request(url, headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN']})
+          try:
+              urllib.request.urlopen(request).close()
+          except urllib.error.HTTPError as error:
+              if error.code != 404:
+                  raise
+          else:
+              raise SystemExit('Release was published during build; refusing to replace its tag')
+          PY
+          OLD_TAG=$(git rev-parse "refs/tags/${RELEASE_TAG}")
+          OLD_COMMIT=$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")
+          if [ "${OLD_COMMIT}" != '9f19e7d8b04f15aefe28773774fd2fe2119718a7' ] && [ "${OLD_COMMIT}" != "${GITHUB_SHA}" ]; then
+            echo 'Release tag changed unexpectedly; refusing to replace it' >&2
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -f -a "${RELEASE_TAG}" "${GITHUB_SHA}" -m "Android ${RELEASE_TAG}" -m 'Fix the first-launch storage permission dialog reopening immediately after Open Settings. Permission is checked when returning from Settings, with a usable retry if Settings cannot open. Reuses verified, unchanged p7 native libraries and assets; compiles the updated Java code.'
+          git push --force-with-lease="refs/tags/${RELEASE_TAG}:${OLD_TAG}" origin "refs/tags/${RELEASE_TAG}"
+
+      - uses: actions/attest-build-provenance@v2
+        if: github.event.repository.visibility == 'public'
+        with:
+          subject-path: soh-${{ env.RELEASE_TAG }}.apk
+      - name: Publish APK release
+        run: |
+          git tag -l --format='%(contents:body)' "${RELEASE_TAG}" > /tmp/release-notes.md
+          printf '\nSHA256: %s\n' "$(sha256sum "soh-${RELEASE_TAG}.apk" | cut -d' ' -f1)" >> /tmp/release-notes.md
+          printf 'Build: %s/%s/actions/runs/%s\n' "${GITHUB_SERVER_URL}" "${GITHUB_REPOSITORY}" "${GITHUB_RUN_ID}" >> /tmp/release-notes.md
+          gh release create "${RELEASE_TAG}" "soh-${RELEASE_TAG}.apk" --verify-tag --title "${RELEASE_TAG}" --notes-file /tmp/release-notes.md
